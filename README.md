@@ -9,6 +9,7 @@ Easily persist and restore your editing sessions effortlessly.
 (package-vc-install
  '(easysession
    :url "https://github.com/jamescherti/easysession.el"))
+(add-hook 'emacs-startup-hook #'easysession-mode)
 ```
 
 ### Install using straight.el
@@ -22,7 +23,9 @@ To install the `easysession` using `straight.el`:
   :straight (easysession
              :type git
              :host github
-             :repo "jamescherti/easysession.el"))
+             :repo "jamescherti/easysession.el")
+  :config
+  (add-hook 'emacs-startup-hook #'easysession-mode))
 ```
 
 

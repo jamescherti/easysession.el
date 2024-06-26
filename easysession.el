@@ -38,13 +38,28 @@
 
 (defcustom easysession-dir (expand-file-name "easysession"
                                              user-emacs-directory)
-  "Directory where the sessions are stored."
+  "Directory where the session files are stored."
   :type 'directory
   :group 'easysession)
 
 (defcustom easysession-before-load-hook nil
+  "Hooks to run before the session is loaded.
+Each element should be a function to be called with no arguments."
+  :type '(repeat function)
+  :group 'easysession)
+
+(defcustom easysession-after-load-hook nil
   "Hooks to run after the session is loaded.
 Each element should be a function to be called with no arguments."
+  :type '(repeat function)
+  :group 'easysession)
+
+(defcustom easysession-after-new-session-created-hook nil
+  "Hooks to run after a new session is created.
+Each element should be a function to be called with no arguments.
+
+This can be used to customize behavior, such as emptying a session
+after a new one is created."
   :type '(repeat function)
   :group 'easysession)
 
@@ -153,6 +168,13 @@ switching between sessions multiple times while using Emacs.")
 (defvar easysession--current-session-loaded nil
   "Was the current session loaded at least once?")
 
+(defun easysession-set-current-session (&optional session-name)
+  "Set the current session to SESSION-NAME.
+Return t if the session name is successfully set."
+  (when (or (not session-name) (string= session-name ""))
+    (error "The provided session name is invalid: '%s'" session-name))
+  (setq easysession--current-session-name session-name)
+  t)
 
 (defun easysession--init-frame-parameters-filters ()
   "Initialize frame parameter filters for EasySession.
@@ -228,16 +250,6 @@ Also checks if 'easysession-dont-save is set to t."
   (and (not (frame-parameter frame 'parent-frame)) ; Exclude frames with a parent frame
        (not (frame-parameter frame 'easysession-dont-save))))
 
-(defun easysession--empty-session ()
-  "Create an empty session after switching to a new session.
-
-This function is intended to be called when switching to a session that does
-not already exist. It performs necessary actions to initialize an empty
-session.
-
-Currently, the function is a placeholder (TODO)."
-  t)
-
 (defun easysession-exists (session-name)
   "Check if a session with the given SESSION-NAME exists.
 
@@ -256,21 +268,6 @@ Returns t if the session file exists, nil otherwise."
     (when (file-exists-p session-file)
       (delete-file session-file nil))
     (message "Session deleted: %s" session-name)))
-
-(defun easysession-set-current-session (&optional session-name)
-  "Set the current session to SESSION-NAME.
-
-SESSION-NAME is the name of the session to set as current. If nil or empty, an
-error is raised indicating that the provided session name is invalid.
-
-Returns t if the session name is successfully set.
-
-Errors:
-Raises an error if the provided session name is nil or an empty string."
-  (when (or (not session-name) (string= session-name ""))
-    (error "The provided session name is invalid: '%s'" session-name))
-  (setq easysession--current-session-name session-name)
-  t)
 
 (defun easysession-get-current-session-name ()
   "Return the name of the current session."
@@ -345,6 +342,7 @@ SESSION-NAME is the name of the session."
                         :force-display t
                         :force-onscreen nil
                         :cleanup-frames t)
+      (run-hooks 'easysession-after-load-hook)
 
       (setq easysession--current-session-loaded t)
       (when (called-interactively-p)
@@ -406,9 +404,9 @@ Behavior:
     (unless session-reloaded
       (easysession-set-current-session session-name)
       (unless (file-exists-p session-file)
+        (run-hooks 'easysession-after-new-session-created-hook)
         (easysession-save)
-        (setq new-session t)
-        (easysession--empty-session)))
+        (setq new-session t)))
 
     (cond (session-reloaded (message "Reloaded session: %s" session-name))
           (saved (message "Saved and switched to %ssession: %s"
@@ -424,9 +422,8 @@ Behavior:
   :group 'easysession
   (if easysession-mode
       (progn
-        (add-hook 'emacs-startup-hook #'easysession-load)
+        (easysession-load)
         (add-hook 'kill-emacs-hook #'easysession-save))
-    (remove-hook 'emacs-startup-hook #'easysession-load)
     (remove-hook 'kill-emacs-hook #'easysession-save)))
 
 
