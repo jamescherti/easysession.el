@@ -6,7 +6,7 @@
 ;; Version: 0.9.0
 ;; URL: https://github.com/jamescherti/easysession.el
 ;; Keywords: convenience
-;; Package-Requires: ((emacs "24.4"))
+;; Package-Requires: ((emacs "25.1"))
 ;; SPDX-License-Identifier: GPL-3.0-or-later
 
 ;; This file is free software; you can redistribute it and/or modify
@@ -31,15 +31,25 @@
 (require 'frameset)
 (require 'f)
 
-(defvar easysession-dir (expand-file-name "easysession" emacs-var-dir)
-  "Directory where the framesets are stored.")
+(defgroup easysession nil
+  "Non-nil if easysession mode mode is enabled."
+  :group 'easysession
+  :prefix "easysession-")
 
-(defvar easysession-file-version "1"
-  "Version number of easysession file format.")
+(defcustom easysession-dir (expand-file-name "easysession"
+                                             user-emacs-directory)
+  "Directory where the sessions are stored."
+  :type 'directory
+  :group 'easysession)
+
+(defcustom easysession-before-load-hook nil
+  "Hooks to run after the session is loaded.
+Each element should be a function to be called with no arguments."
+  :type '(repeat function)
+  :group 'easysession)
 
 (defvar easysession-overwrite-frameset-filter-alist
-  '(
-    (GUI:bottom . :never)
+  '((GUI:bottom . :never)
     (GUI:font . :never)
     (GUI:fullscreen . :never)
     (GUI:height . :never)
@@ -124,6 +134,9 @@
     (z-group . :never))
   "Alist of frame parameters and filtering functions.")
 
+(defvar easysession-file-version "1"
+  "Version number of easysession file format.")
+
 (defvar easysession--modified-filter-alist nil
   "Each time a session is saved, this list is overwritten.
 It is overwritten with the values from 'frameset-filter-alist'. Afterwards, the
@@ -142,6 +155,11 @@ switching between sessions multiple times while using Emacs.")
 
 
 (defun easysession--init-frame-parameters-filters ()
+  "Initialize frame parameter filters for EasySession.
+
+This function sets up `easysession--modified-filter-alist` by copying the
+default `frameset-filter-alist` and then overwriting specific entries with
+those provided in `easysession-overwrite-frameset-filter-alist`."
   (setq easysession--modified-filter-alist (copy-tree frameset-filter-alist))
   (dolist (pair easysession-overwrite-frameset-filter-alist)
     (setf (alist-get (car pair) easysession--modified-filter-alist) (cdr pair))))
@@ -177,6 +195,15 @@ switching between sessions multiple times while using Emacs.")
         nil))))
 
 (defun easysession--check-session-name (session-name)
+  "Validate the provided SESSION-NAME.
+
+If the SESSION-NAME is invalid, an error is raised with a message indicating
+the invalid name.
+
+Return the SESSION-NAME if it is valid.
+
+Errors:
+Raise an error if the session name is invalid."
   (when (or (not session-name)
             (string= session-name "")
             (string-match-p "/" session-name)
@@ -202,13 +229,19 @@ Also checks if 'easysession-dont-save is set to t."
        (not (frame-parameter frame 'easysession-dont-save))))
 
 (defun easysession--empty-session ()
-  (interactive)
-  (when (and (boundp 'tab-bar-mode) tab-bar-mode)
-    (tab-bar-close-other-tabs))
-  (delete-other-windows)
-  (scratch-buffer))
+  "Create an empty session after switching to a new session.
+
+This function is intended to be called when switching to a session that does
+not already exist. It performs necessary actions to initialize an empty
+session.
+
+Currently, the function is a placeholder (TODO)."
+  t)
 
 (defun easysession-exists (session-name)
+  "Check if a session with the given SESSION-NAME exists.
+
+Returns t if the session file exists, nil otherwise."
   (when (file-exists-p (easysession--get-session-file-name session-name))
     t))
 
@@ -225,18 +258,28 @@ Also checks if 'easysession-dont-save is set to t."
     (message "Session deleted: %s" session-name)))
 
 (defun easysession-set-current-session (&optional session-name)
+  "Set the current session to SESSION-NAME.
+
+SESSION-NAME is the name of the session to set as current. If nil or empty, an
+error is raised indicating that the provided session name is invalid.
+
+Returns t if the session name is successfully set.
+
+Errors:
+Raises an error if the provided session name is nil or an empty string."
   (when (or (not session-name) (string= session-name ""))
     (error "The provided session name is invalid: '%s'" session-name))
   (setq easysession--current-session-name session-name)
   t)
 
 (defun easysession-get-current-session-name ()
+  "Return the name of the current session."
   easysession--current-session-name)
 
-(defun easysession-rename (&optional session-name new-session-name)
-  (interactive)
-  ;; TODO
-  (message "Not implemented yet."))
+;; (defun easysession-rename (&optional session-name new-session-name)
+;;   (interactive)
+;;   ;; TODO
+;;   (message "Not implemented yet."))
 
 (defun easysession-save (&optional session-name)
   "Save the current session.
@@ -269,7 +312,7 @@ SESSION-NAME is the name of the session."
     t))
 
 (defun easysession-load (&optional session-name)
-  "Load the current session. SESSION-name is the session name."
+  "Load the current session. SESSION-NAME is the session name."
   (interactive)
   (let* ((session-name (if session-name
                            session-name
@@ -295,6 +338,7 @@ SESSION-NAME is the name of the session."
                   (rename-buffer buffer-name t)))))))
 
       ;; Load frameset
+      (run-hooks 'easysession-before-load-hook)
       (frameset-restore (assoc-default "frameset" session-info)
                         :reuse-frames t
                         :cleanup-frames t
@@ -327,7 +371,23 @@ If the function is called interactively, ask the user."
     t))
 
 (defun easysession-switch-to (&optional session-name)
-  "Save the current session and load a new one."
+  "Save the current session and load a new one.
+
+This function handles saving the current session and loading a new session
+specified by SESSION-NAME. If SESSION-NAME is not provided, it will prompt the
+user for a session name if called interactively. If the session already exists,
+it will be loaded; otherwise, a new session will be created.
+
+SESSION-NAME is the name of the session to switch to. If nil, the function
+prompts the user for a session name if called interactively.
+
+Behavior:
+- If the current session is loaded and not being reloaded, the current session
+  is saved.
+- Loads the specified session.
+- Sets the specified session as the current session.
+- If the session does not exist, it is saved and an empty session is
+  initialized."
   (interactive)
   (let* ((session-name (cond (session-name session-name)
                              ((called-interactively-p) (easysession--prompt-session-name
@@ -355,6 +415,20 @@ If the function is called interactively, ask the user."
                           (if new-session "new " "") session-name))
           (t (message "Switched to %ssession: %s"
                       (if new-session "new " "") session-name)))))
+
+;;;###autoload
+(define-minor-mode easysession-mode
+  "Toggle `easysession-mode'."
+  :global t
+  :lighter " easysession"
+  :group 'easysession
+  (if easysession-mode
+      (progn
+        (add-hook 'emacs-startup-hook #'easysession-load)
+        (add-hook 'kill-emacs-hook #'easysession-save))
+    (remove-hook 'emacs-startup-hook #'easysession-load)
+    (remove-hook 'kill-emacs-hook #'easysession-save)))
+
 
 (provide 'easysession)
 ;;; easysession.el ends here
