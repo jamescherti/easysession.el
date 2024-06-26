@@ -28,6 +28,7 @@
 
 ;;; Code:
 
+(require 'dired)
 (require 'frameset)
 (require 'f)
 
