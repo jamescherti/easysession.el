@@ -4,10 +4,15 @@ Easily persist and restore your editing sessions effortlessly.
 
 ## Installation
 
-## Install using straight
+### Install using package-vc
+```
+(package-vc-install
+ '(easysession
+   :url "https://github.com/jamescherti/easysession.el"))
+```
 
+### Install using straight.el
 To install the `easysession` using `straight.el`:
-
 1. If you haven't already done so, [add the `straight.el` bootstrap code to your init file ](https://github.com/radian-software/straight.el?tab=readme-ov-file#getting-started)
 
 2. Add the following code to your Emacs init file:
@@ -20,21 +25,6 @@ To install the `easysession` using `straight.el`:
              :repo "jamescherti/easysession.el"))
 ```
 
-## Install using package-vc
-
-```
-(package-vc-install
- '(easysession
-   :url "https://github.com/jamescherti/easysession.el"))
-```
-
-## Install using Elpaca's with explicit recipe
-```
-(use-package easysession
-  :elpaca (easysession
-  :host github
-  :repo "jamescherti/easysession.el"))
-```
 
 ## License
 
@@ -48,4 +38,4 @@ You should have received a copy of the GNU General Public License along with thi
 
 ## Links
 
-- [easysession.el @GitHub](https://github.com/jamescherti/jamescherti/easysession.el)
+- [easysession.el @GitHub](https://github.com/jamescherti/easysession.el)
