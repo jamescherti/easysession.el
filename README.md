@@ -1,16 +1,10 @@
 # easysession
 
-Easily persist and restore your editing sessions effortlessly.
+The Emacs package **easysession.el** offers a convenient and effortless way to persist and restore Emacs editing sessions. It can significantly increase productivity and save a lot of time for users who frequently switch between different projects and those who frequently open and close the Emacs editor.
+
+In addition to its automatic session management capabilities, the easysession.el Emacs package also offers a variety of useful Emacs commands that allow users to save, load, list and delete session.
 
 ## Installation
-
-### Install using package-vc
-```
-(package-vc-install
- '(easysession
-   :url "https://github.com/jamescherti/easysession.el"))
-(add-hook 'emacs-startup-hook #'easysession-mode)
-```
 
 ### Install using straight.el
 To install the `easysession` using `straight.el`:
@@ -28,6 +22,15 @@ To install the `easysession` using `straight.el`:
   (add-hook 'emacs-startup-hook #'easysession-mode))
 ```
 
+## Features
+
+- Automatically save and restore the Emacs editing session,
+- Automatically save the current editing session when Emacs is closed or when a file is save,
+- Manually save the current Emacs editing session,
+- Switch to a different session,
+- List the available sessions,
+- Delete the current Emacs session,
+- Specify the directory where all the saved sessions are located.
 
 ## License
 
