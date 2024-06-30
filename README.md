@@ -25,7 +25,7 @@ To install the `easysession` using `straight.el`:
 ## Features
 
 - Automatically save and restore the Emacs editing session,
-- Automatically save the current editing session when Emacs is closed or when a file is save,
+- Automatically save the current editing session when Emacs is closed,
 - Manually save the current Emacs editing session,
 - Switch to a different session,
 - List the available sessions,
