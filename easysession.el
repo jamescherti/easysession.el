@@ -293,6 +293,7 @@ Raise an error if the session name is invalid."
 
 (defun easysession--handler-save-frameset (session-name)
   "Return a frameset for FRAME-LIST, a list of frames."
+  (easysession--init-frame-parameters-filters)
   (frameset-save nil
                  :app `(easysession . ,easysession-file-version)
                  :name session-name
@@ -386,8 +387,6 @@ Returns t if the session file exists, nil otherwise."
   "Save the current session.
 SESSION-NAME is the name of the session."
   (interactive)
-  (easysession--init-frame-parameters-filters)
-
   ;; Close the minibuffer to avoid prevent the mini buffer from being part of
   ;; the session
   (when (called-interactively-p)
@@ -449,7 +448,6 @@ SESSION-NAME is the name of the session."
 If SESSION-NAME is provided, use it; otherwise, use current session.
 If the function is called interactively, ask the user."
   (interactive)
-  (easysession--init-frame-parameters-filters)
   (let* ((session-name (if (called-interactively-p)
                            (easysession--prompt-session-name
                             "Save session as: " (easysession-get-current-session-name))
