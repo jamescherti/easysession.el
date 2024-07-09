@@ -3,7 +3,7 @@
 ;; Copyright (C) 2024 James Cherti
 
 ;; Author: James Cherti
-;; Version: 0.9.0
+;; Version: 1.0.0
 ;; URL: https://github.com/jamescherti/easysession.el
 ;; Keywords: convenience
 ;; Package-Requires: ((emacs "25.1"))
