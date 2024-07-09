@@ -378,8 +378,6 @@ SESSION-NAME is the name of the session."
   (when (called-interactively-p)
     (when (> (minibuffer-depth) 0)
       (let ((inhibit-message t))
-        ;; TODO check if it is working
-        ;; (call-interactively 'abort-recursive-edit)
         (abort-recursive-edit))))
 
   (let* ((session-name (if session-name session-name (easysession-get-current-session-name)))
@@ -401,17 +399,6 @@ SESSION-NAME is the name of the session."
     (when (called-interactively-p)
       (message "Session saved: %s" session-name))
     t))
-
-;; (defun easysession--clone-indirect-buffer (newname)
-;;   "Create an indirect buffer that is a twin copy of the current buffer.
-;; NEWNAME is the name of the new indirect buffer.
-;; Returns the newly created indirect buffer."
-;;   (unless (get major-mode 'no-clone-indirect)
-;;     (let* ((name (generate-new-buffer-name newname))
-;;            (buffer (make-indirect-buffer (current-buffer) name t)))
-;;       (with-current-buffer buffer
-;;         (run-hooks 'clone-indirect-buffer-hook))
-;;       buffer)))
 
 (defun easysession-load (&optional session-name)
   "Load the current session. SESSION-NAME is the session name."
@@ -517,7 +504,6 @@ Behavior:
       (progn
         (add-hook 'kill-emacs-hook #'easysession-save))
     (remove-hook 'kill-emacs-hook #'easysession-save)))
-
 
 (provide 'easysession)
 ;;; easysession.el ends here
