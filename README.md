@@ -23,7 +23,7 @@ To install the `easysession` using `straight.el`:
 
 ## Features
 
-- Save and load file editing buffers, indirect buffers/clones, dired buffers, and it is extensible (users can add other handlers).
+- Save and load file editing buffers, indirect buffers/clones, dired buffers, tab-bar, the Emacs frame, and it is extensible (users can add other handlers).
 - Automatically save sessions by activating the mode with `easysession-save-mode`.
   This mode saves the current editing session when Emacs is closed.
 - Save the Emacs editing session with `easysession-save` and `easysession-save-as`.
