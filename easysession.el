@@ -37,8 +37,8 @@
   :group 'easysession
   :prefix "easysession-")
 
-(defcustom easysession-dir (expand-file-name "easysession"
-                                             user-emacs-directory)
+(defcustom easysession-directory (expand-file-name "easysession"
+                                                   user-emacs-directory)
   "Directory where the session files are stored."
   :type 'directory
   :group 'easysession)
@@ -189,9 +189,8 @@ those provided in `easysession-overwrite-frameset-filter-alist`."
 
 (defun easysession--get-all-names ()
   "Return a list of all session names."
-  (if (file-directory-p easysession-dir)
-      ;; (directory-files easysession-dir nil "^[^.]" t)
-      (remove "." (remove ".." (directory-files easysession-dir nil nil t)))
+  (if (file-directory-p easysession-directory)
+      (remove "." (remove ".." (directory-files easysession-directory nil nil t)))
     '()))
 
 (defun easysession--prompt-session-name (prompt &optional session-name)
@@ -275,7 +274,7 @@ Raise an error if the session name is invalid."
   "Return the fully qualified session file name for SESSION-NAME."
   (when session-name
     (easysession--check-session-name session-name)
-    (expand-file-name session-name easysession-dir)))
+    (expand-file-name session-name easysession-directory)))
 
 (defun easysession--handler-save-frameset (session-name)
   "Return a frameset for FRAME-LIST, a list of frames."
