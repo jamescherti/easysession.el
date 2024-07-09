@@ -23,6 +23,7 @@ To install the `easysession` using `straight.el`:
 
 ## Features
 
+- Save and load file editing buffers, indirect buffers/clones, dired buffers, and it is extensible (users can add other handlers).
 - Automatically save sessions by activating the mode with `easysession-save-mode`.
   This mode saves the current editing session when Emacs is closed.
 - Save the Emacs editing session with `easysession-save` and `easysession-save-as`.
@@ -39,6 +40,20 @@ This program is free software: you can redistribute it and/or modify it under th
 This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with this program.
+
+## Comparison with alternatives
+
+### desktop.el (built-in)
+
+While `desktop.el` is a foundational session management tool for Emacs, it has several limitations:
+- It can be bulky and slow in operation.
+- It primarily saves Emacs' state on exit and restores it on startup, making it difficult to switch between different session files during an editing session.
+- It lacks support for saving and restoring indirect buffers (clones).
+
+In contrast, `easysession.el` offers enhanced functionality:
+- It supports saving and loading various buffer types, including indirect buffers (clones).
+- It allows users to load or save different sessions while actively editing, without the need to restart Emacs.
+- It excels in speed and efficiency, enabling seamless session management within Emacs.
 
 ## Links
 
