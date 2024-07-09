@@ -14,23 +14,21 @@ To install the `easysession` using `straight.el`:
 ```
 (use-package easysession
   :ensure t
-  :straight (easysession
-             :type git
-             :host github
-             :repo "jamescherti/easysession.el")
-  :config
-  (add-hook 'emacs-startup-hook #'easysession-mode))
+  :straight (easysession :type git
+                         :host github
+                         :repo "jamescherti/easysession.el")
+  :hook ((emacs-startup . easysession-load)
+         (emacs-startup . easysession-save-mode)))
 ```
 
 ## Features
 
-- Automatically save and restore the Emacs editing session,
-- Automatically save the current editing session when Emacs is closed,
-- Manually save the current Emacs editing session,
-- Switch to a different session,
-- List the available sessions,
-- Delete the current Emacs session,
-- Specify the directory where all the saved sessions are located.
+- Automatically save sessions by activating the mode with `easysession-save-mode`.
+  This mode saves the current editing session when Emacs is closed.
+- Save the Emacs editing session with `easysession-save` and `easysession-save-as`.
+- Load the Emacs editing session with `easysession-load`.
+- Switch to a session (i.e., load and change the default session) with `easysession-switch-to`.
+- Delete the current Emacs session with `easysession-delete`.
 
 ## License
 

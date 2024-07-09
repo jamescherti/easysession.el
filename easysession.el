@@ -150,7 +150,7 @@ after a new one is created."
     (z-group . :never))
   "Alist of frame parameters and filtering functions.")
 
-(defvar easysession-file-version "1"
+(defvar easysession-file-version "2"
   "Version number of easysession file format.")
 
 (defvar easysession--modified-filter-alist nil
@@ -198,24 +198,60 @@ those provided in `easysession-overwrite-frameset-filter-alist`."
   "Prompt for a session name with PROMPT. Use SESSION-NAME as the default value."
   (completing-read prompt (easysession--get-all-names) nil nil nil nil session-name))
 
-(defun easysession--get-buffer-path (buf)
-  "Get the name and path of the buffer BUF, returning a cons cell (buffer-name . path)."
-  (with-current-buffer buf
-    (let* ((base-buffer (buffer-base-buffer))
-           (buffer (current-buffer))
-           (path (cond ((eq major-mode 'dired-mode)
-                        (dired-current-directory))
-                       (base-buffer
-                        (buffer-file-name base-buffer))
-                       (buffer
-                        (buffer-file-name buffer))
-                       (t nil)))
-           (buffer-name (buffer-name)))
-      (if path
-          ;; File visiting buffer
-          (cons buffer-name path)
-        ;; This buffer is not visiting a file
-        nil))))
+(defun easysession--get-base-buffer-path (buf)
+  "Get the name and path of the buffer BUF.
+Return nil When the buffer is not a base buffer.
+Return a cons cell (buffer-name . path)."
+  (when (buffer-live-p buf)
+    (with-current-buffer buf
+      (let* ((buffer (current-buffer))
+             (path (cond ((eq major-mode 'dired-mode)
+                          (dired-current-directory))
+                         (buffer
+                          (buffer-file-name buffer))
+                         (t nil)))
+             (buffer-name (buffer-name)))
+        (if path
+            ;; File visiting buffer and base buffers (not carbon copies)
+            (cons buffer-name path)
+          ;; This buffer is not visiting a file or it is a carbon copy
+          nil)))))
+
+(defun easysession--get-indirect-buffer-info (buf)
+  "Get information about the indirect buffer BUF.
+
+This function retrieves details about the indirect buffer BUF and its base
+buffer. It returns a list of cons cells containing the names of both buffers,
+the point position, window start position, and horizontal scroll position of
+the base buffer.
+
+- BUF: The buffer to get information from.
+
+Return a list of cons cells:
+'((indirect-buffer-name . name-of-indirect-buffer)
+  (base-buffer-name . name-of-base-buffer)
+  (base-buffer-point . point-position)
+  (base-buffer-window-start . window-start-position)
+  (base-buffer-hscroll . horizontal-scroll-position))
+
+Return nil if BUF is not an indirect buffer or if the base buffer cannot be
+determined."
+  (when (and buf (buffer-live-p buf))
+    (let* ((base-buffer (buffer-base-buffer buf)))
+      (when (and base-buffer
+                 (buffer-live-p base-buffer)
+                 (not (eq base-buffer buf))
+                 ;; The base has to be a file visiting buffer
+                 (buffer-file-name base-buffer))
+        (with-current-buffer buf  ; indirect buffer
+          (let ((base-buffer-name (buffer-name base-buffer))
+                (indirect-buffer-name (buffer-name)))
+            (when (and base-buffer-name indirect-buffer-name)
+              `((indirect-buffer-name . ,indirect-buffer-name)
+                (indirect-buffer-point . ,(point))
+                (indirect-buffer-window-start . ,(window-start))
+                (indirect-buffer-hscroll . ,(window-hscroll))
+                (base-buffer-name . ,base-buffer-name)))))))))
 
 (defun easysession--check-session-name (session-name)
   "Validate the provided SESSION-NAME.
@@ -240,6 +276,59 @@ Raise an error if the session name is invalid."
   (when session-name
     (easysession--check-session-name session-name)
     (expand-file-name session-name easysession-dir)))
+
+(defun easysession--handler-save-frameset (session-name)
+  "Return a frameset for FRAME-LIST, a list of frames."
+  (frameset-save nil
+                 :app `(easysession . ,easysession-file-version)
+                 :name session-name
+                 :predicate #'easysession--check-dont-save
+                 :filters easysession--modified-filter-alist))
+
+(defun easysession--handler-load-frameset (session-info)
+  (frameset-restore (assoc-default "frameset" session-info)
+                    :reuse-frames t
+                    :force-display t
+                    :force-onscreen nil
+                    :cleanup-frames t))
+
+(defun easysession--handler-save-base-buffers ()
+  "Return data about the base buffers and dired buffers."
+  (cl-remove nil (mapcar #'easysession--get-base-buffer-path (buffer-list))))
+
+(defun easysession--handler-load-base-buffers (session-info)
+  (let ((buffer-file-names (assoc-default "buffers" session-info)))
+    (when buffer-file-names
+      (dolist (buffer-name-and-path buffer-file-names)
+        (let ((buffer-name (car buffer-name-and-path))
+              (buffer-path (cdr buffer-name-and-path)))
+          (when (and buffer-name buffer-path)
+            (unless (or (get-buffer buffer-name)
+                        (find-buffer-visiting buffer-path))
+              (with-current-buffer (find-file-noselect buffer-path)
+                (rename-buffer buffer-name t)))))))))
+
+(defun easysession--handler-save-indirect-buffers ()
+  "Return data about the indirect buffers."
+  (cl-remove nil (mapcar #'easysession--get-indirect-buffer-info
+                         (buffer-list))))
+
+(defun easysession--handler-load-indirect-buffers (session-info)
+  (let ((indirect-buffers (assoc-default "indirect-buffers"
+                                         session-info)))
+    (dolist (item indirect-buffers)
+      (let* ((indirect-buffer-name (alist-get 'indirect-buffer-name item))
+             (base-buffer-name (alist-get 'base-buffer-name
+                                          (cdr item))))
+        (when (and base-buffer-name indirect-buffer-name)
+          (let ((base-buffer (get-buffer base-buffer-name))
+                (indirect-buffer (get-buffer indirect-buffer-name)))
+            (when (and (or (not indirect-buffer)
+                           (not (buffer-live-p indirect-buffer)))
+                       base-buffer
+                       (buffer-live-p base-buffer))
+              (with-current-buffer base-buffer
+                (clone-indirect-buffer indirect-buffer-name nil)))))))))
 
 (defun easysession--check-dont-save (frame)
   "Check if FRAME is a real frame and should be saved.
@@ -287,27 +376,43 @@ SESSION-NAME is the name of the session."
 
   ;; Close the minibuffer to avoid prevent the mini buffer from being part of
   ;; the session
-  (when (> (minibuffer-depth) 0)
-    (let ((inhibit-message t))
-      (call-interactively 'abort-recursive-edit)))
+  (when (called-interactively-p)
+    (when (> (minibuffer-depth) 0)
+      (let ((inhibit-message t))
+        ;; TODO check if it is working
+        ;; (call-interactively 'abort-recursive-edit)
+        (abort-recursive-edit))))
 
   (let* ((session-name (if session-name session-name (easysession-get-current-session-name)))
          (session-file (easysession--get-session-file-name session-name))
-         (data-frameset (frameset-save nil
-                                       :app `(easysession . ,easysession-file-version)
-                                       :name session-name
-                                       :predicate #'easysession--check-dont-save
-                                       :filters easysession--modified-filter-alist))
-         (data-buffer (mapcar #'easysession--get-buffer-path (buffer-list)))
-         (session-data `(("frameset" . ,data-frameset)
-                         ("buffers" . ,(cl-remove nil data-buffer))))
+         (data-frameset (easysession--handler-save-frameset session-name))
+         (data-buffer (easysession--handler-save-base-buffers))
+         (indirect-buffers (easysession--handler-save-indirect-buffers))
+         (session-data nil)
          (session-dir (file-name-directory session-file)))
+
+    ;; Handlers
+    (push (cons "frameset" data-frameset) session-data)
+    (push (cons "buffers" data-buffer) session-data)
+    (push (cons "indirect-buffers" indirect-buffers) session-data)
+
     (unless (file-directory-p session-dir)
       (make-directory session-dir t))
     (f-write (prin1-to-string session-data) 'utf-8 session-file)
     (when (called-interactively-p)
       (message "Session saved: %s" session-name))
     t))
+
+;; (defun easysession--clone-indirect-buffer (newname)
+;;   "Create an indirect buffer that is a twin copy of the current buffer.
+;; NEWNAME is the name of the new indirect buffer.
+;; Returns the newly created indirect buffer."
+;;   (unless (get major-mode 'no-clone-indirect)
+;;     (let* ((name (generate-new-buffer-name newname))
+;;            (buffer (make-indirect-buffer (current-buffer) name t)))
+;;       (with-current-buffer buffer
+;;         (run-hooks 'clone-indirect-buffer-hook))
+;;       buffer)))
 
 (defun easysession-load (&optional session-name)
   "Load the current session. SESSION-NAME is the session name."
@@ -318,6 +423,7 @@ SESSION-NAME is the name of the session."
          (session-info nil)
          (session-file (easysession--get-session-file-name session-name)))
     (when (and session-file (file-exists-p session-file))
+      ;; Load
       (with-temp-buffer
         (insert-file-contents session-file)
         (setq session-info (read (current-buffer))))
@@ -325,24 +431,11 @@ SESSION-NAME is the name of the session."
       (unless session-info
         (error "Could not read '%s' session information" session-name))
 
-      ;; Load file-visiting buffers
-      (let ((buffer-file-names (assoc-default "buffers" session-info)))
-        (dolist (buffer-name-and-path buffer-file-names)
-          (let ((buffer-name (car buffer-name-and-path))
-                (buffer-path (cdr buffer-name-and-path)))
-            (when buffer-path
-              (unless (find-buffer-visiting buffer-path)
-                (with-current-buffer (find-file-noselect buffer-path)
-                  (rename-buffer buffer-name t)))))))
-
-      ;; Load frameset
+      ;; Handlers
       (run-hooks 'easysession-before-load-hook)
-      (frameset-restore (assoc-default "frameset" session-info)
-                        :reuse-frames t
-                        :cleanup-frames t
-                        :force-display t
-                        :force-onscreen nil
-                        :cleanup-frames t)
+      (easysession--handler-load-base-buffers session-info)
+      (easysession--handler-load-indirect-buffers session-info)
+      (easysession--handler-load-frameset session-info)
       (run-hooks 'easysession-after-load-hook)
 
       (setq easysession--current-session-loaded t)
@@ -416,14 +509,13 @@ Behavior:
                       (if new-session "new " "") session-name)))))
 
 ;;;###autoload
-(define-minor-mode easysession-mode
-  "Toggle `easysession-mode'."
+(define-minor-mode easysession-save-mode
+  "Toggle `easysession-save-mode'."
   :global t
   :lighter " easysession"
   :group 'easysession
-  (if easysession-mode
+  (if easysession-save-mode
       (progn
-        (easysession-load)
         (add-hook 'kill-emacs-hook #'easysession-save))
     (remove-hook 'kill-emacs-hook #'easysession-save)))
 
