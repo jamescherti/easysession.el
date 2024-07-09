@@ -150,6 +150,21 @@ after a new one is created."
     (z-group . :never))
   "Alist of frame parameters and filtering functions.")
 
+(defvar easysession-frameset-filter-alist-geometry
+  '(GUI:bottom
+    GUI:fullscreen
+    GUI:height
+    GUI:left
+    GUI:right
+    GUI:top
+    GUI:width
+    height
+    left
+    right
+    top
+    width)
+  "List of frame parameters related to geometry.")
+
 (defvar easysession-file-version "2"
   "Version number of easysession file format.")
 
