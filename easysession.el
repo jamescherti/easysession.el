@@ -292,7 +292,8 @@ Raise an error if the session name is invalid."
     (expand-file-name session-name easysession-directory)))
 
 (defun easysession--handler-save-frameset (session-name)
-  "Return a frameset for FRAME-LIST, a list of frames."
+  "Return a frameset for FRAME-LIST, a list of frames.
+SESSION-NAME is the session name."
   (easysession--init-frame-parameters-filters)
   (frameset-save nil
                  :app `(easysession . ,easysession-file-version)
@@ -301,6 +302,7 @@ Raise an error if the session name is invalid."
                  :filters easysession--modified-filter-alist))
 
 (defun easysession--handler-load-frameset (session-info)
+  "Load the frameset from the SESSION-INFO argument."
   (frameset-restore (assoc-default "frameset" session-info)
                     :reuse-frames t
                     :force-display t
@@ -308,10 +310,11 @@ Raise an error if the session name is invalid."
                     :cleanup-frames t))
 
 (defun easysession--handler-save-base-buffers ()
-  "Return data about the base buffers and dired buffers."
+  "Return data about the base buffers and Dired buffers."
   (cl-remove nil (mapcar #'easysession--get-base-buffer-path (buffer-list))))
 
 (defun easysession--handler-load-base-buffers (session-info)
+  "Load base buffers from the SESSION-INFO variable."
   (let ((buffer-file-names (assoc-default "buffers" session-info)))
     (when buffer-file-names
       (dolist (buffer-name-and-path buffer-file-names)
@@ -329,6 +332,7 @@ Raise an error if the session name is invalid."
                          (buffer-list))))
 
 (defun easysession--handler-load-indirect-buffers (session-info)
+  "Load indirect buffers from the SESSION-INFO variable."
   (let ((indirect-buffers (assoc-default "indirect-buffers"
                                          session-info)))
     (dolist (item indirect-buffers)
