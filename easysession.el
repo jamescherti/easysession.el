@@ -151,18 +151,19 @@ after a new one is created."
   "Alist of frame parameters and filtering functions.")
 
 (defvar easysession-frameset-filter-alist-geometry
-  '(GUI:bottom
-    GUI:fullscreen
-    GUI:height
-    GUI:left
-    GUI:right
+  '(GUI:fullscreen
     GUI:top
-    GUI:width
-    height
-    left
-    right
     top
-    width)
+    GUI:bottom
+    bottom
+    GUI:left
+    left
+    GUI:right
+    right
+    GUI:width
+    width
+    GUI:height
+    height)
   "List of frame parameters related to geometry.")
 
 (defvar easysession-file-version "2"
@@ -201,6 +202,17 @@ those provided in `easysession-overwrite-frameset-filter-alist`."
   (setq easysession--modified-filter-alist (copy-tree frameset-filter-alist))
   (dolist (pair easysession-overwrite-frameset-filter-alist)
     (setf (alist-get (car pair) easysession--modified-filter-alist) (cdr pair))))
+
+(defun easysession--get-geometry-frameset-filter-alist ()
+  "Return a frameset filter alist excluding the geometry.
+This function creates a copy of `easysession-overwrite-frameset-filter-alist'
+and filters out entries that are related to frame geometry, as specified in
+`easysession-frameset-filter-alist-geometry'. The resulting alist excludes
+parameters like top, left, width, height, fullscreen, and their variants."
+  (let ((result (copy-alist easysession-overwrite-frameset-filter-alist)))
+    (dolist (entry easysession-frameset-filter-alist-geometry)
+      (setq result (delq (assoc entry result) result)))
+    result))
 
 (defun easysession--get-all-names ()
   "Return a list of all session names."
