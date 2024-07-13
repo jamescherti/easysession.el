@@ -43,6 +43,11 @@
   :type 'directory
   :group 'easysession)
 
+(defcustom easysession-persist-geometry t
+  "Save the geometry in the Easy Session file."
+  :type 'boolean
+  :group 'easysession)
+
 (defcustom easysession-before-load-hook nil
   "Hooks to run before the session is loaded.
 Each element should be a function to be called with no arguments."
@@ -236,22 +241,6 @@ after a new one is created."
     (z-group . :never))
   "Alist of frame parameters and filtering functions.")
 
-(defvar easysession-frameset-filter-alist-geometry
-  '(GUI:fullscreen
-    GUI:top
-    top
-    GUI:bottom
-    bottom
-    GUI:left
-    left
-    GUI:right
-    right
-    GUI:width
-    width
-    GUI:height
-    height)
-  "List of frame parameters related to geometry.")
-
 (defvar easysession-file-version 3
   "Version number of easysession file format.")
 
@@ -399,16 +388,20 @@ INCLUDE-GEOMETRY includes the geometry."
 
 (defun easysession--handler-load-frameset (session-info &optional load-geometry)
   "Load the frameset from the SESSION-INFO argument."
-  (let ((data (assoc-default
-               (if (and load-geometry)
-                   "frameset-geo"
-                 "frameset") session-info)))
-    (unless data (assoc-default "frameset" session-info))
-    (frameset-restore data
-                      :reuse-frames t
-                      :force-display t
-                      :force-onscreen nil
-                      :cleanup-frames t)))
+  (let* ((key (if load-geometry
+                  "frameset-geo"
+                "frameset"))
+         (data (when (assoc key session-info)
+                 (assoc-default key session-info))))
+    (when (and (not data) load-geometry)
+      (setq data (when (assoc "frameset" session-info)
+                   (assoc-default "frameset" session-info))))
+    (when data
+      (frameset-restore data
+                        :reuse-frames t
+                        :force-display t
+                        :force-onscreen nil
+                        :cleanup-frames t))))
 
 (defun easysession--handler-save-base-buffers ()
   "Return data about the base buffers and Dired buffers."
@@ -504,8 +497,7 @@ SESSION-NAME is the name of the session."
                          (easysession-get-session-name)))
          (session-file (easysession--get-session-file-name session-name))
          (data-frameset (easysession--handler-save-frameset session-name))
-         (data-frameset-geometry (easysession--handler-save-frameset
-                                  session-name t))
+         (data-frameset-geometry nil)
          (data-buffer (easysession--handler-save-base-buffers))
          (indirect-buffers (easysession--handler-save-indirect-buffers))
          (session-data nil)
@@ -513,7 +505,12 @@ SESSION-NAME is the name of the session."
 
     ;; Handlers
     (push (cons "frameset" data-frameset) session-data)
-    (push (cons "frameset-geo" data-frameset-geometry) session-data)
+
+    (when easysession-persist-geometry
+      (setq data-frameset-geometry (easysession--handler-save-frameset
+                                    session-name t))
+      (push (cons "frameset-geo" data-frameset-geometry) session-data))
+
     (push (cons "buffers" data-buffer) session-data)
     (push (cons "indirect-buffers" indirect-buffers) session-data)
 
