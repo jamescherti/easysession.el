@@ -150,6 +150,92 @@ after a new one is created."
     (z-group . :never))
   "Alist of frame parameters and filtering functions.")
 
+(defvar easysession-overwrite-frameset-filter-include-geometry-alist
+  '(;; (GUI:bottom . :never)
+    (GUI:font . :never)
+    ;; (GUI:fullscreen . :never)
+    ;; (GUI:height . :never)
+    ;; (GUI:left . :never)
+    ;; (GUI:right . :never)
+    ;; (GUI:top . :never)
+    ;; (GUI:width . :never)
+    (alpha . :never)
+    (alpha-background . :never)
+    (auto-lower . :never)
+    (auto-raise . :never)
+    (background-color . :never)
+    (background-mode . :never)
+    (border-color . :never)
+    (border-width . :never)
+    ;; (bottom . :never)
+    (bottom-divider-width . :never)
+    (buffer-list . :never)
+    (buffer-predicate . :never)
+    (buried-buffer-list . :never)
+    (child-frame-border-width . :never)
+    (client . :never)
+    (cursor-color . :never)
+    (cursor-type . :never)
+    (delete-before . :never)
+    (display-type . :never)
+    (environment . :never)
+    (font . :never)
+    (font-backend . :never)
+    (font-parameter . :never)
+    (foreground-color . :never)
+    (frameset--text-pixel-height . :never)
+    (frameset--text-pixel-width . :never)
+    ;; (fullscreen . :never)
+    ;; (height . :never)
+    (horizontal-scroll-bars . :never)
+    (icon-type . :never)
+    (inhibit-double-buffering . :never)
+    (internal-border-width . :never)
+    ;; (left . :never)
+    (left-fringe . :never)
+    (line-spacing . :never)
+    (menu-bar-lines . :never)
+    (minibuffer . :never)
+    (mouse-color . :never)
+    (mouse-wheel-frame . :never)
+    (name . :never)
+    (no-accept-focus . :never)
+    (no-focus-on-map . :never)
+    (no-special-glyphs . :never)
+    (ns-appearance . :never)
+    (outer-window-id . :never)
+    (override-redirect . :never)
+    (parent-frame . :never)
+    (parent-id . :never)
+    ;; (right . :never)
+    (right-divider-width . :never)
+    (right-fringe . :never)
+    (screen-gamma . :never)
+    (scroll-bar-background . :never)
+    (scroll-bar-foreground . :never)
+    (scroll-bar-height . :never)
+    (scroll-bar-width . :never)
+    (shaded . :never)
+    (skip-taskbar . :never)
+    (sticky . :never)
+    (tab-bar-lines . :never)
+    (title . :never)
+    (tool-bar-lines . :never)
+    (tool-bar-position . :never)
+    ;; (top . :never)
+    (tty . :never)
+    (tty-type . :never)
+    (undecorated . :never)
+    (use-frame-synchronization . :never)
+    (vertical-scroll-bars . :never)
+    (visibility . :never)
+    (wait-for-wm . :never)
+    ;; (width . :never)
+    (window-id . :never)
+    (window-system . :never)
+    (z-group . :never))
+  "Alist of frame parameters and filtering functions.")
+
 (defvar easysession-frameset-filter-alist-geometry
   '(GUI:fullscreen
     GUI:top
@@ -168,6 +254,7 @@ after a new one is created."
 
 (defvar easysession-file-version "2"
   "Version number of easysession file format.")
+
 
 (defvar easysession--modified-filter-alist nil
   "Each time a session is saved, this list is overwritten.
@@ -193,25 +280,16 @@ Return t if the session name is successfully set."
   (setq easysession--current-session-name session-name)
   t)
 
-(defun easysession--init-frame-parameters-filters ()
-  "Initialize frame parameter filters for EasySession.
-
-This function sets up `easysession--modified-filter-alist` by copying the
-default `frameset-filter-alist` and then overwriting specific entries with
-those provided in `easysession-overwrite-frameset-filter-alist`."
-  (setq easysession--modified-filter-alist (copy-tree frameset-filter-alist))
-  (dolist (pair easysession-overwrite-frameset-filter-alist)
-    (setf (alist-get (car pair) easysession--modified-filter-alist) (cdr pair))))
-
-(defun easysession--get-geometry-frameset-filter-alist ()
-  "Return a frameset filter alist excluding the geometry.
-This function creates a copy of `easysession-overwrite-frameset-filter-alist'
-and filters out entries that are related to frame geometry, as specified in
-`easysession-frameset-filter-alist-geometry'. The resulting alist excludes
-parameters like top, left, width, height, fullscreen, and their variants."
-  (let ((result (copy-alist easysession-overwrite-frameset-filter-alist)))
-    (dolist (entry easysession-frameset-filter-alist-geometry)
-      (setq result (delq (assoc entry result) result)))
+(defun easysession--init-frame-parameters-filters (&optional overwrite-alist)
+  "Return the EasySession version of `frameset-filter-alist'.
+OVERWRITE-ALIST is an alist similar to
+`easysession-overwrite-frameset-filter-alist'."
+  (unless overwrite-alist
+    (setq overwrite-alist easysession-overwrite-frameset-filter-alist))
+  (let ((result (copy-tree frameset-filter-alist)))
+    (dolist (pair overwrite-alist)
+      (setf (alist-get (car pair) result)
+            (cdr pair)))
     result))
 
 (defun easysession--get-all-names ()
@@ -303,19 +381,27 @@ Raise an error if the session name is invalid."
     (easysession--check-session-name session-name)
     (expand-file-name session-name easysession-directory)))
 
-(defun easysession--handler-save-frameset (session-name)
+(defun easysession--handler-save-frameset (session-name
+                                           &optional save-geometry)
   "Return a frameset for FRAME-LIST, a list of frames.
-SESSION-NAME is the session name."
-  (easysession--init-frame-parameters-filters)
-  (frameset-save nil
-                 :app `(easysession . ,easysession-file-version)
-                 :name session-name
-                 :predicate #'easysession--check-dont-save
-                 :filters easysession--modified-filter-alist))
+SESSION-NAME is the session name.
+INCLUDE-GEOMETRY includes the geometry."
+  (let ((modified-filter-alist
+         (if save-geometry
+             (easysession--init-frame-parameters-filters
+              easysession-overwrite-frameset-filter-include-geometry-alist)
+           (easysession--init-frame-parameters-filters))))
+    (frameset-save nil
+                   :app `(easysession . ,easysession-file-version)
+                   :name session-name
+                   :predicate #'easysession--check-dont-save
+                   :filters modified-filter-alist)))
 
-(defun easysession--handler-load-frameset (session-info)
+(defun easysession--handler-load-frameset (session-info &optional load-geometry)
   "Load the frameset from the SESSION-INFO argument."
-  (frameset-restore (assoc-default "frameset" session-info)
+  (frameset-restore (assoc-default (if load-geometry
+                                       "frameset-geo"
+                                    "frameset") session-info)
                     :reuse-frames t
                     :force-display t
                     :force-onscreen nil
@@ -390,7 +476,7 @@ Returns t if the session file exists, nil otherwise."
       (delete-file session-file nil))
     (message "Session deleted: %s" session-name)))
 
-(defun easysession-get-current-session-name ()
+(defun easysession-get-session-name ()
   "Return the name of the current session."
   easysession--current-session-name)
 
@@ -410,9 +496,13 @@ SESSION-NAME is the name of the session."
       (let ((inhibit-message t))
         (abort-recursive-edit))))
 
-  (let* ((session-name (if session-name session-name (easysession-get-current-session-name)))
+  (let* ((session-name (if session-name
+                           session-name
+                         (easysession-get-session-name)))
          (session-file (easysession--get-session-file-name session-name))
          (data-frameset (easysession--handler-save-frameset session-name))
+         (data-frameset-geometry (easysession--handler-save-frameset
+                                  session-name t))
          (data-buffer (easysession--handler-save-base-buffers))
          (indirect-buffers (easysession--handler-save-indirect-buffers))
          (session-data nil)
@@ -420,6 +510,7 @@ SESSION-NAME is the name of the session."
 
     ;; Handlers
     (push (cons "frameset" data-frameset) session-data)
+    (push (cons "frameset-geo" data-frameset-geometry) session-data)
     (push (cons "buffers" data-buffer) session-data)
     (push (cons "indirect-buffers" indirect-buffers) session-data)
 
@@ -430,8 +521,9 @@ SESSION-NAME is the name of the session."
       (message "Session saved: %s" session-name))
     t))
 
-(defun easysession-load (&optional session-name)
-  "Load the current session. SESSION-NAME is the session name."
+(defun easysession-load (&optional session-name load-geometry)
+  "Load the current session. SESSION-NAME is the session name.
+The geometry is loaded when LOAD-GEOMETRY is set to t"
   (interactive)
   (let* ((session-name (if session-name
                            session-name
@@ -451,7 +543,7 @@ SESSION-NAME is the name of the session."
       (run-hooks 'easysession-before-load-hook)
       (easysession--handler-load-base-buffers session-info)
       (easysession--handler-load-indirect-buffers session-info)
-      (easysession--handler-load-frameset session-info)
+      (easysession--handler-load-frameset session-info load-geometry)
       (run-hooks 'easysession-after-load-hook)
 
       (setq easysession--current-session-loaded t)
@@ -506,7 +598,8 @@ Behavior:
                                (easysession-get-current-session-name)))
                              (t (easysession-get-current-session-name))))
          (session-file (easysession--get-session-file-name session-name))
-         (session-reloaded (string= session-name easysession--current-session-name))
+         (session-reloaded (string= session-name
+                                    easysession--current-session-name))
          (saved nil)
          (new-session nil))
     (when (and easysession--current-session-loaded (not session-reloaded))
