@@ -252,7 +252,7 @@ after a new one is created."
     height)
   "List of frame parameters related to geometry.")
 
-(defvar easysession-file-version "2"
+(defvar easysession-file-version 3
   "Version number of easysession file format.")
 
 
@@ -399,13 +399,16 @@ INCLUDE-GEOMETRY includes the geometry."
 
 (defun easysession--handler-load-frameset (session-info &optional load-geometry)
   "Load the frameset from the SESSION-INFO argument."
-  (frameset-restore (assoc-default (if load-geometry
-                                       "frameset-geo"
-                                    "frameset") session-info)
-                    :reuse-frames t
-                    :force-display t
-                    :force-onscreen nil
-                    :cleanup-frames t))
+  (let ((data (assoc-default
+               (if (and load-geometry)
+                   "frameset-geo"
+                 "frameset") session-info)))
+    (unless data (assoc-default "frameset" session-info))
+    (frameset-restore data
+                      :reuse-frames t
+                      :force-display t
+                      :force-onscreen nil
+                      :cleanup-frames t)))
 
 (defun easysession--handler-save-base-buffers ()
   "Return data about the base buffers and Dired buffers."
