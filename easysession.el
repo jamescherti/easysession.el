@@ -393,7 +393,7 @@ SESSION-NAME is the name of the session."
   (interactive)
   ;; Close the minibuffer to avoid prevent the mini buffer from being part of
   ;; the session
-  (when (called-interactively-p)
+  (when (called-interactively-p 'any)
     (when (> (minibuffer-depth) 0)
       (let ((inhibit-message t))
         (abort-recursive-edit))))
@@ -414,7 +414,7 @@ SESSION-NAME is the name of the session."
     (unless (file-directory-p session-dir)
       (make-directory session-dir t))
     (f-write (prin1-to-string session-data) 'utf-8 session-file)
-    (when (called-interactively-p)
+    (when (called-interactively-p 'any)
       (message "Session saved: %s" session-name))
     t))
 
@@ -443,7 +443,7 @@ SESSION-NAME is the name of the session."
       (run-hooks 'easysession-after-load-hook)
 
       (setq easysession--current-session-loaded t)
-      (when (called-interactively-p)
+      (when (called-interactively-p 'any)
         (message "Session loaded: %s" session-name))
       t)))
 
@@ -452,7 +452,7 @@ SESSION-NAME is the name of the session."
 If SESSION-NAME is provided, use it; otherwise, use current session.
 If the function is called interactively, ask the user."
   (interactive)
-  (let* ((session-name (if (called-interactively-p)
+  (let* ((session-name (if (called-interactively-p 'any)
                            (easysession--prompt-session-name
                             "Save session as: " (easysession-get-current-session-name))
                          (easysession-get-current-session-name)))
@@ -485,9 +485,10 @@ Behavior:
   initialized."
   (interactive)
   (let* ((session-name (cond (session-name session-name)
-                             ((called-interactively-p) (easysession--prompt-session-name
-                                                        "Load and switch to session: "
-                                                        (easysession-get-current-session-name)))
+                             ((called-interactively-p 'any)
+                              (easysession--prompt-session-name
+                               "Load and switch to session: "
+                               (easysession-get-current-session-name)))
                              (t (easysession-get-current-session-name))))
          (session-file (easysession--get-session-file-name session-name))
          (session-reloaded (string= session-name easysession--current-session-name))
