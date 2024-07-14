@@ -6,7 +6,7 @@
 ;; Version: 1.0.1
 ;; URL: https://github.com/jamescherti/easysession.el
 ;; Keywords: convenience
-;; Package-Requires: ((emacs "25.1") (f "0"))
+;; Package-Requires: ((emacs "25.1") (f "0.18.2"))
 ;; SPDX-License-Identifier: GPL-3.0-or-later
 
 ;; This file is free software; you can redistribute it and/or modify
