@@ -412,8 +412,9 @@ INCLUDE-GEOMETRY includes the geometry."
           (when (and buffer-name buffer-path)
             (unless (or (get-buffer buffer-name)
                         (find-buffer-visiting buffer-path))
-              (with-current-buffer (find-file-noselect buffer-path)
-                (rename-buffer buffer-name t)))))))))
+              (let ((easysession-find-file-p t))
+                (with-current-buffer (find-file-noselect buffer-path)
+                  (rename-buffer buffer-name t))))))))))
 
 (defun easysession--handler-save-indirect-buffers ()
   "Return data about the indirect buffers."
@@ -471,10 +472,19 @@ Returns t if the session file exists, nil otherwise."
   "Return the name of the current session."
   easysession--current-session-name)
 
-;; (defun easysession-rename (&optional session-name new-session-name)
-;;   (interactive)
-;;   ;; TODO
-;;   (message "Not implemented yet."))
+(defun easysession-rename (&optional session-name new-session-name)
+  (interactive)
+  (let* ((new-session-name
+          (easysession--prompt-session-name
+           (format "Rename session '%s' to: "
+                   easysession--current-session-name)))
+         (old-path (easysession--get-session-file-name
+                    easysession--current-session-name))
+         (new-path (easysession--get-session-file-name new-session-name)))
+    (unless (file-regular-p old-path)
+      (error "No such file or directory: %s" old-path))
+    (rename-file old-path new-path)
+    (setq easysession--current-session-name new-session-name)))
 
 (defun easysession-save (&optional session-name)
   "Save the current session.
