@@ -64,7 +64,7 @@ after a new one is created."
   :type '(repeat function)
   :group 'easysession)
 
-(defvar easysession-overwrite-frameset-filter-alist
+(defvar easysession--overwrite-frameset-filter-alist
   '((GUI:bottom . :never)
     (GUI:font . :never)
     (GUI:fullscreen . :never)
@@ -150,7 +150,7 @@ after a new one is created."
     (z-group . :never))
   "Alist of frame parameters and filtering functions.")
 
-(defvar easysession-overwrite-frameset-filter-include-geometry-alist
+(defvar easysession--overwrite-frameset-filter-include-geometry-alist
   '(;; (GUI:bottom . :never)
     (GUI:font . :never)
     ;; (GUI:fullscreen . :never)
@@ -239,12 +239,11 @@ after a new one is created."
 (defvar easysession-file-version 3
   "Version number of easysession file format.")
 
-
 (defvar easysession--modified-filter-alist nil
   "Each time a session is saved, this list is overwritten.
 It is overwritten with the values from `frameset-filter-alist'. Afterwards, the
 values of specific entries are replaced with ':never' for each frame parameter
-listed in `easysession-overwrite-frameset-filter-alist'. This process ensures
+listed in `easysession--overwrite-frameset-filter-alist'. This process ensures
 that certain settings are not persisted across sessions, focusing the restored
 environment on essential user configurations and omitting system or
 GUI-specific settings that are not relevant or desirable to persist when
@@ -256,20 +255,12 @@ switching between sessions multiple times while using Emacs.")
 (defvar easysession--current-session-loaded nil
   "Was the current session loaded at least once?")
 
-(defun easysession-set-current-session (&optional session-name)
-  "Set the current session to SESSION-NAME.
-Return t if the session name is successfully set."
-  (when (or (not session-name) (string= session-name ""))
-    (error "The provided session name is invalid: '%s'" session-name))
-  (setq easysession--current-session-name session-name)
-  t)
-
 (defun easysession--init-frame-parameters-filters (&optional overwrite-alist)
   "Return the EasySession version of `frameset-filter-alist'.
 OVERWRITE-ALIST is an alist similar to
-`easysession-overwrite-frameset-filter-alist'."
+`easysession--overwrite-frameset-filter-alist'."
   (unless overwrite-alist
-    (setq overwrite-alist easysession-overwrite-frameset-filter-alist))
+    (setq overwrite-alist easysession--overwrite-frameset-filter-alist))
   (let ((result (copy-tree frameset-filter-alist)))
     (dolist (pair overwrite-alist)
       (setf (alist-get (car pair) result)
@@ -373,7 +364,7 @@ INCLUDE-GEOMETRY includes the geometry."
   (let ((modified-filter-alist
          (if save-geometry
              (easysession--init-frame-parameters-filters
-              easysession-overwrite-frameset-filter-include-geometry-alist)
+              easysession--overwrite-frameset-filter-include-geometry-alist)
            (easysession--init-frame-parameters-filters))))
     (frameset-save nil
                    :app `(easysession . ,easysession-file-version)
@@ -455,6 +446,14 @@ Also checks if `easysession-dont-save' is set to t."
 Returns t if the session file exists, nil otherwise."
   (when (file-exists-p (easysession--get-session-file-name session-name))
     t))
+
+(defun easysession-set-current-session (&optional session-name)
+  "Set the current session to SESSION-NAME.
+Return t if the session name is successfully set."
+  (when (or (not session-name) (string= session-name ""))
+    (error "The provided session name is invalid: '%s'" session-name))
+  (setq easysession--current-session-name session-name)
+  t)
 
 (defun easysession-delete (&optional session-name)
   "Delete a session. Prompt for SESSION-NAME if not provided."
