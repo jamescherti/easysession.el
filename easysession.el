@@ -219,7 +219,7 @@ Return a cons cell (buffer-name . path)."
   (when (buffer-live-p buf)
     (with-current-buffer buf
       (let* ((buffer (current-buffer))
-             (path (cond ((eq major-mode 'dired-mode)
+             (path (cond ((derived-mode-p 'dired-mode)
                           (dired-current-directory))
                          (buffer
                           (buffer-file-name buffer))
