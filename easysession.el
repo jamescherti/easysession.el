@@ -170,9 +170,9 @@ after a new one is created."
 
 (defvar easysession--modified-filter-alist nil
   "Each time a session is saved, this list is overwritten.
-It is overwritten with the values from 'frameset-filter-alist'. Afterwards, the
+It is overwritten with the values from `frameset-filter-alist'. Afterwards, the
 values of specific entries are replaced with ':never' for each frame parameter
-listed in 'easysession-overwrite-frameset-filter-alist'. This process ensures
+listed in `easysession-overwrite-frameset-filter-alist'. This process ensures
 that certain settings are not persisted across sessions, focusing the restored
 environment on essential user configurations and omitting system or
 GUI-specific settings that are not relevant or desirable to persist when
@@ -242,11 +242,11 @@ the base buffer.
 - BUF: The buffer to get information from.
 
 Return a list of cons cells:
-'((indirect-buffer-name . name-of-indirect-buffer)
-  (base-buffer-name . name-of-base-buffer)
-  (base-buffer-point . point-position)
-  (base-buffer-window-start . window-start-position)
-  (base-buffer-hscroll . horizontal-scroll-position))
+  ((indirect-buffer-name . name-of-indirect-buffer)
+   (base-buffer-name . name-of-base-buffer)
+   (base-buffer-point . point-position)
+   (base-buffer-window-start . window-start-position)
+   (base-buffer-hscroll . horizontal-scroll-position))
 
 Return nil if BUF is not an indirect buffer or if the base buffer cannot be
 determined."
@@ -351,7 +351,7 @@ SESSION-NAME is the session name."
 
 (defun easysession--check-dont-save (frame)
   "Check if FRAME is a real frame and should be saved.
-Also checks if 'easysession-dont-save is set to t."
+Also checks if `easysession-dont-save' is set to t."
   ;; One common use of the parent-frame parameter is in the context of child
   ;; frames, often used by packages like posframe, which create transient,
   ;; overlay, or tooltip-like frames. These child frames are associated with a
@@ -452,17 +452,20 @@ SESSION-NAME is the name of the session."
 If SESSION-NAME is provided, use it; otherwise, use current session.
 If the function is called interactively, ask the user."
   (interactive)
-  (let* ((session-name (if (called-interactively-p 'any)
-                           (easysession--prompt-session-name
-                            "Save session as: " (easysession-get-current-session-name))
+  (let* ((session-name (if session-name
+                           session-name
                          (easysession-get-current-session-name)))
+         (new-session-name (if (called-interactively-p 'any)
+                               (easysession--prompt-session-name
+                                "Save session as: " (easysession-get-current-session-name))
+                             (easysession-get-current-session-name)))
          (previous-session-name easysession--current-session-name))
-    (easysession--check-session-name session-name)
-    (easysession-save session-name)
-    (easysession-set-current-session session-name)
+    (easysession--check-session-name new-session-name)
+    (easysession-save new-session-name)
+    (easysession-set-current-session new-session-name)
     (if (string= previous-session-name easysession--current-session-name)
-        (message "Saved the session: %s" session-name)
-      (message "Saved and switched to session: %s" session-name))
+        (message "Saved the session: %s" new-session-name)
+      (message "Saved and switched to session: %s" new-session-name))
     t))
 
 (defun easysession-switch-to (&optional session-name)
