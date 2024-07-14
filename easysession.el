@@ -452,13 +452,13 @@ SESSION-NAME is the name of the session."
 If SESSION-NAME is provided, use it; otherwise, use current session.
 If the function is called interactively, ask the user."
   (interactive)
-  (let* ((session-name (if session-name
-                           session-name
-                         (easysession-get-current-session-name)))
-         (new-session-name (if (called-interactively-p 'any)
+  (unless session-name
+    (setq session-name
+          (easysession-get-current-session-name)))
+  (let* ((new-session-name (if (called-interactively-p 'any)
                                (easysession--prompt-session-name
-                                "Save session as: " (easysession-get-current-session-name))
-                             (easysession-get-current-session-name)))
+                                "Save session as: " session-name)
+                             session-name))
          (previous-session-name easysession--current-session-name))
     (easysession--check-session-name new-session-name)
     (easysession-save new-session-name)
