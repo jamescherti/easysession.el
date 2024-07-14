@@ -433,11 +433,12 @@ INCLUDE-GEOMETRY includes the geometry."
 (defun easysession--check-dont-save (frame)
   "Check if FRAME is a real frame and should be saved.
 Also checks if `easysession-dont-save' is set to t."
-  ;; One common use of the parent-frame parameter is in the context of child
-  ;; frames, often used by packages like posframe, which create transient,
-  ;; overlay, or tooltip-like frames. These child frames are associated with a
-  ;; parent frame to maintain a logical and spatial relationship.
-  (and (not (frame-parameter frame 'parent-frame)) ; Exclude frames with a parent frame
+  ;; Exclude frames with a parent frame. One common use of the parent-frame
+  ;; parameter is in the context of child frames, often used by packages like
+  ;; posframe, which create transient, overlay, or tooltip-like frames. These
+  ;; child frames are associated with a parent frame to maintain a logical and
+  ;; spatial relationship.
+  (and (not (frame-parameter frame 'parent-frame))
        (not (frame-parameter frame 'easysession-dont-save))))
 
 (defun easysession-exists (session-name)
