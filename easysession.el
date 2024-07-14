@@ -468,6 +468,10 @@ Return t if the session name is successfully set."
       (delete-file session-file nil))
     (message "Session deleted: %s" session-name)))
 
+(defun easysession-get-current-session-name ()
+  "Return the name of the current session."
+  easysession--current-session-name)
+
 (defun easysession-get-session-name ()
   "Return the name of the current session."
   easysession--current-session-name)
