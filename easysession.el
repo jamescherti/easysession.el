@@ -43,11 +43,6 @@
   :type 'directory
   :group 'easysession)
 
-(defcustom easysession-persist-geometry t
-  "Save the geometry in the Easy Session file."
-  :type 'boolean
-  :group 'easysession)
-
 (defcustom easysession-before-load-hook nil
   "Hooks to run before the session is loaded.
 Each element should be a function to be called with no arguments."
@@ -188,8 +183,8 @@ after a new one is created."
     (font-backend . :never)
     (font-parameter . :never)
     (foreground-color . :never)
-    (frameset--text-pixel-height . :never)
-    (frameset--text-pixel-width . :never)
+    ;; (frameset--text-pixel-height . :never)
+    ;; (frameset--text-pixel-width . :never)
     ;; (fullscreen . :never)
     ;; (height . :never)
     (horizontal-scroll-bars . :never)
@@ -497,7 +492,8 @@ SESSION-NAME is the name of the session."
                          (easysession-get-session-name)))
          (session-file (easysession--get-session-file-name session-name))
          (data-frameset (easysession--handler-save-frameset session-name))
-         (data-frameset-geometry nil)
+         (data-frameset-geometry (easysession--handler-save-frameset
+                                  session-name t))
          (data-buffer (easysession--handler-save-base-buffers))
          (indirect-buffers (easysession--handler-save-indirect-buffers))
          (session-data nil)
@@ -505,12 +501,7 @@ SESSION-NAME is the name of the session."
 
     ;; Handlers
     (push (cons "frameset" data-frameset) session-data)
-
-    (when easysession-persist-geometry
-      (setq data-frameset-geometry (easysession--handler-save-frameset
-                                    session-name t))
-      (push (cons "frameset-geo" data-frameset-geometry) session-data))
-
+    (push (cons "frameset-geo" data-frameset-geometry) session-data)
     (push (cons "buffers" data-buffer) session-data)
     (push (cons "indirect-buffers" indirect-buffers) session-data)
 
