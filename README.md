@@ -17,8 +17,9 @@ To install the `easysession` using `straight.el`:
   :straight (easysession :type git
                          :host github
                          :repo "jamescherti/easysession.el")
-  :hook ((emacs-startup . easysession-load)
-         (emacs-startup . easysession-save-mode)))
+  :init
+  (add-hook 'emacs-startup-hook #'easysession-load 100)
+  (add-hook 'emacs-startup-hook #'easysession-save-mode 100))
 ```
 
 ## Features
