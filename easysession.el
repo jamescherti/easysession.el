@@ -552,6 +552,19 @@ The geometry is loaded when LOAD-GEOMETRY is set to t"
         (message "Session loaded: %s" session-name))
       t)))
 
+(defun easysession-load-including-geometry (&optional session-name)
+  "Load the session and restoring the position and size of the Emacs frames.
+
+This function is typically used when Emacs is initially loaded. It ensures
+that session settings, including the positions and sizes (geometry) of all
+frames, are restored.
+
+For subsequent session switching, consider using `easysession-load' or
+`easysession-switch-to', which load the session without resizing or moving the
+Emacs frames."
+  (interactive)
+  (easysession-load session-name t))
+
 (defun easysession-save-as (&optional session-name)
   "Save the state of all frames into a session with the given name.
 If SESSION-NAME is provided, use it; otherwise, use current session.

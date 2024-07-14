@@ -18,7 +18,7 @@ To install the `easysession` using `straight.el`:
                          :host github
                          :repo "jamescherti/easysession.el")
   :init
-  (add-hook 'emacs-startup-hook #'easysession-load 100)
+  (add-hook 'emacs-startup-hook #'easysession-load-including-geometry 100)
   (add-hook 'emacs-startup-hook #'easysession-save-mode 100))
 ```
 
