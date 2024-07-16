@@ -404,8 +404,10 @@ INCLUDE-GEOMETRY includes the geometry."
             (unless (or (get-buffer buffer-name)
                         (find-buffer-visiting buffer-path))
               (let ((easysession-find-file-p t))
-                (with-current-buffer (find-file-noselect buffer-path)
-                  (rename-buffer buffer-name t))))))))))
+                (let ((parent-dir (file-name-directory buffer-path)))
+                  (when (and parent-dir (file-directory-p parent-dir))
+                    (with-current-buffer (find-file-noselect buffer-path)
+                      (rename-buffer buffer-name t))))))))))))
 
 (defun easysession--handler-save-indirect-buffers ()
   "Return data about the indirect buffers."
