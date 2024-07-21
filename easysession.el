@@ -360,7 +360,7 @@ Raise an error if the session name is invalid."
                                            &optional save-geometry)
   "Return a frameset for FRAME-LIST, a list of frames.
 SESSION-NAME is the session name.
-INCLUDE-GEOMETRY includes the geometry."
+When SAVE-GEOMETRY is non-nil, include the frame geometry."
   (let ((modified-filter-alist
          (if save-geometry
              (easysession--init-frame-parameters-filters
@@ -373,7 +373,8 @@ INCLUDE-GEOMETRY includes the geometry."
                    :filters modified-filter-alist)))
 
 (defun easysession--handler-load-frameset (session-info &optional load-geometry)
-  "Load the frameset from the SESSION-INFO argument."
+  "Load the frameset from the SESSION-INFO argument.
+When LOAD-GEOMETRY is non-nil, load the frame geometry."
   (let* ((key (if load-geometry
                   "frameset-geo"
                 "frameset"))
@@ -403,11 +404,10 @@ INCLUDE-GEOMETRY includes the geometry."
           (when (and buffer-name buffer-path)
             (unless (or (get-buffer buffer-name)
                         (find-buffer-visiting buffer-path))
-              (let ((easysession-find-file-p t))
-                (let ((parent-dir (file-name-directory buffer-path)))
-                  (when (and parent-dir (file-directory-p parent-dir))
-                    (with-current-buffer (find-file-noselect buffer-path)
-                      (rename-buffer buffer-name t))))))))))))
+              (let ((parent-dir (file-name-directory buffer-path)))
+                (when (and parent-dir (file-directory-p parent-dir))
+                  (with-current-buffer (find-file-noselect buffer-path)
+                    (rename-buffer buffer-name t)))))))))))
 
 (defun easysession--handler-save-indirect-buffers ()
   "Return data about the indirect buffers."
@@ -479,6 +479,7 @@ Return t if the session name is successfully set."
   easysession--current-session-name)
 
 (defun easysession-rename (&optional session-name new-session-name)
+  "Rename a session from SESSION-NAME to NEW-SESSION-NAME."
   (interactive)
   (let* ((new-session-name
           (easysession--prompt-session-name
@@ -559,11 +560,12 @@ The geometry is loaded when LOAD-GEOMETRY is set to t"
       t)))
 
 (defun easysession-load-including-geometry (&optional session-name)
-  "Load the session and restoring the position and size of the Emacs frames.
+  "Load the session and restore the position and size of the Emacs frames.
+SESSION-NAME is the session name.
 
-This function is typically used when Emacs is initially loaded. It ensures
-that session settings, including the positions and sizes (geometry) of all
-frames, are restored.
+This function is typically used when Emacs is initially loaded. It ensures that
+session settings, including the positions and sizes (geometry) of all frames,
+are restored.
 
 For subsequent session switching, consider using `easysession-load' or
 `easysession-switch-to', which load the session without resizing or moving the
