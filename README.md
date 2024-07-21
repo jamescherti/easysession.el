@@ -25,7 +25,7 @@ To install the `easysession` using `straight.el`:
 ```
 
 Note that:
-- `easysession-load-including-geometry` is not necessary after Emacs is loaded if you do not wish EasySession to move or resize the Emacs frame. Use `easysession-switch-to` to switch to another session or `easysession-load` to reload the current one,
+- `easysession-load-including-geometry` is not needed after Emacs is loaded if you do not want EasySession to move or resize the Emacs frame when switching sessions. Instead, use `easysession-switch-to` or `easysession-load` to switch to another session or reload the current session without resizing or moving the Emacs frames.,
 - The `easysession-save-mode` ensures that the current session is automatically saved every `easysession-save-interval` seconds and when emacs quits.
 
 ## Usage
