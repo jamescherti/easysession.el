@@ -484,7 +484,7 @@ Return t if the session name is successfully set."
   (unless new-session-name
     (setq new-session-name (easysession--prompt-session-name
                             (format "Rename session '%s' to: "
-                                    easysession--current-session-name))))
+                                    (easysession-get-session-name)))))
   (let* ((old-path (easysession--get-session-file-name
                     easysession--current-session-name))
          (new-path (easysession--get-session-file-name new-session-name)))
