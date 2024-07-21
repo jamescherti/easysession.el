@@ -270,12 +270,14 @@ OVERWRITE-ALIST is an alist similar to
 (defun easysession--get-all-names ()
   "Return a list of all session names."
   (if (file-directory-p easysession-directory)
-      (remove "." (remove ".." (directory-files easysession-directory nil nil t)))
+      (remove "." (remove ".." (directory-files easysession-directory nil
+                                                nil t)))
     '()))
 
 (defun easysession--prompt-session-name (prompt &optional session-name)
   "Prompt for a session name with PROMPT. Use SESSION-NAME as the default value."
-  (completing-read prompt (easysession--get-all-names) nil nil nil nil session-name))
+  (completing-read prompt (easysession--get-all-names) nil nil nil nil
+                   session-name))
 
 (defun easysession--get-base-buffer-path (buf)
   "Get the name and path of the buffer BUF.
@@ -570,7 +572,6 @@ are restored.
 For subsequent session switching, consider using `easysession-load' or
 `easysession-switch-to', which load the session without resizing or moving the
 Emacs frames."
-  (interactive)
   (easysession-load session-name t))
 
 (defun easysession-save-as (&optional session-name)
