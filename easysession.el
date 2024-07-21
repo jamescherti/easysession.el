@@ -64,9 +64,10 @@ after a new one is created."
   :type '(repeat function)
   :group 'easysession)
 
-(defcustom easysession-auto-save-interval nil
-  "The interval between auto save.
-If set to nil, disables timer-based autosaving."
+(defcustom easysession-save-interval nil
+  "The interval between automatic session saves.
+If set to nil, it disables timer-based autosaving. Automatic session saves are
+activated when `easysession-save-mode' is enabled."
   :type '(choice (const :tag "Disabled" nil)
                  (integer :tag "Seconds")))
 
@@ -663,11 +664,11 @@ Behavior:
   :group 'easysession
   (if easysession-save-mode
       (progn
-        (when (and easysession-auto-save-interval
+        (when (and easysession-save-interval
 	                 (null easysession-timer))
           (setq easysession-timer
-	              (run-with-timer easysession-auto-save-interval
-			                          easysession-auto-save-interval
+	              (run-with-timer easysession-save-interval
+			                          easysession-save-interval
                                 #'easysession-save)))
         (add-hook 'kill-emacs-hook #'easysession-save))
     (cancel-timer easysession-timer)

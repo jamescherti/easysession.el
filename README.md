@@ -17,6 +17,8 @@ To install the `easysession` using `straight.el`:
   :straight (easysession :type git
                          :host github
                          :repo "jamescherti/easysession.el")
+  :custom
+  (easysession-save-interval (* 10 60))
   :init
   (add-hook 'emacs-startup-hook #'easysession-load-including-geometry 98)
   (add-hook 'emacs-startup-hook #'easysession-save-mode 99))
@@ -66,6 +68,7 @@ While `desktop.el` is a foundational session management tool for Emacs, it has s
 - It can be bulky and slow in operation.
 - It primarily saves Emacs' state on exit and restores it on startup, making it difficult to switch between different session files during an editing session.
 - It lacks support for saving and restoring indirect buffers (clones).
+- The `desktop.el` package saves and restores major modes and important global variables, which can prevent some packages from initializing correctly. For example, the `vdiff` package may stop working after comparing two files and reloading Emacs and the `desktop.el` session. This issue has also occurred with a few other packages.
 
 In contrast, `easysession.el` offers enhanced functionality:
 - It supports saving and loading various buffer types, including indirect buffers (clones).
