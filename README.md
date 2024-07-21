@@ -29,7 +29,7 @@ Note that:
 ## Usage
 
 It is recommended to use the following functions:
-- `easysession-switch-to` to switch to another session,
+- `easysession-switch-to` to switch to another session or reload the current one,
 - `easysession-save-as` to save the current session as the current name or another name.
 
 To facilitate session management, consider using the following key mappings: `C-c l` for switching sessions with `easysession-switch-to`, and `C-c s` for saving the current session with `easysession-save-as`:
