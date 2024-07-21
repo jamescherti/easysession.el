@@ -22,15 +22,15 @@ To install the `easysession` using `straight.el`:
   (add-hook 'emacs-startup-hook #'easysession-save-mode 99))
 ```
 
-## Usage
-
 Note that `easysession-load-including-geometry` is not necessary after Emacs is loaded if you do not wish EasySession to move or resize the Emacs frame.
 
-It is recommended to use the following:
-- `easysession-switch-to` to switch to another session
-- `easysession-save-as` to save the current session as the current name or another name
+## Usage
 
-To facilitate session management, consider using the following key mappings: `C-c s` for switching sessions with `easysession-switch-to`, and `C-c S` for saving the current session with `easysession-save-as`:
+It is recommended to use the following functions:
+- `easysession-switch-to` to switch to another session,
+- `easysession-save-as` to save the current session as the current name or another name.
+
+To facilitate session management, consider using the following key mappings: `C-c l` for switching sessions with `easysession-switch-to`, and `C-c s` for saving the current session with `easysession-save-as`:
 ```
 (global-set-key (kbd "C-c l") 'easysession-switch-to)
 (global-set-key (kbd "C-c s") 'easysession-save-as)
