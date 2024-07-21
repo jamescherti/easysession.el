@@ -64,6 +64,14 @@ after a new one is created."
   :type '(repeat function)
   :group 'easysession)
 
+(defcustom easysession-auto-save-interval nil
+  "The interval between auto save.
+If set to nil, disables timer-based autosaving."
+  :type '(choice (const :tag "Disabled" nil)
+                 (integer :tag "Seconds")))
+
+(defvar easysession-timer nil)
+
 (defvar easysession--overwrite-frameset-filter-alist
   '((GUI:bottom . :never)
     (GUI:font . :never)
@@ -238,6 +246,9 @@ after a new one is created."
 
 (defvar easysession-file-version 3
   "Version number of easysession file format.")
+
+(defvar easysession--load-geometry nil
+  "Non-nil to make `easysession-load` load the geometry.")
 
 (defvar easysession--modified-filter-alist nil
   "Each time a session is saved, this list is overwritten.
@@ -501,10 +512,10 @@ SESSION-NAME is the name of the session."
   (interactive)
   ;; Close the minibuffer to avoid prevent the mini buffer from being part of
   ;; the session
-  (when (called-interactively-p 'any)
-    (when (> (minibuffer-depth) 0)
-      (let ((inhibit-message t))
-        (abort-recursive-edit))))
+  ;; (when (called-interactively-p 'any)
+  ;;   (when (> (minibuffer-depth) 0)
+  ;;     (let ((inhibit-message t))
+  ;;       (abort-recursive-edit))))
 
   (let* ((session-name (if session-name
                            session-name
@@ -531,9 +542,8 @@ SESSION-NAME is the name of the session."
       (message "Session saved: %s" session-name))
     t))
 
-(defun easysession-load (&optional session-name load-geometry)
-  "Load the current session. SESSION-NAME is the session name.
-The geometry is loaded when LOAD-GEOMETRY is set to t"
+(defun easysession-load (&optional session-name)
+  "Load the current session. SESSION-NAME is the session name."
   (interactive)
   (let* ((session-name (if session-name
                            session-name
@@ -553,7 +563,8 @@ The geometry is loaded when LOAD-GEOMETRY is set to t"
       (run-hooks 'easysession-before-load-hook)
       (easysession--handler-load-base-buffers session-info)
       (easysession--handler-load-indirect-buffers session-info)
-      (easysession--handler-load-frameset session-info load-geometry)
+      (easysession--handler-load-frameset session-info
+                                          easysession--load-geometry)
       (run-hooks 'easysession-after-load-hook)
 
       (setq easysession--current-session-loaded t)
@@ -572,7 +583,8 @@ are restored.
 For subsequent session switching, consider using `easysession-load' or
 `easysession-switch-to', which load the session without resizing or moving the
 Emacs frames."
-  (easysession-load session-name t))
+  (let ((easysession--load-geometry t))
+    (easysession-load session-name)))
 
 (defun easysession-save-as (&optional session-name)
   "Save the state of all frames into a session with the given name.
@@ -647,11 +659,19 @@ Behavior:
 (define-minor-mode easysession-save-mode
   "Toggle `easysession-save-mode'."
   :global t
-  :lighter " easysession"
+  :lighter " EasySess"
   :group 'easysession
   (if easysession-save-mode
       (progn
+        (when (and easysession-auto-save-interval
+	                 (null easysession-timer))
+          (setq easysession-timer
+	              (run-with-timer easysession-auto-save-interval
+			                          easysession-auto-save-interval
+                                #'easysession-save)))
         (add-hook 'kill-emacs-hook #'easysession-save))
+    (cancel-timer easysession-timer)
+    (setq easysession-timer nil)
     (remove-hook 'kill-emacs-hook #'easysession-save)))
 
 (provide 'easysession)
