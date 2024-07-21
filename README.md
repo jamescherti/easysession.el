@@ -4,6 +4,16 @@ The Emacs package `easysession.el` offers a convenient and effortless way to per
 
 In addition to its automatic session management capabilities, the `easysession.el` Emacs package provides a range of useful commands for saving, loading, listing, renaming, and deleting sessions. Beyond its custom functions for restoring buffers, `easysession.el` leverages built-in Emacs functions to persist and restore frames, utilizing official functions maintained by Emacs developers.
 
+## Features
+
+- Save and load file editing buffers, indirect buffers/clones, dired buffers, tab-bar, the Emacs frame, and it is extensible (users can add other handlers).
+- Automatically save sessions by activating the mode with `easysession-save-mode`.
+  This mode saves the current editing session when Emacs is closed.
+- Save the Emacs editing session with `easysession-save` and `easysession-save-as`.
+- Load the Emacs editing session with `easysession-load`.
+- Switch to a session (i.e., load and change the default session) with `easysession-switch-to`.
+- Delete the current Emacs session with `easysession-delete`.
+
 ## Installation
 
 ### Install using straight.el
@@ -39,16 +49,6 @@ To facilitate session management, consider using the following key mappings: `C-
 (global-set-key (kbd "C-c l") 'easysession-switch-to)
 (global-set-key (kbd "C-c s") 'easysession-save-as)
 ```
-
-## Features
-
-- Save and load file editing buffers, indirect buffers/clones, dired buffers, tab-bar, the Emacs frame, and it is extensible (users can add other handlers).
-- Automatically save sessions by activating the mode with `easysession-save-mode`.
-  This mode saves the current editing session when Emacs is closed.
-- Save the Emacs editing session with `easysession-save` and `easysession-save-as`.
-- Load the Emacs editing session with `easysession-load`.
-- Switch to a session (i.e., load and change the default session) with `easysession-switch-to`.
-- Delete the current Emacs session with `easysession-delete`.
 
 ## License
 
