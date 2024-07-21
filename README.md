@@ -59,3 +59,4 @@ In contrast, `easysession.el` offers enhanced functionality:
 ## Links
 
 - [easysession.el @GitHub](https://github.com/jamescherti/easysession.el)
+- There is also a Vim version of Easysession: [vim-easysession](https://github.com/jamescherti/vim-easysession)
