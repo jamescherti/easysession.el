@@ -22,7 +22,9 @@ To install the `easysession` using `straight.el`:
   (add-hook 'emacs-startup-hook #'easysession-save-mode 99))
 ```
 
-Note that `easysession-load-including-geometry` is not necessary after Emacs is loaded if you do not wish EasySession to move or resize the Emacs frame.
+Note that:
+- `easysession-load-including-geometry` is not necessary after Emacs is loaded if you do not wish EasySession to move or resize the Emacs frame.
+- The `easysession-save-mode` ensures that the current session is automatically saved.
 
 ## Usage
 
