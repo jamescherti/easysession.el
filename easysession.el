@@ -481,11 +481,11 @@ Return t if the session name is successfully set."
 (defun easysession-rename (&optional new-session-name)
   "Rename the current session to NEW-SESSION-NAME."
   (interactive)
-  (let* ((new-session-name
-          (easysession--prompt-session-name
-           (format "Rename session '%s' to: "
-                   easysession--current-session-name)))
-         (old-path (easysession--get-session-file-name
+  (unless new-session-name
+    (setq new-session-name (easysession--prompt-session-name
+                            (format "Rename session '%s' to: "
+                                    easysession--current-session-name))))
+  (let* ((old-path (easysession--get-session-file-name
                     easysession--current-session-name))
          (new-path (easysession--get-session-file-name new-session-name)))
     (unless (file-regular-p old-path)
