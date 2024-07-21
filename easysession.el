@@ -478,8 +478,8 @@ Return t if the session name is successfully set."
   "Return the name of the current session."
   easysession--current-session-name)
 
-(defun easysession-rename (&optional session-name new-session-name)
-  "Rename a session from SESSION-NAME to NEW-SESSION-NAME."
+(defun easysession-rename (&optional new-session-name)
+  "Rename the current session to NEW-SESSION-NAME."
   (interactive)
   (let* ((new-session-name
           (easysession--prompt-session-name
