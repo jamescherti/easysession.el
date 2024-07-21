@@ -2,7 +2,7 @@
 
 The Emacs package `easysession.el` offers a convenient and effortless way to persist and restore Emacs editing sessions. It can significantly increase productivity and save a lot of time for users who frequently switch between different projects and those who frequently open and close the Emacs editor.
 
-In addition to its automatic session management capabilities, the `easysession.el` Emacs package also offers a variety of useful Emacs commands that allow users to save, load, list and delete session.
+In addition to its automatic session management capabilities, the `easysession.el` Emacs package provides a range of useful commands for saving, loading, listing, renaming, and deleting sessions. Beyond its custom functions for restoring buffers, `easysession.el` leverages built-in Emacs functions to persist and restore frames, utilizing official functions maintained by Emacs developers.
 
 ## Installation
 
