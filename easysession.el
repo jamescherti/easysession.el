@@ -267,6 +267,19 @@ switching between sessions multiple times while using Emacs.")
 (defvar easysession--current-session-loaded nil
   "Was the current session loaded at least once?")
 
+(defvar easysession--is-loading-p nil
+  "Non-nil if a session is currently being loaded.
+This variable is used to indicate whether a session loading process is in
+progress.")
+
+(defun easysession-set-current-session (&optional session-name)
+  "Set the current session to SESSION-NAME.
+Return t if the session name is successfully set."
+  (when (or (not session-name) (string= session-name ""))
+    (error "The provided session name is invalid: '%s'" session-name))
+  (setq easysession--current-session-name session-name)
+  t)
+
 (defun easysession--init-frame-parameters-filters (&optional overwrite-alist)
   "Return the EasySession version of `frameset-filter-alist'.
 OVERWRITE-ALIST is an alist similar to
@@ -546,7 +559,9 @@ SESSION-NAME is the name of the session."
 (defun easysession-load (&optional session-name)
   "Load the current session. SESSION-NAME is the session name."
   (interactive)
-  (let* ((session-name (if session-name
+  (setq easysession--is-loading-p nil)
+  (let* ((easysession--is-loading-p t)
+         (session-name (if session-name
                            session-name
                          easysession--current-session-name))
          (session-info nil)
