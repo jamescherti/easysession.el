@@ -577,8 +577,13 @@ SESSION-NAME is the name of the session."
 
       ;; Handlers
       (run-hooks 'easysession-before-load-hook)
+
+      ;; Load buffers first because the cursor might be changed by packages such
+      ;; as saveplace. This will allow frameset to change the cursor later
+      ;; on.
       (easysession--handler-load-base-buffers session-info)
       (easysession--handler-load-indirect-buffers session-info)
+
       (easysession--handler-load-frameset session-info
                                           easysession--load-geometry)
       (run-hooks 'easysession-after-load-hook)
