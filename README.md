@@ -7,8 +7,7 @@ In addition to its automatic session management capabilities, the `easysession.e
 ## Features
 
 - Save and load file editing buffers, indirect buffers/clones, dired buffers, tab-bar, the Emacs frame, and it is extensible (users can add other handlers).
-- Automatically save sessions by activating the mode with `easysession-save-mode`.
-  This mode saves the current editing session when Emacs is closed.
+- Automatically save sessions by activating the mode with `easysession-save-mode`. This ensures that the current session is automatically saved every `easysession-save-interval` seconds and when emacs quits.
 - Save the Emacs editing session with `easysession-save` and `easysession-save-as`.
 - Load the Emacs editing session with `easysession-load`.
 - Switch to a session (i.e., load and change the default session) with `easysession-switch-to`.
