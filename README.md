@@ -60,9 +60,33 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY 
 
 You should have received a copy of the GNU General Public License along with this program.
 
-## Comparison with alternatives
+## Frequently asked questions
 
-### desktop.el (built-in)
+### How to persist and restore global variables?
+
+To persist and restore global variables in Emacs, you can use the built-in `savehist` Emacs package. This package is designed to save and restore minibuffer histories, but it can also be configured to save other global variables:
+``` emacs-lisp
+(use-package savehist
+  :ensure nil  ; built-in
+
+  :hook
+  ((after-init . savehist-mode)
+   (kill-emacs . savehist-save))
+
+  :config
+  (add-to-list 'savehist-additional-variables 'Info-history-list)
+  (add-to-list 'savehist-additional-variables 'kill-ring)
+  (add-to-list 'savehist-additional-variables 'register-alist)
+  (add-to-list 'savehist-additional-variables 'global-mark-ring)
+  (add-to-list 'savehist-additional-variables 'mark-ring)
+  (add-to-list 'savehist-additional-variables 'xref--history)
+  (add-to-list 'savehist-additional-variables 'search-ring)
+  (add-to-list 'savehist-additional-variables 'regexp-search-ring))
+```
+
+(Each element added to `savehist-additional-variables` is a variable that will be persisted across Emacs sessions that use `savehist`.)
+
+### Why not use the desktop.el?
 
 While `desktop.el` is a foundational session management tool for Emacs, it has several limitations:
 - It can be bulky and slow in operation.
@@ -74,6 +98,7 @@ In contrast, `easysession.el` offers enhanced functionality:
 - It supports saving and loading various buffer types, including indirect buffers (clones).
 - It allows users to load or save different sessions while actively editing, without the need to restart Emacs.
 - It excels in speed and efficiency, enabling seamless session management within Emacs.
+
 
 ## Links
 
