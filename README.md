@@ -91,7 +91,7 @@ To persist and restore global variables in Emacs, you can use the built-in `save
 While `desktop.el` is a foundational session management tool for Emacs, it has several limitations:
 - It can be bulky and slow in operation.
 - It primarily saves Emacs' state on exit and restores it on startup, making it difficult to switch between different session files during an editing session.
-- It lacks support for saving and restoring indirect buffers (clones).
+- It lacks support for saving and restoring indirect buffers (clones). Indirect buffers are secondary buffers that share the same content as an existing buffer but can have different point positions, narrowing, folds, and other buffer-local settings. This allows users to view and edit the same file or text content in multiple ways simultaneously without duplicating the actual data.
 - The `desktop.el` package saves and restores major modes and important global variables, which can prevent some packages from initializing correctly. For example, the `vdiff` package may stop working after comparing two files and reloading Emacs and the `desktop.el` session. This issue has also occurred with a few other packages.
 
 In contrast, `easysession.el` offers enhanced functionality:
