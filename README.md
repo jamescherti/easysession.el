@@ -99,6 +99,17 @@ In contrast, `easysession.el` offers enhanced functionality:
 - It allows users to load or save different sessions while actively editing, without the need to restart Emacs.
 - It excels in speed and efficiency, enabling seamless session management within Emacs.
 
+### Why not use one of the other third-party session packages on MELPA?
+
+There are some existing packages for maintaining sessions, such as minimal-session-saver, save-visited-files, sesman, and psession.
+
+However, these packages have the following limitations:
+- They cannot restore indirect buffers (clones) or the frameset (including the tab-bar in recent versions of Emacs).
+- Sesman is somewhat complex and is designed to implement some IDE features in Emacs.
+- Minimal-session-saver and save-visited-files.el are no longer maintained.
+- Psession does not seem to support indirect buffers (clones). It also overlaps with the built-in savehist package, which can save and restore variables. Additionally, it cannot switch between sessions quickly, with or without modifying the geometry. This last feature is important in easysession.el because it allows switching between sessions without the annoyance of changing the window position or size.
+
+Easysession is lightweight and can persist and restore file editing buffers, indirect buffers/clones, Dired buffers, the tab-bar, and the Emacs frames (with or without the Emacs frames size, width, and height). It is also extensible, allowing users to add additional handlers. It is similar to Vim or Neovim sessions.
 
 ## Links
 

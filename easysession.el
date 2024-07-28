@@ -23,8 +23,21 @@
 ;; along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
-
-;; Easily persist and restore your editing sessions effortlessly.
+;; Easysession.el is a lightweight Emacs package designed to enhance your
+;; workflow by providing seamless session management. It efficiently persists
+;; and restores file editing buffers, indirect buffers/clones, Dired buffers,
+;; the tab-bar, and Emacs frames, including their geometry. With Easysession.el,
+;; you can effortlessly switch between sessions, ensuring a consistent and
+;; uninterrupted editing experience.
+;;
+;; Key features include:
+;; - Quick restoration of frames and buffers, allowing you to resume work
+;;   immediately.
+;; - Extensibility to add custom handlers, tailored to your specific needs.
+;; - Minimalistic design focused on performance and simplicity, avoiding
+;;   unnecessary complexity.
+;; - Compatibility with the latest versions of Emacs, including support for the
+;;   tab-bar.
 
 ;;; Code:
 
@@ -334,11 +347,11 @@ the base buffer.
 - BUF: The buffer to get information from.
 
 Return a list of cons cells:
-  ((indirect-buffer-name . name-of-indirect-buffer)
-   (base-buffer-name . name-of-base-buffer)
-   (base-buffer-point . point-position)
-   (base-buffer-window-start . window-start-position)
-   (base-buffer-hscroll . horizontal-scroll-position))
+((indirect-buffer-name . name-of-indirect-buffer)
+ (base-buffer-name . name-of-base-buffer)
+ (base-buffer-point . point-position)
+ (base-buffer-window-start . window-start-position)
+ (base-buffer-hscroll . horizontal-scroll-position))
 
 Return nil if BUF is not an indirect buffer or if the base buffer cannot be
 determined."
@@ -476,14 +489,6 @@ Also checks if `easysession-dont-save' is set to t."
 Returns t if the session file exists, nil otherwise."
   (when (file-exists-p (easysession--get-session-file-name session-name))
     t))
-
-(defun easysession-set-current-session (&optional session-name)
-  "Set the current session to SESSION-NAME.
-Return t if the session name is successfully set."
-  (when (or (not session-name) (string= session-name ""))
-    (error "The provided session name is invalid: '%s'" session-name))
-  (setq easysession--current-session-name session-name)
-  t)
 
 (defun easysession-delete (&optional session-name)
   "Delete a session. Prompt for SESSION-NAME if not provided."
@@ -641,11 +646,11 @@ prompts the user for a session name if called interactively.
 
 Behavior:
 - If the current session is loaded and not being reloaded, the current session
-  is saved.
+is saved.
 - Loads the specified session.
 - Sets the specified session as the current session.
 - If the session does not exist, it is saved and an empty session is
-  initialized."
+initialized."
   (interactive)
   (let* ((session-name (cond (session-name session-name)
                              ((called-interactively-p 'any)
