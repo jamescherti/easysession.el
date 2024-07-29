@@ -1,4 +1,5 @@
 # easysession.el - Easily persist and restore your Emacs editing sessions
+[![MELPA](https://melpa.org/packages/easysession-badge.svg)](https://melpa.org/#/easysession)
 
 The Emacs package `easysession.el` offers a convenient and effortless way to persist and restore Emacs editing sessions. It can significantly increase productivity and save a lot of time for users who frequently switch between different projects and those who frequently open and close the Emacs editor.
 
@@ -16,7 +17,21 @@ In addition to its automatic session management capabilities, the `easysession.e
 
 ## Installation
 
+### Install from MELPA (preferred)
+
+The `easysession` package can be installed from MELPA by adding the following to your init.el:
+```
+(use-package easysession
+  :ensure t
+  :custom
+  (easysession-save-interval (* 10 60))
+  :init
+  (add-hook 'emacs-startup-hook #'easysession-load-including-geometry 98)
+  (add-hook 'emacs-startup-hook #'easysession-save-mode 99))
+```
+
 ### Install using straight.el
+
 To install the `easysession` using `straight.el`:
 1. If you haven't already done so, [add the `straight.el` bootstrap code to your init file ](https://github.com/radian-software/straight.el?tab=readme-ov-file#getting-started)
 
