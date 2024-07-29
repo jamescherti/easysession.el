@@ -24,20 +24,20 @@
 
 ;;; Commentary:
 ;; Easysession.el is a lightweight Emacs package designed to enhance your
-;; workflow by providing seamless session management. It efficiently persists
+;; workflow by providing session management. It efficiently persists
 ;; and restores file editing buffers, indirect buffers/clones, Dired buffers,
-;; the tab-bar, and Emacs frames, including their geometry. With Easysession.el,
-;; you can effortlessly switch between sessions, ensuring a consistent and
-;; uninterrupted editing experience.
+;; the tab-bar, and Emacs frames, including their geometry. With
+;; Easysession.el, you can effortlessly switch between sessions, ensuring a
+;; consistent and uninterrupted editing experience.
 ;;
 ;; Key features include:
 ;; - Quick restoration of frames and buffers, allowing you to resume work
 ;;   immediately.
-;; - Extensibility to add custom handlers, tailored to your specific needs.
 ;; - Minimalistic design focused on performance and simplicity, avoiding
 ;;   unnecessary complexity.
 ;; - Compatibility with the latest versions of Emacs, including support for the
 ;;   tab-bar.
+;; - Extensibility to add custom handlers, customized to your specific needs.
 
 ;;; Code:
 
