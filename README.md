@@ -17,31 +17,10 @@ In addition to its automatic session management capabilities, the `easysession.e
 
 ## Installation
 
-### Install from MELPA (preferred)
-
 The `easysession` package can be installed from MELPA by adding the following to your init.el:
 ```
 (use-package easysession
   :ensure t
-  :custom
-  (easysession-save-interval (* 10 60))
-  :init
-  (add-hook 'emacs-startup-hook #'easysession-load-including-geometry 98)
-  (add-hook 'emacs-startup-hook #'easysession-save-mode 99))
-```
-
-### Install using straight.el
-
-To install the `easysession` using `straight.el`:
-1. If you haven't already done so, [add the `straight.el` bootstrap code to your init file ](https://github.com/radian-software/straight.el?tab=readme-ov-file#getting-started)
-
-2. Add the following code to your Emacs init file:
-```
-(use-package easysession
-  :ensure t
-  :straight (easysession :type git
-                         :host github
-                         :repo "jamescherti/easysession.el")
   :custom
   (easysession-save-interval (* 10 60))
   :init
