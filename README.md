@@ -7,7 +7,7 @@ In addition to its automatic session management capabilities, the `easysession.e
 
 ## Features
 
-- Save and load file editing buffers, indirect buffers/clones, dired buffers, tab-bar, the Emacs frame, and it is extensible (users can add other handlers).
+- Save and load file editing buffers, indirect buffers/clones, dired buffers, tab-bar, the Emacs frame.
 - Automatically save sessions by activating the mode with `easysession-save-mode`. This ensures that the current session is automatically saved every `easysession-save-interval` seconds and when emacs quits.
 - Switch to a session (i.e., load and change the current session) with `easysession-switch-to`.
 - Load the Emacs editing session with `easysession-load`.
@@ -29,8 +29,9 @@ The `easysession` package can be installed from MELPA by adding the following to
 ```
 
 Note that:
-- `easysession-load-including-geometry` is not needed after Emacs is loaded if you do not want EasySession to move or resize the Emacs frame when switching sessions. Instead, use `easysession-switch-to` or `easysession-load` to switch to another session or reload the current session without resizing or moving the Emacs frames.,
+- `easysession-load-including-geometry` is not needed after Emacs is loaded if you do not want EasySession to move or resize the Emacs frame when switching sessions. Instead, use `easysession-switch-to` or `easysession-load` to switch to another session or reload the current session without resizing or moving the Emacs frames.
 - The `easysession-save-mode` ensures that the current session is automatically saved every `easysession-save-interval` seconds and when emacs quits.
+- The `easysession-save-interval` variable determines the interval between automatic session saves. Setting it to nil disables timer-based autosaving, causing `easysession-save-mode` to save only when Emacs exits.
 
 ## Usage
 
@@ -103,9 +104,10 @@ However, these packages have the following limitations:
 - Sesman is somewhat complex and is designed to implement some IDE features in Emacs.
 - Psession cannot switch between sessions quickly, with or without modifying the the Emacs frame geometry. This last feature is important in easysession.el because it allows switching between sessions without the annoyance of changing the window position or size.
 
-Easysession is lightweight and can persist and restore file editing buffers, indirect buffers/clones, Dired buffers, the tab-bar, and the Emacs frames (with or without the Emacs frames size, width, and height). It is also extensible, allowing users to add additional handlers. It is similar to Vim or Neovim sessions.
+Easysession is lightweight and can persist and restore file editing buffers, indirect buffers/clones, Dired buffers, the tab-bar, and the Emacs frames (with or without the Emacs frames size, width, and height). It is similar to Vim or Neovim sessions.
 
 ## Links
 
 - [easysession.el @GitHub](https://github.com/jamescherti/easysession.el)
+- [easysession.el @MELPA](https://melpa.org/#/easysession)
 - There is also a Vim version of Easysession: [vim-easysession](https://github.com/jamescherti/vim-easysession)

@@ -262,17 +262,9 @@ activated when `easysession-save-mode' is enabled."
   "Version number of easysession file format.")
 
 (defvar easysession--load-geometry nil
-  "Non-nil to make `easysession-load` load the geometry.")
-
-(defvar easysession--modified-filter-alist nil
-  "Each time a session is saved, this list is overwritten.
-It is overwritten with the values from `frameset-filter-alist'. Afterwards, the
-values of specific entries are replaced with ':never' for each frame parameter
-listed in `easysession--overwrite-frameset-filter-alist'. This process ensures
-that certain settings are not persisted across sessions, focusing the restored
-environment on essential user configurations and omitting system or
-GUI-specific settings that are not relevant or desirable to persist when
-switching between sessions multiple times while using Emacs.")
+  "Non-nil to make `easysession-load' load the geometry.
+Do not modify this variable, use the `easysession-load-including-geometry'
+function instead.")
 
 (defvar easysession--current-session-name "main"
   "Current session.")
@@ -280,7 +272,7 @@ switching between sessions multiple times while using Emacs.")
 (defvar easysession--current-session-loaded nil
   "Was the current session loaded at least once?")
 
-(defvar easysession--is-loading-p nil
+(defvar easysession--is-loading nil
   "Non-nil if a session is currently being loaded.
 This variable is used to indicate whether a session loading process is in
 progress.")
@@ -347,11 +339,11 @@ the base buffer.
 - BUF: The buffer to get information from.
 
 Return a list of cons cells:
-((indirect-buffer-name . name-of-indirect-buffer)
- (base-buffer-name . name-of-base-buffer)
- (base-buffer-point . point-position)
- (base-buffer-window-start . window-start-position)
- (base-buffer-hscroll . horizontal-scroll-position))
+'((indirect-buffer-name . name-of-indirect-buffer)
+  (base-buffer-name . name-of-base-buffer)
+  (base-buffer-point . point-position)
+  (base-buffer-window-start . window-start-position)
+  (base-buffer-hscroll . horizontal-scroll-position))
 
 Return nil if BUF is not an indirect buffer or if the base buffer cannot be
 determined."
@@ -412,8 +404,9 @@ When SAVE-GEOMETRY is non-nil, include the frame geometry."
                    :predicate #'easysession--check-dont-save
                    :filters modified-filter-alist)))
 
-(defun easysession--handler-load-frameset (session-info &optional load-geometry)
+(defun easysession--handler-load-frameset (session-info session-name &optional load-geometry)
   "Load the frameset from the SESSION-INFO argument.
+SESSION-NAME is the session name.
 When LOAD-GEOMETRY is non-nil, load the frame geometry."
   (let* ((key (if load-geometry
                   "frameset-geo"
@@ -424,11 +417,14 @@ When LOAD-GEOMETRY is non-nil, load the frame geometry."
       (setq data (when (assoc "frameset" session-info)
                    (assoc-default "frameset" session-info))))
     (when data
-      (frameset-restore data
-                        :reuse-frames t
-                        :force-display t
-                        :force-onscreen nil
-                        :cleanup-frames t))))
+      (unless (ignore-errors
+                (progn (frameset-restore data
+                                         :reuse-frames t
+                                         :force-display t
+                                         :force-onscreen nil
+                                         :cleanup-frames t)
+                       t))
+        (message "[easysession] %s: Failed to restore the frameset" session-name)))))
 
 (defun easysession--handler-save-base-buffers ()
   "Return data about the base buffers and Dired buffers."
@@ -446,8 +442,13 @@ When LOAD-GEOMETRY is non-nil, load the frame geometry."
                         (find-buffer-visiting buffer-path))
               (let ((parent-dir (file-name-directory buffer-path)))
                 (when (and parent-dir (file-directory-p parent-dir))
-                  (with-current-buffer (find-file-noselect buffer-path)
-                    (rename-buffer buffer-name t)))))))))))
+                  (let ((buffer (ignore-errors
+                                  (find-file-noselect buffer-path t))))
+                    (if buffer
+                        (with-current-buffer buffer
+                          (rename-buffer buffer-name t))
+                      (message "[easysession] Failed to restore the buffer: %s"
+                               buffer-path))))))))))))
 
 (defun easysession--handler-save-indirect-buffers ()
   "Return data about the indirect buffers."
@@ -470,7 +471,12 @@ When LOAD-GEOMETRY is non-nil, load the frame geometry."
                        base-buffer
                        (buffer-live-p base-buffer))
               (with-current-buffer base-buffer
-                (clone-indirect-buffer indirect-buffer-name nil)))))))))
+                (unless (ignore-errors (clone-indirect-buffer
+                                        indirect-buffer-name nil))
+                  (message
+                   (concat "[easysession] Failed to restore the indirect "
+                           "buffer (clone): %s")
+                   indirect-buffer-name))))))))))
 
 (defun easysession--check-dont-save (frame)
   "Check if FRAME is a real frame and should be saved.
@@ -564,8 +570,8 @@ SESSION-NAME is the name of the session."
 (defun easysession-load (&optional session-name)
   "Load the current session. SESSION-NAME is the session name."
   (interactive)
-  (setq easysession--is-loading-p nil)
-  (let* ((easysession--is-loading-p t)
+  (setq easysession--is-loading nil)
+  (let* ((easysession--is-loading t)
          (session-name (if session-name
                            session-name
                          easysession--current-session-name))
@@ -590,6 +596,7 @@ SESSION-NAME is the name of the session."
       (easysession--handler-load-indirect-buffers session-info)
 
       (easysession--handler-load-frameset session-info
+                                          session-name
                                           easysession--load-geometry)
       (run-hooks 'easysession-after-load-hook)
 
@@ -696,8 +703,9 @@ initialized."
 			                          easysession-save-interval
                                 #'easysession-save)))
         (add-hook 'kill-emacs-hook #'easysession-save))
-    (cancel-timer easysession-timer)
-    (setq easysession-timer nil)
+    (when easysession-timer
+      (cancel-timer easysession-timer)
+      (setq easysession-timer nil))
     (remove-hook 'kill-emacs-hook #'easysession-save)))
 
 (provide 'easysession)
