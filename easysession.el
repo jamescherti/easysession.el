@@ -338,12 +338,12 @@ the base buffer.
 
 - BUF: The buffer to get information from.
 
-Return a list of cons cells:
-'((indirect-buffer-name . name-of-indirect-buffer)
-  (base-buffer-name . name-of-base-buffer)
-  (base-buffer-point . point-position)
-  (base-buffer-window-start . window-start-position)
-  (base-buffer-hscroll . horizontal-scroll-position))
+Return:
+A list of cons cells: ((indirect-buffer-name . name-of-indirect-buffer)
+                       (base-buffer-name . name-of-base-buffer)
+                       (base-buffer-point . point-position)
+                       (base-buffer-window-start . window-start-position)
+                       (base-buffer-hscroll . horizontal-scroll-position))
 
 Return nil if BUF is not an indirect buffer or if the base buffer cannot be
 determined."
@@ -418,12 +418,12 @@ When LOAD-GEOMETRY is non-nil, load the frame geometry."
                    (assoc-default "frameset" session-info))))
     (when data
       (unless (ignore-errors
-                (progn (frameset-restore data
-                                         :reuse-frames t
-                                         :force-display t
-                                         :force-onscreen nil
-                                         :cleanup-frames t)
-                       t))
+                (frameset-restore data
+                                  :reuse-frames t
+                                  :force-display t
+                                  :force-onscreen nil
+                                  :cleanup-frames t)
+                t)
         (message "[easysession] %s: Failed to restore the frameset" session-name)))))
 
 (defun easysession--handler-save-base-buffers ()
