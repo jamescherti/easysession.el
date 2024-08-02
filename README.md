@@ -97,7 +97,7 @@ In contrast, `easysession.el` offers enhanced functionality:
 - It allows users to load or save different sessions while actively editing, without the need to restart Emacs.
 - It excels in speed and efficiency, enabling seamless session management within Emacs.
 
-### Why not use one of the other third-party session packages on MELPA?
+### Why not use one of the other third-party session packages?
 
 There are some existing packages for maintaining sessions, such as minimal-session-saver, save-visited-files, sesman, and psession.
 
