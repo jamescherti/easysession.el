@@ -15,7 +15,7 @@ Key features include:
 
 ## Installation
 
-The `easysession` package can be installed from MELPA by adding the following to your init.el:
+The `easysession` package can be installed from MELPA by adding the following to your Emacs init file:
 ```
 (use-package easysession
   :ensure t
