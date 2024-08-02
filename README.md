@@ -51,18 +51,11 @@ To persist and restore global variables in Emacs, you can use the built-in `save
 ``` emacs-lisp
 (use-package savehist
   :ensure nil  ; built-in
-
   :hook
-  ((after-init . savehist-mode)
-   (kill-emacs . savehist-save))
-
+  (after-init . savehist-mode)
   :config
-  (add-to-list 'savehist-additional-variables 'Info-history-list)
   (add-to-list 'savehist-additional-variables 'kill-ring)
-  (add-to-list 'savehist-additional-variables 'register-alist)
-  (add-to-list 'savehist-additional-variables 'global-mark-ring)
   (add-to-list 'savehist-additional-variables 'mark-ring)
-  (add-to-list 'savehist-additional-variables 'xref--history)
   (add-to-list 'savehist-additional-variables 'search-ring)
   (add-to-list 'savehist-additional-variables 'regexp-search-ring))
 ```
