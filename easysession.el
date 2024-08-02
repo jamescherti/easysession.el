@@ -32,10 +32,12 @@
 ;; ensuring a consistent and uninterrupted editing experience.
 ;;
 ;; Key features include:
-;; - Quick restoration of frames and buffers, allowing you to resume work
-;;   immediately.
 ;; - Minimalistic design focused on performance and simplicity, avoiding
 ;;   unnecessary complexity.
+;; - Quick restoration of frames and buffers, allowing you to resume work
+;;   immediately.
+;; - Save and load file editing buffers, indirect buffers/clones, dired buffers,
+;;   tab-bar, the Emacs frame.
 ;; - Compatibility with the latest versions of Emacs, including support for the
 ;;   tab-bar.
 
