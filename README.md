@@ -80,7 +80,7 @@ In contrast, `easysession.el` offers enhanced functionality:
 There are some existing packages, such as minimal-session-saver, save-visited-files, sesman, and psession. However, these packages have the following limitations:
 - None of them can restore indirect buffers (clones). Indirect buffers, which can be created using `clone-indirect-buffer`, are secondary buffers that share the same content as an existing buffer but can have different point positions, narrowing, folds, and other buffer-local settings. This allows users to view and edit the same file or text content in multiple ways simultaneously without duplicating the actual data.
 - The minimal-session-saver and save-visited-files packages are no longer maintained and cannot restore the frameset and the tab-bar.
-- Sesman is somewhat complex and is designed to implement some IDE features in Emacs.
+- Sesman is designed to implement some IDE features in Emacs.
 - Psession cannot switch between sessions quickly, with or without modifying the the Emacs frame geometry. This last feature is important in easysession.el because it allows switching between sessions without the annoyance of changing the window position or size.
 
 Easysession is lightweight and can persist and restore file editing buffers, indirect buffers/clones, Dired buffers, the tab-bar, and the Emacs frames (with or without the Emacs frames geometry). It is similar to Vim or Neovim sessions.
