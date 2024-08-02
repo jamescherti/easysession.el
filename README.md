@@ -11,11 +11,7 @@ Key features include:
 - Quick switch between session, allowing you to resume work immediately.
 - Save and load file editing buffers, indirect buffers/clones, dired buffers, the Emacs frame (including support for the tab-bar).
 - Automatically save sessions by activating the mode with `easysession-save-mode` to ensure that the current session is automatically saved every `easysession-save-interval` seconds and when emacs quits.
-- Switch to a session (i.e., load and change the current session) with `easysession-switch-to`.
-- Load the Emacs editing session with `easysession-load`.
-- Save the Emacs editing session with `easysession-save` and `easysession-save-as`.
-- Delete the current Emacs session with `easysession-delete`.
-- Rename the current Emacs session with `easysession-rename`.
+- Helper functions: Switch to a session (i.e., load and change the current session) with `easysession-switch-to`, load the Emacs editing session with `easysession-load`, save the Emacs editing session with `easysession-save` and `easysession-save-as`, delete the current Emacs session with `easysession-delete`, and rename the current Emacs session with `easysession-rename`.
 
 ## Installation
 
