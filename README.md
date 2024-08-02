@@ -2,14 +2,14 @@
 [![MELPA](https://melpa.org/packages/easysession-badge.svg)](https://melpa.org/#/easysession)
 ![](https://raw.githubusercontent.com/jamescherti/easysession.el/main/.images/made-for-gnu-emacs.svg)
 
-The `easysession.el` Emacs package is a lightweight session manager for Emacs that can persist and restore file editing buffers, indirect buffers/clones, Dired buffers, windows/splits, the built-in tab-bar (including tabs, their buffers, and windows), and Emacs frames (with or without their geometry). It offers a convenient and effortless way to manage Emacs editing sessions and utilizes built-in Emacs functions to persist and restore frames.
+The `easysession.el` Emacs package is a lightweight session manager for Emacs that can persist and restore file editing buffers, indirect buffers/clones, Dired buffers, windows/splits, the built-in tab-bar (including tabs, their buffers, and windows), and Emacs frames. It offers a convenient and effortless way to manage Emacs editing sessions and utilizes built-in Emacs functions to persist and restore frames.
 
 ## Features
 
 Key features include:
 - Minimalistic design focused on performance and simplicity, avoiding unnecessary complexity.
 - Quickly switch between sessions while editing without disrupting the frame geometry, enabling you to resume work immediately.
-- Save and load file editing buffers, indirect buffers/clones, dired buffers, windows/splits, the Emacs frames (including support for the tab-bar).
+- Save and load file editing buffers, indirect buffers/clones, dired buffers, windows/splits, the built-in tab-bar (including tabs, their buffers, and windows), the Emacs frames (with or without their position and size).
 - Automatically save sessions by activating the mode with `easysession-save-mode` to ensure that the current session is automatically saved every `easysession-save-interval` seconds and when emacs quits.
 - Helper functions: Switch to a session (i.e., load and change the current session) with `easysession-switch-to`, load the Emacs editing session with `easysession-load`, save the Emacs editing session with `easysession-save` and `easysession-save-as`, delete the current Emacs session with `easysession-delete`, and rename the current Emacs session with `easysession-rename`.
 
