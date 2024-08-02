@@ -50,7 +50,7 @@ To facilitate session management, consider using the following key mappings: `C-
 To persist and restore global variables in Emacs, you can use the built-in `savehist` Emacs package. This package is designed to save and restore minibuffer histories, but it can also be configured to save other global variables:
 ``` emacs-lisp
 (use-package savehist
-  :ensure nil  ; built-in
+  :ensure nil
   :hook
   (after-init . savehist-mode)
   :config
