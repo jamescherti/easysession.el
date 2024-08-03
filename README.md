@@ -4,6 +4,19 @@
 
 The `easysession.el` Emacs package is a lightweight session manager for Emacs that can persist and restore file editing buffers, indirect buffers/clones, Dired buffers, windows/splits, the built-in tab-bar (including tabs, their buffers, and windows), and Emacs frames. It offers a convenient and effortless way to manage Emacs editing sessions and utilizes built-in Emacs functions to persist and restore frames.
 
+## Table of contents
+
+- [Features](#features)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Frequently asked questions](#frequently-asked-questions)
+    - [How to persist and restore global variables?](#how-to-persist-and-restore-global-variables)
+    - [Why not use the desktop.el?](#why-not-use-the-desktopel)
+    - [Why not use one of the other third-party session packages?](#why-not-use-one-of-the-other-third-party-session-packages)
+    - [How does the author use easysession?](#how-does-the-author-use-easysession)
+- [License](#license)
+- [Links](#links)
+
 ## Features
 
 Key features include:
