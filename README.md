@@ -85,6 +85,10 @@ There are some existing packages, such as minimal-session-saver, save-visited-fi
 
 Easysession is lightweight and can persist and restore file editing buffers, indirect buffers/clones, Dired buffers, the tab-bar, and the Emacs frames (with or without the Emacs frames geometry). It is similar to Vim or Neovim sessions because it loads and restores your editing environment, including buffers, windows, tabs, and other settings, allowing you to resume work exactly where you left off.
 
+### How does the author use easysession?
+
+The author uses `easysession.el` by setting up each session to represent a distinct project or a specific "view" on a particular project, including various tabs (built-in tab-bar), window splits, dired buffers, and file editing buffers. This organization allows for the creation of dedicated environments for different tasks or aspects of a project, such as development, debugging, and documentation. The author switches between projects and views of the same projects multiple times a day, and `easysession.el` helps significantly by allowing quick transitions between them.
+
 ## License
 
 Copyright (C) 2024 [James Cherti](https://www.jamescherti.com)
