@@ -303,12 +303,28 @@ progress.")
 The message is formatted with the provided arguments."
   (apply 'message (concat "[easysession] " (car args)) (cdr args)))
 
+(defun easysession--is-valid-session-name (session-name)
+  "Validate the provided SESSION-NAME.
+
+If the SESSION-NAME is invalid, an error is raised with a message indicating
+the invalid name.
+
+Return the SESSION-NAME if it is valid.
+
+Errors:
+Raise an error if the session name is invalid."
+  (when (or (not session-name)
+            (string= session-name "")
+            (string-match-p "/" session-name)
+            (string= session-name "..")
+            (string= session-name "."))
+    (error "[easysession] Invalid session name: %s" session-name))
+  session-name)
+
 (defun easysession-set-current-session (&optional session-name)
   "Set the current session to SESSION-NAME.
 Return t if the session name is successfully set."
-  (when (or (not session-name) (string= session-name ""))
-    (error "[easysession] The provided session name is invalid: '%s'"
-           session-name))
+  (easysession--is-valid-session-name session-name)
   (setq easysession--current-session-name session-name)
   t)
 
@@ -384,29 +400,10 @@ determined."
             (when (and base-buffer-name indirect-buffer-name)
               `((indirect-buffer-name . ,indirect-buffer-name)
                 (base-buffer-name . ,base-buffer-name)))))))))
-
-(defun easysession--check-session-name (session-name)
-  "Validate the provided SESSION-NAME.
-
-If the SESSION-NAME is invalid, an error is raised with a message indicating
-the invalid name.
-
-Return the SESSION-NAME if it is valid.
-
-Errors:
-Raise an error if the session name is invalid."
-  (when (or (not session-name)
-            (string= session-name "")
-            (string-match-p "/" session-name)
-            (string= session-name "..")
-            (string= session-name "."))
-    (error "[easysession] Invalid session name: %s" session-name))
-  session-name)
-
 (defun easysession--get-session-file-name (session-name)
   "Return the fully qualified session file name for SESSION-NAME."
   (when session-name
-    (easysession--check-session-name session-name)
+    (easysession--is-valid-session-name session-name)
     (expand-file-name session-name easysession-directory)))
 
 (defun easysession--save-frameset (session-name
@@ -675,7 +672,7 @@ If the function is called interactively, ask the user."
                                 "Save session as: " session-name)
                              session-name))
          (previous-session-name easysession--current-session-name))
-    (easysession--check-session-name new-session-name)
+    (easysession--is-valid-session-name new-session-name)
     (easysession-save new-session-name)
     (easysession-set-current-session new-session-name)
     (if (string= previous-session-name easysession--current-session-name)
