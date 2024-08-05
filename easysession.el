@@ -369,7 +369,8 @@ determined."
                  (buffer-live-p base-buffer)
                  (not (eq base-buffer indirect-buffer))
                  ;; The base has to be a file visiting buffer
-                 (buffer-file-name base-buffer))
+                 (or (buffer-file-name base-buffer)
+                     (derived-mode-p 'dired-mode)))
         (with-current-buffer indirect-buffer  ; indirect buffer
           (let ((base-buffer-name (buffer-name base-buffer))
                 (indirect-buffer-name (buffer-name)))
@@ -558,11 +559,10 @@ SESSION-NAME is the name of the session."
     (let ((file-editing-buffers)
           (indirect-buffers))
       (dolist (buf (buffer-list))
-        (let ((indirect-buf (buffer-base-buffer buf)))
-          (if indirect-buf
+        (let ((indirect-buf-info (easysession--get-indirect-buffer-info buf)))
+          (if indirect-buf-info
               ;; Indirect buffers
-              (push (easysession--get-indirect-buffer-info buf)
-                    indirect-buffers)
+              (push indirect-buf-info indirect-buffers)
             ;; File editing buffers and dired buffers
             (let ((path (easysession--get-base-buffer-path buf)))
               (when path
