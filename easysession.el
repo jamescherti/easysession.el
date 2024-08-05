@@ -327,8 +327,8 @@ OVERWRITE-ALIST is an alist similar to
 
 (defun easysession--prompt-session-name (prompt &optional session-name)
   "Prompt for a session name with PROMPT. Use SESSION-NAME as the default value."
-  (completing-read prompt (easysession--get-all-names) nil nil nil nil
-                   session-name))
+  (completing-read (concat "[easysession] " prompt)
+                   (easysession--get-all-names) nil nil nil nil session-name))
 
 (defun easysession--get-base-buffer-path (buffer)
   "Get the name and path of the buffer BUFFER.
