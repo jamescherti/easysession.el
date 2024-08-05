@@ -578,6 +578,7 @@ SESSION-NAME is the name of the session."
 
     (unless (file-directory-p session-dir)
       (make-directory session-dir t))
+
     (let ((fwrite-success (ignore-errors (f-write (prin1-to-string session-data)
                                                   'utf-8 session-file)
                                          t)))
@@ -599,19 +600,28 @@ SESSION-NAME is the name of the session."
          (session-info nil)
          (session-file (easysession--get-session-file-name session-name)))
     (when (and session-file (file-exists-p session-file))
-      ;; Load file
-      (setq file-contents (ignore-errors (f-read session-file)))
-      (when file-contents
-        (setq file-contents (string-trim file-contents)))
-      (when (or (not file-contents) (string= file-contents ""))
-        (error "easysession: Failed to read session information from %s"
-               session-file))
-
-      ;; Evaluate file
-      (setq session-info (ignore-errors (read file-contents)))
-      (when (not session-info)
+      ;; Load and evaluate file
+      (with-temp-buffer
+        (insert-file-contents session-file)
+        (setq session-info (ignore-errors (read (current-buffer)))))
+      (unless session-info
         (error "easysession: Failed to evaluate session information from %s"
                session-file))
+
+      ;; Load file
+      ;; (setq file-contents (ignore-errors (f-read session-file)))
+      ;; ;; (when file-contents
+      ;; ;;   (setq file-contents (concat (string-trim file-contents) "\n")))
+      ;; (when (or (not file-contents) (string= file-contents ""))
+      ;;   (error "easysession: Failed to read session information from %s"
+      ;;          session-file))
+      ;;
+      ;; ;; Evaluate file
+      ;; (setq session-info (ignore-errors (read file-contents)))
+      ;; (when (not session-info)
+      ;;   (message "Session info: %s" file-contents) ;; TODO remove
+      ;;   (error "easysession: Failed to evaluate session information from %s"
+      ;;          session-file))
 
       (run-hooks 'easysession-before-load-hook)
       ;; Load buffers first because the cursor might be changed by packages such
