@@ -442,7 +442,8 @@ When LOAD-GEOMETRY is non-nil, load the frame geometry."
                                   :force-onscreen nil
                                   :cleanup-frames t)
                 t)
-        (message "easysession: %s: Failed to restore the frameset" session-name)))))
+        (message "easysession: %s: Warning: Failed to restore the frameset"
+                 session-name)))))
 
 (defun easysession--ensure-buffer-name (buffer name)
   "Ensure that BUFFER name is NAME."
@@ -467,7 +468,8 @@ When LOAD-GEOMETRY is non-nil, load the frame geometry."
                        (buffer (if base-buffer base-buffer buffer)))
                   (when (and buffer (buffer-live-p buffer))
                     (easysession--ensure-buffer-name buffer buffer-name)))
-              (message "easysession: Failed to restore the buffer: %s"
+              (message (concat "easysession: "
+                               "Warning: Failed to restore the buffer: %s")
                        buffer-path))))))))
 
 (defun easysession--handler-load-indirect-buffers (session-info)
@@ -493,8 +495,9 @@ When LOAD-GEOMETRY is non-nil, load the frame geometry."
                       (easysession--ensure-buffer-name indirect-buffer
                                                        indirect-buffer-name)
                     (message
-                     (concat "easysession: Failed to restore the indirect "
-                             "buffer (clone): %s")
+                     (concat
+                      "easysession: Warning: Failed to restore the indirect "
+                      "buffer (clone): %s")
                      indirect-buffer-name)))))))))))
 
 (defun easysession--check-dont-save (frame)
@@ -595,7 +598,8 @@ SESSION-NAME is the name of the session."
           (when (called-interactively-p 'any)
             (message "easysession: Session saved: %s" session-name)
             (run-hooks 'easysession-after-save-hook))
-        (error "easysession: failed to save the session to %s" session-file)))
+        (error "easysession: %s: failed to save the session to %s"
+               session-name session-file)))
     t))
 
 (defun easysession-load (&optional session-name)
@@ -614,14 +618,16 @@ SESSION-NAME is the name of the session."
       (when file-contents
         (setq file-contents (string-trim file-contents)))
       (when (or (not file-contents) (string= file-contents ""))
-        (error "easysession: Failed to read session information from %s"
+        (error "easysession: %s: Failed to read session information from %s"
+               session-name
                session-file))
 
       ;; Evaluate file
       (setq session-info (ignore-errors (read file-contents)))
       (when (not session-info)
         (message "Session info: %s" file-contents) ;; TODO remove
-        (error "easysession: Failed to evaluate session information from %s"
+        (error "easysession: %s: Failed to evaluate session information from %s"
+               session-name
                session-file))
 
       (run-hooks 'easysession-before-load-hook)
