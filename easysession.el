@@ -306,7 +306,7 @@ Return t if the session name is successfully set."
   (setq easysession--current-session-name session-name)
   t)
 
-(defun easysession--init-frame-parameters-filters (&optional overwrite-alist)
+(defun easysession--init-frame-parameters-filters (overwrite-alist)
   "Return the EasySession version of `frameset-filter-alist'.
 OVERWRITE-ALIST is an alist similar to
 `easysession--overwrite-frameset-filter-alist'."
@@ -410,9 +410,12 @@ SESSION-NAME is the session name.
 When SAVE-GEOMETRY is non-nil, include the frame geometry."
   (let ((modified-filter-alist
          (if save-geometry
+             ;; Include geometry
              (easysession--init-frame-parameters-filters
               easysession--overwrite-frameset-filter-include-geometry-alist)
-           (easysession--init-frame-parameters-filters))))
+           ;; Exclude geometry
+           (easysession--init-frame-parameters-filters
+            easysession--overwrite-frameset-filter-alist))))
     (frameset-save nil
                    :app `(easysession . ,easysession-file-version)
                    :name session-name
