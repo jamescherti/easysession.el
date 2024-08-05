@@ -329,22 +329,18 @@ OVERWRITE-ALIST is an alist similar to
   (completing-read prompt (easysession--get-all-names) nil nil nil nil
                    session-name))
 
-(defun easysession--get-base-buffer-path (buf)
-  "Get the name and path of the buffer BUF.
+(defun easysession--get-base-buffer-path (buffer)
+  "Get the name and path of the buffer BUFFER.
 Return nil When the buffer is not a base buffer.
 Return a cons cell (buffer-name . path)."
-  (when (buffer-live-p buf)
-    (with-current-buffer buf
-      (let* ((buffer (current-buffer))
-             (path (cond ((derived-mode-p 'dired-mode)
+  (when (and buffer (buffer-live-p buffer))
+    (with-current-buffer buffer
+      (let* ((path (cond ((derived-mode-p 'dired-mode)
                           (dired-current-directory))
-                         (buffer
-                          (buffer-file-name buffer))
-                         (t nil)))
-             (buffer-name (buffer-name)))
+                         (t (buffer-file-name)))))
         (if path
             ;; File visiting buffer and base buffers (not carbon copies)
-            (cons buffer-name path)
+            (cons (buffer-name) path)
           ;; This buffer is not visiting a file or it is a carbon copy
           nil)))))
 
@@ -554,8 +550,6 @@ SESSION-NAME is the name of the session."
          (data-frameset (easysession--save-frameset session-name))
          (data-frameset-geometry (easysession--save-frameset
                                   session-name t))
-         (data-buffer)
-         (indirect-buffers)
          (session-data nil)
          (session-dir (file-name-directory session-file)))
 
@@ -564,19 +558,21 @@ SESSION-NAME is the name of the session."
     (push (cons "frameset-geo" data-frameset-geometry) session-data)
 
     ;; Buffers and file buffers
-    (dolist (buf (buffer-list))
-      (let ((indirect-buf (buffer-base-buffer buf)))
-        (if indirect-buf
-            ;; Indirect buffers
-            (push (easysession--get-indirect-buffer-info indirect-buf)
-                  indirect-buffers)
-          ;; File editing buffers and dired buffers
-          (let ((path (easysession--get-base-buffer-path buf)))
-            (when path
-              (push path data-buffer))))))
+    (let ((file-editing-buffers)
+          (indirect-buffers))
+      (dolist (buf (buffer-list))
+        (let ((indirect-buf (buffer-base-buffer buf)))
+          (if indirect-buf
+              ;; Indirect buffers
+              (push (easysession--get-indirect-buffer-info buf)
+                    indirect-buffers)
+            ;; File editing buffers and dired buffers
+            (let ((path (easysession--get-base-buffer-path buf)))
+              (when path
+                (push path file-editing-buffers))))))
 
-    (push (cons "buffers" data-buffer) session-data)
-    (push (cons "indirect-buffers" indirect-buffers) session-data)
+      (push (cons "buffers" file-editing-buffers) session-data)
+      (push (cons "indirect-buffers" indirect-buffers) session-data))
 
     (unless (file-directory-p session-dir)
       (make-directory session-dir t))
