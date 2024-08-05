@@ -408,8 +408,8 @@ Raise an error if the session name is invalid."
     (easysession--check-session-name session-name)
     (expand-file-name session-name easysession-directory)))
 
-(defun easysession--handler-save-frameset (session-name
-                                           &optional save-geometry)
+(defun easysession--save-frameset (session-name
+                                   &optional save-geometry)
   "Return a frameset for FRAME-LIST, a list of frames.
 SESSION-NAME is the session name.
 When SAVE-GEOMETRY is non-nil, include the frame geometry."
@@ -424,7 +424,7 @@ When SAVE-GEOMETRY is non-nil, include the frame geometry."
                    :predicate #'easysession--check-dont-save
                    :filters modified-filter-alist)))
 
-(defun easysession--handler-load-frameset (session-info session-name &optional load-geometry)
+(defun easysession--load-frameset (session-info session-name &optional load-geometry)
   "Load the frameset from the SESSION-INFO argument.
 SESSION-NAME is the session name.
 When LOAD-GEOMETRY is non-nil, load the frame geometry."
@@ -446,10 +446,6 @@ When LOAD-GEOMETRY is non-nil, load the frame geometry."
                 t)
         (message "[easysession] %s: Failed to restore the frameset" session-name)))))
 
-(defun easysession--handler-save-base-buffers ()
-  "Return data about the base buffers and Dired buffers."
-  (cl-remove nil (mapcar #'easysession--get-base-buffer-path (buffer-list))))
-
 (defun easysession--handler-load-base-buffers (session-info)
   "Load base buffers from the SESSION-INFO variable."
   (let ((buffer-file-names (assoc-default "buffers" session-info)))
@@ -469,11 +465,6 @@ When LOAD-GEOMETRY is non-nil, load the frame geometry."
                           (rename-buffer buffer-name t))
                       (message "[easysession] Failed to restore the buffer: %s"
                                buffer-path))))))))))))
-
-(defun easysession--handler-save-indirect-buffers ()
-  "Return data about the indirect buffers."
-  (cl-remove nil (mapcar #'easysession--get-indirect-buffer-info
-                         (buffer-list))))
 
 (defun easysession--handler-load-indirect-buffers (session-info)
   "Load indirect buffers from the SESSION-INFO variable."
@@ -560,17 +551,30 @@ SESSION-NAME is the name of the session."
                            session-name
                          (easysession-get-session-name)))
          (session-file (easysession--get-session-file-name session-name))
-         (data-frameset (easysession--handler-save-frameset session-name))
-         (data-frameset-geometry (easysession--handler-save-frameset
+         (data-frameset (easysession--save-frameset session-name))
+         (data-frameset-geometry (easysession--save-frameset
                                   session-name t))
-         (data-buffer (easysession--handler-save-base-buffers))
-         (indirect-buffers (easysession--handler-save-indirect-buffers))
+         (data-buffer)
+         (indirect-buffers)
          (session-data nil)
          (session-dir (file-name-directory session-file)))
 
     ;; Handlers
     (push (cons "frameset" data-frameset) session-data)
     (push (cons "frameset-geo" data-frameset-geometry) session-data)
+
+    ;; Buffers and file buffers
+    (dolist (buf (buffer-list))
+      (let ((indirect-buf (buffer-base-buffer buf)))
+        (if indirect-buf
+            ;; Indirect buffers
+            (push (easysession--get-indirect-buffer-info indirect-buf)
+                  indirect-buffers)
+          ;; File editing buffers and dired buffers
+          (let ((path (easysession--get-base-buffer-path buf)))
+            (when path
+              (push path data-buffer))))))
+
     (push (cons "buffers" data-buffer) session-data)
     (push (cons "indirect-buffers" indirect-buffers) session-data)
 
@@ -608,9 +612,9 @@ SESSION-NAME is the name of the session."
       (easysession--handler-load-base-buffers session-info)
       (easysession--handler-load-indirect-buffers session-info)
 
-      (easysession--handler-load-frameset session-info
-                                          session-name
-                                          easysession--load-geometry)
+      (easysession--load-frameset session-info
+                                  session-name
+                                  easysession--load-geometry)
       (setq easysession--current-session-loaded t)
       (when (called-interactively-p 'any)
         (message "Session loaded: %s" session-name))
