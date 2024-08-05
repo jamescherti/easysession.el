@@ -445,7 +445,7 @@ When LOAD-GEOMETRY is non-nil, load the frame geometry."
                                   :force-onscreen nil
                                   :cleanup-frames t)
                 t)
-        (easysession--message "%s: Warning: Failed to restore the frameset"
+        (easysession--message "%s: Warning: Failed to restore the frameset:"
                               session-name)))))
 
 (defun easysession--ensure-buffer-name (buffer name)
@@ -471,8 +471,9 @@ When LOAD-GEOMETRY is non-nil, load the frame geometry."
                        (buffer (if base-buffer base-buffer buffer)))
                   (when (and buffer (buffer-live-p buffer))
                     (easysession--ensure-buffer-name buffer buffer-name)))
-              (easysession--message "Warning: Failed to restore the buffer: %s"
-                                    buffer-path))))))))
+              (easysession--message
+               "Warning: Failed to restore the buffer '%s': %s"
+               buffer-name buffer-path))))))))
 
 (defun easysession--handler-load-indirect-buffers (session-info)
   "Load indirect buffers from the SESSION-INFO variable."
@@ -497,8 +498,8 @@ When LOAD-GEOMETRY is non-nil, load the frame geometry."
                       (easysession--ensure-buffer-name indirect-buffer
                                                        indirect-buffer-name)
                     (easysession--message
-                     "Warning: Failed to restore the indirect "
-                     "buffer (clone): %s"
+                     (concat "Warning: Failed to restore the indirect "
+                             "buffer (clone): %s")
                      indirect-buffer-name)))))))))))
 
 (defun easysession--check-dont-save (frame)
