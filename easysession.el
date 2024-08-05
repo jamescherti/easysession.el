@@ -447,11 +447,17 @@ When LOAD-GEOMETRY is non-nil, load the frame geometry."
       (dolist (buffer-name-and-path buffer-file-names)
         (let ((buffer-name (car buffer-name-and-path))
               (buffer-path (cdr buffer-name-and-path)))
-          (let ((buffer (ignore-errors (find-file-noselect buffer-path t))))
+          (let* ((buffer (ignore-errors (find-file-noselect buffer-path t))))
             (if buffer
-                (with-current-buffer buffer
-                  (unless (string= (buffer-name) buffer-name)
-                    (rename-buffer buffer-name t)))
+                ;; We are going to be using buffer-base-buffer to make sure that
+                ;; the buffer that was returned by find-file-noselect is a base
+                ;; buffer and not a clone
+                (let ((base-buffer (buffer-base-buffer buffer)))
+                  (with-current-buffer (if base-buffer
+                                           base-buffer
+                                         buffer)
+                    (unless (string= (buffer-name) buffer-name)
+                      (rename-buffer buffer-name t))))
               (message "[easysession] Failed to restore the buffer: %s"
                        buffer-path))))))))
 
