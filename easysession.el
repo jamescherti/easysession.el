@@ -312,7 +312,7 @@ OVERWRITE-ALIST is an alist similar to
 `easysession--overwrite-frameset-filter-alist'."
   (unless overwrite-alist
     (setq overwrite-alist easysession--overwrite-frameset-filter-alist))
-  (let ((result (copy-tree frameset-persistent-filter-alist)))
+  (let ((result (copy-tree frameset-filter-alist)))
     (dolist (pair overwrite-alist)
       (setf (alist-get (car pair) result)
             (cdr pair)))
@@ -579,14 +579,14 @@ SESSION-NAME is the name of the session."
     (unless (file-directory-p session-dir)
       (make-directory session-dir t))
 
-    (let ((fwrite-success (ignore-errors (f-write (prin1-to-string session-data)
-                                                  'utf-8 session-file)
-                                         t)))
+    (let ((fwrite-success (progn (f-write (prin1-to-string session-data)
+                                          'utf-8 session-file)
+                                 t)))
       (if fwrite-success
           (when (called-interactively-p 'any)
-            (message "easysession: Session saved: %s" session-name))
-        (error "easysession: failed to save the session to %s" session-file))
-      (run-hooks 'easysession-after-save-hook))
+            (message "easysession: Session saved: %s" session-name)
+            (run-hooks 'easysession-after-save-hook))
+        (error "easysession: failed to save the session to %s" session-file)))
     t))
 
 (defun easysession-load (&optional session-name)
@@ -600,28 +600,20 @@ SESSION-NAME is the name of the session."
          (session-info nil)
          (session-file (easysession--get-session-file-name session-name)))
     (when (and session-file (file-exists-p session-file))
-      ;; Load and evaluate file
-      (with-temp-buffer
-        (insert-file-contents session-file)
-        (setq session-info (ignore-errors (read (current-buffer)))))
-      (unless session-info
-        (error "easysession: Failed to evaluate session information from %s"
+      ;; Load file
+      (setq file-contents (ignore-errors (f-read session-file)))
+      (when file-contents
+        (setq file-contents (string-trim file-contents)))
+      (when (or (not file-contents) (string= file-contents ""))
+        (error "easysession: Failed to read session information from %s"
                session-file))
 
-      ;; Load file
-      ;; (setq file-contents (ignore-errors (f-read session-file)))
-      ;; ;; (when file-contents
-      ;; ;;   (setq file-contents (concat (string-trim file-contents) "\n")))
-      ;; (when (or (not file-contents) (string= file-contents ""))
-      ;;   (error "easysession: Failed to read session information from %s"
-      ;;          session-file))
-      ;;
-      ;; ;; Evaluate file
-      ;; (setq session-info (ignore-errors (read file-contents)))
-      ;; (when (not session-info)
-      ;;   (message "Session info: %s" file-contents) ;; TODO remove
-      ;;   (error "easysession: Failed to evaluate session information from %s"
-      ;;          session-file))
+      ;; Evaluate file
+      (setq session-info (ignore-errors (read file-contents)))
+      (when (not session-info)
+        (message "Session info: %s" file-contents) ;; TODO remove
+        (error "easysession: Failed to evaluate session information from %s"
+               session-file))
 
       (run-hooks 'easysession-before-load-hook)
       ;; Load buffers first because the cursor might be changed by packages such
