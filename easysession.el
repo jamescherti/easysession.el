@@ -312,7 +312,7 @@ OVERWRITE-ALIST is an alist similar to
 `easysession--overwrite-frameset-filter-alist'."
   (unless overwrite-alist
     (setq overwrite-alist easysession--overwrite-frameset-filter-alist))
-  (let ((result (copy-tree frameset-filter-alist)))
+  (let ((result (copy-tree frameset-persistent-filter-alist)))
     (dolist (pair overwrite-alist)
       (setf (alist-get (car pair) result)
             (cdr pair)))
