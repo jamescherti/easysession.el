@@ -102,9 +102,10 @@ after a new one is created."
 If set to nil, it disables timer-based autosaving. Automatic session saves are
 activated when `easysession-save-mode' is enabled."
   :type '(choice (const :tag "Disabled" nil)
-                 (integer :tag "Seconds")))
+                 (integer :tag "Seconds"))
+  :group 'easysession)
 
-(defvar easysession-timer nil)
+(defvar easysession--timer nil)
 
 (defvar easysession--overwrite-frameset-filter-alist
   '((GUI:bottom . :never)
@@ -707,15 +708,15 @@ initialized."
   (if easysession-save-mode
       (progn
         (when (and easysession-save-interval
-	                 (null easysession-timer))
-          (setq easysession-timer
+	                 (null easysession--timer))
+          (setq easysession--timer
 	              (run-with-timer easysession-save-interval
 			                          easysession-save-interval
                                 #'easysession-save)))
         (add-hook 'kill-emacs-hook #'easysession-save))
-    (when easysession-timer
-      (cancel-timer easysession-timer)
-      (setq easysession-timer nil))
+    (when easysession--timer
+      (cancel-timer easysession--timer)
+      (setq easysession--timer nil))
     (remove-hook 'kill-emacs-hook #'easysession-save)))
 
 (provide 'easysession)
