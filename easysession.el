@@ -302,7 +302,7 @@ progress.")
   "Set the current session to SESSION-NAME.
 Return t if the session name is successfully set."
   (when (or (not session-name) (string= session-name ""))
-    (error "The provided session name is invalid: '%s'" session-name))
+    (error "easysession: The provided session name is invalid: '%s'" session-name))
   (setq easysession--current-session-name session-name)
   t)
 
@@ -394,7 +394,7 @@ Raise an error if the session name is invalid."
             (string-match-p "/" session-name)
             (string= session-name "..")
             (string= session-name "."))
-    (error "Invalid session name: %s" session-name))
+    (error "easysession: Invalid session name: %s" session-name))
   session-name)
 
 (defun easysession--get-session-file-name (session-name)
@@ -442,7 +442,7 @@ When LOAD-GEOMETRY is non-nil, load the frame geometry."
                                   :force-onscreen nil
                                   :cleanup-frames t)
                 t)
-        (message "[easysession] %s: Failed to restore the frameset" session-name)))))
+        (message "easysession: %s: Failed to restore the frameset" session-name)))))
 
 (defun easysession--handler-load-base-buffers (session-info)
   "Load base buffers from the SESSION-INFO variable."
@@ -462,7 +462,7 @@ When LOAD-GEOMETRY is non-nil, load the frame geometry."
                                          buffer)
                     (unless (string= (buffer-name) buffer-name)
                       (rename-buffer buffer-name t))))
-              (message "[easysession] Failed to restore the buffer: %s"
+              (message "easysession: Failed to restore the buffer: %s"
                        buffer-path))))))))
 
 (defun easysession--handler-load-indirect-buffers (session-info)
@@ -484,7 +484,7 @@ When LOAD-GEOMETRY is non-nil, load the frame geometry."
                 (unless (ignore-errors (clone-indirect-buffer
                                         indirect-buffer-name nil))
                   (message
-                   (concat "[easysession] Failed to restore the indirect "
+                   (concat "easysession: Failed to restore the indirect "
                            "buffer (clone): %s")
                    indirect-buffer-name))))))))))
 
@@ -516,7 +516,7 @@ Returns t if the session file exists, nil otherwise."
         (kill-buffer session-buffer))
     (when (file-exists-p session-file)
       (delete-file session-file nil))
-    (message "Session deleted: %s" session-name)))
+    (message "easysession: Session deleted: %s" session-name)))
 
 (defun easysession-get-current-session-name ()
   "Return the name of the current session."
@@ -537,7 +537,7 @@ Returns t if the session file exists, nil otherwise."
                     easysession--current-session-name))
          (new-path (easysession--get-session-file-name new-session-name)))
     (unless (file-regular-p old-path)
-      (error "No such file or directory: %s" old-path))
+      (error "easysession: No such file or directory: %s" old-path))
     (rename-file old-path new-path)
     (setq easysession--current-session-name new-session-name)))
 
@@ -578,10 +578,14 @@ SESSION-NAME is the name of the session."
 
     (unless (file-directory-p session-dir)
       (make-directory session-dir t))
-    (f-write (prin1-to-string session-data) 'utf-8 session-file)
-    (when (called-interactively-p 'any)
-      (message "Session saved: %s" session-name))
-    (run-hooks 'easysession-after-save-hook)
+    (let ((fwrite-success (ignore-errors (f-write (prin1-to-string session-data)
+                                                  'utf-8 session-file)
+                                         t)))
+      (if fwrite-success
+          (when (called-interactively-p 'any)
+            (message "easysession: Session saved: %s" session-name))
+        (error "easysession: failed to save the session to %s" session-file))
+      (run-hooks 'easysession-after-save-hook))
     t))
 
 (defun easysession-load (&optional session-name)
@@ -595,13 +599,19 @@ SESSION-NAME is the name of the session."
          (session-info nil)
          (session-file (easysession--get-session-file-name session-name)))
     (when (and session-file (file-exists-p session-file))
-      ;; Load
-      (with-temp-buffer
-        (insert-file-contents session-file)
-        (setq session-info (read (current-buffer))))
+      ;; Load file
+      (setq file-contents (ignore-errors (f-read session-file)))
+      (when file-contents
+        (setq file-contents (string-trim file-contents)))
+      (when (or (not file-contents) (string= file-contents ""))
+        (error "easysession: Failed to read session information from %s"
+               session-file))
 
-      (unless session-info
-        (error "Could not read '%s' session information" session-name))
+      ;; Evaluate file
+      (setq session-info (ignore-errors (read file-contents)))
+      (when (not session-info)
+        (error "easysession: Failed to evaluate session information from %s"
+               session-file))
 
       (run-hooks 'easysession-before-load-hook)
       ;; Load buffers first because the cursor might be changed by packages such
@@ -615,7 +625,7 @@ SESSION-NAME is the name of the session."
                                   easysession--load-geometry)
       (setq easysession--current-session-loaded t)
       (when (called-interactively-p 'any)
-        (message "Session loaded: %s" session-name))
+        (message "easysession: Session loaded: %s" session-name))
       (run-hooks 'easysession-after-load-hook)
       t)))
 
@@ -650,8 +660,9 @@ If the function is called interactively, ask the user."
     (easysession-save new-session-name)
     (easysession-set-current-session new-session-name)
     (if (string= previous-session-name easysession--current-session-name)
-        (message "Saved the session: %s" new-session-name)
-      (message "Saved and switched to session: %s" new-session-name))
+        (message "easysession: Saved the session: %s" new-session-name)
+      (message "easysession: Saved and switched to session: %s"
+               new-session-name))
     t))
 
 (defun easysession-switch-to (&optional session-name)
@@ -696,10 +707,10 @@ initialized."
         (easysession-save)
         (setq new-session t)))
 
-    (cond (session-reloaded (message "Reloaded session: %s" session-name))
-          (saved (message "Saved and switched to %ssession: %s"
+    (cond (session-reloaded (message "easysession: Reloaded session: %s" session-name))
+          (saved (message "easysession: Saved and switched to %ssession: %s"
                           (if new-session "new " "") session-name))
-          (t (message "Switched to %ssession: %s"
+          (t (message "easysession: Switched to %ssession: %s"
                       (if new-session "new " "") session-name)))))
 
 ;;;###autoload
