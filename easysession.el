@@ -76,6 +76,18 @@ Each element should be a function to be called with no arguments."
   :type '(repeat function)
   :group 'easysession)
 
+(defcustom easysession-before-save-hook nil
+  "Hooks to run before the session is saved.
+Each element should be a function to be called with no arguments."
+  :type '(repeat function)
+  :group 'easysession)
+
+(defcustom easysession-after-save-hook nil
+  "Hooks to run after the session is saved.
+Each element should be a function to be called with no arguments."
+  :type '(repeat function)
+  :group 'easysession)
+
 (defcustom easysession-after-new-session-created-hook nil
   "Hooks to run after a new session is created.
 Each element should be a function to be called with no arguments.
@@ -543,13 +555,7 @@ Returns t if the session file exists, nil otherwise."
   "Save the current session.
 SESSION-NAME is the name of the session."
   (interactive)
-  ;; Close the minibuffer to avoid prevent the mini buffer from being part of
-  ;; the session
-  ;; (when (called-interactively-p 'any)
-  ;;   (when (> (minibuffer-depth) 0)
-  ;;     (let ((inhibit-message t))
-  ;;       (abort-recursive-edit))))
-
+  (run-hooks 'easysession-before-save-hook)
   (let* ((session-name (if session-name
                            session-name
                          (easysession-get-session-name)))
@@ -573,6 +579,7 @@ SESSION-NAME is the name of the session."
     (f-write (prin1-to-string session-data) 'utf-8 session-file)
     (when (called-interactively-p 'any)
       (message "Session saved: %s" session-name))
+    (run-hooks 'easysession-after-save-hook)
     t))
 
 (defun easysession-load (&optional session-name)
@@ -594,9 +601,7 @@ SESSION-NAME is the name of the session."
       (unless session-info
         (error "Could not read '%s' session information" session-name))
 
-      ;; Handlers
       (run-hooks 'easysession-before-load-hook)
-
       ;; Load buffers first because the cursor might be changed by packages such
       ;; as saveplace. This will allow frameset to change the cursor later
       ;; on.
@@ -606,11 +611,10 @@ SESSION-NAME is the name of the session."
       (easysession--handler-load-frameset session-info
                                           session-name
                                           easysession--load-geometry)
-      (run-hooks 'easysession-after-load-hook)
-
       (setq easysession--current-session-loaded t)
       (when (called-interactively-p 'any)
         (message "Session loaded: %s" session-name))
+      (run-hooks 'easysession-after-load-hook)
       t)))
 
 (defun easysession-load-including-geometry (&optional session-name)
