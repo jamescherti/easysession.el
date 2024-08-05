@@ -344,8 +344,8 @@ Return a cons cell (buffer-name . path)."
           ;; This buffer is not visiting a file or it is a carbon copy
           nil)))))
 
-(defun easysession--get-indirect-buffer-info (buf)
-  "Get information about the indirect buffer BUF.
+(defun easysession--get-indirect-buffer-info (indirect-buffer)
+  "Get information about the indirect buffer INDIRECT-BUFFER.
 
 This function retrieves details about the indirect buffer BUF and its base
 buffer. It returns a list of cons cells containing the names of both buffers,
@@ -363,21 +363,18 @@ A list of cons cells: ((indirect-buffer-name . name-of-indirect-buffer)
 
 Return nil if BUF is not an indirect buffer or if the base buffer cannot be
 determined."
-  (when (and buf (buffer-live-p buf))
-    (let* ((base-buffer (buffer-base-buffer buf)))
+  (when (and indirect-buffer (buffer-live-p indirect-buffer))
+    (let* ((base-buffer (buffer-base-buffer indirect-buffer)))
       (when (and base-buffer
                  (buffer-live-p base-buffer)
-                 (not (eq base-buffer buf))
+                 (not (eq base-buffer indirect-buffer))
                  ;; The base has to be a file visiting buffer
                  (buffer-file-name base-buffer))
-        (with-current-buffer buf  ; indirect buffer
+        (with-current-buffer indirect-buffer  ; indirect buffer
           (let ((base-buffer-name (buffer-name base-buffer))
                 (indirect-buffer-name (buffer-name)))
             (when (and base-buffer-name indirect-buffer-name)
               `((indirect-buffer-name . ,indirect-buffer-name)
-                (indirect-buffer-point . ,(point))
-                (indirect-buffer-window-start . ,(window-start))
-                (indirect-buffer-hscroll . ,(window-hscroll))
                 (base-buffer-name . ,base-buffer-name)))))))))
 
 (defun easysession--check-session-name (session-name)
