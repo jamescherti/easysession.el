@@ -444,6 +444,13 @@ When LOAD-GEOMETRY is non-nil, load the frame geometry."
                 t)
         (message "easysession: %s: Failed to restore the frameset" session-name)))))
 
+(defun easysession--ensure-buffer-name (buffer name)
+  "Ensure that BUFFER name is NAME."
+  (interactive)
+  (when (not (string= (buffer-name buffer) name))
+    (with-current-buffer buffer
+      (rename-buffer name t))))
+
 (defun easysession--handler-load-base-buffers (session-info)
   "Load base buffers from the SESSION-INFO variable."
   (let ((buffer-file-names (assoc-default "buffers" session-info)))
@@ -456,12 +463,10 @@ When LOAD-GEOMETRY is non-nil, load the frame geometry."
                 ;; We are going to be using buffer-base-buffer to make sure that
                 ;; the buffer that was returned by find-file-noselect is a base
                 ;; buffer and not a clone
-                (let ((base-buffer (buffer-base-buffer buffer)))
-                  (with-current-buffer (if base-buffer
-                                           base-buffer
-                                         buffer)
-                    (unless (string= (buffer-name) buffer-name)
-                      (rename-buffer buffer-name t))))
+                (let* ((base-buffer (buffer-base-buffer buffer))
+                       (buffer (if base-buffer base-buffer buffer)))
+                  (when (and buffer (buffer-live-p buffer))
+                    (easysession--ensure-buffer-name buffer buffer-name)))
               (message "easysession: Failed to restore the buffer: %s"
                        buffer-path))))))))
 
@@ -481,12 +486,16 @@ When LOAD-GEOMETRY is non-nil, load the frame geometry."
                        base-buffer
                        (buffer-live-p base-buffer))
               (with-current-buffer base-buffer
-                (unless (ignore-errors (clone-indirect-buffer
-                                        indirect-buffer-name nil))
-                  (message
-                   (concat "easysession: Failed to restore the indirect "
-                           "buffer (clone): %s")
-                   indirect-buffer-name))))))))))
+                (let ((indirect-buffer
+                       (ignore-errors (clone-indirect-buffer
+                                       indirect-buffer-name nil))))
+                  (if indirect-buffer
+                      (easysession--ensure-buffer-name indirect-buffer
+                                                       indirect-buffer-name)
+                    (message
+                     (concat "easysession: Failed to restore the indirect "
+                             "buffer (clone): %s")
+                     indirect-buffer-name)))))))))))
 
 (defun easysession--check-dont-save (frame)
   "Check if FRAME is a real frame and should be saved.
