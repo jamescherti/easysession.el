@@ -6,6 +6,7 @@ The `easysession.el` Emacs package is a lightweight session manager for Emacs th
 
 ## Table of contents
 
+<!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
 - [Features](#features)
 - [Installation](#installation)
 - [Usage](#usage)
@@ -14,8 +15,11 @@ The `easysession.el` Emacs package is a lightweight session manager for Emacs th
     - [Why not use the desktop.el?](#why-not-use-the-desktopel)
     - [Why not use one of the other third-party session packages?](#why-not-use-one-of-the-other-third-party-session-packages)
     - [How does the author use easysession?](#how-does-the-author-use-easysession)
+- [How to create an empty session setup](#how-to-create-an-empty-session-setup)
 - [License](#license)
 - [Links](#links)
+
+<!-- markdown-toc end -->
 
 ## Features
 
@@ -35,8 +39,8 @@ The `easysession` package can be installed from MELPA by adding the following to
   :custom
   (easysession-save-interval (* 10 60))
   :init
-  (add-hook 'emacs-startup-hook #'easysession-load-including-geometry 98)
-  (add-hook 'emacs-startup-hook #'easysession-save-mode 99))
+  (add-hook 'after-init-hook #'easysession-load-including-geometry 98)
+  (add-hook 'after-init-hook #'easysession-save-mode 99))
 ```
 
 Note that:
