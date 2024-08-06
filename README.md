@@ -104,14 +104,15 @@ The author uses `easysession.el` by setting up each session to represent a disti
 
 ## How to create an empty session setup
 
-To create a minimal environment when starting a new session with easysession, you can define a function that closes all other tabs, deletes all other windows, and switches to the scratch buffer. The following Emacs Lisp code demonstrates how to achieve this:
+To set up a minimal environment when easysession creates a new session, you can define a function that closes all other tabs, deletes all other windows, and switches to the scratch buffer. The following Emacs Lisp code demonstrates how to achieve this:
 
 ``` emacs-lisp
 (defun my-empty-easysession ()
-    (when (and (boundp 'tab-bar-mode) tab-bar-mode)
-      (tab-bar-close-other-tabs))
-    (delete-other-windows)
-    (scratch-buffer))
+  "Set up a minimal environment when easysession creates a new session."
+  (when (and (boundp 'tab-bar-mode) tab-bar-mode)
+    (tab-bar-close-other-tabs))
+  (delete-other-windows)
+  (scratch-buffer))
 
 (add-hook 'easysession-after-new-session-created-hook #'my-empty-easysession)
 ```
