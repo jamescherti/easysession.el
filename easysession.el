@@ -88,7 +88,7 @@ Each element should be a function to be called with no arguments."
   :type '(repeat function)
   :group 'easysession)
 
-(defcustom easysession-after-new-session-created-hook nil
+(defcustom easysession-new-session-hook nil
   "Hooks to run after a new session is created.
 Each element should be a function to be called with no arguments.
 
@@ -732,7 +732,7 @@ initialized."
     (unless session-reloaded
       (easysession-set-current-session session-name)
       (unless (file-exists-p session-file)
-        (run-hooks 'easysession-after-new-session-created-hook)
+        (run-hooks 'easysession-new-session-hook)
         (easysession-save)
         (setq new-session t)))
 

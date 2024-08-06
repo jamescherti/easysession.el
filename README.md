@@ -114,7 +114,7 @@ To set up a minimal environment when easysession creates a new session, you can 
   (delete-other-windows)
   (scratch-buffer))
 
-(add-hook 'easysession-after-new-session-created-hook #'my-empty-easysession)
+(add-hook 'easysession-new-session-hook #'my-empty-easysession)
 ```
 
 ## License
