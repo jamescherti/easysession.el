@@ -97,6 +97,13 @@ after a new one is created."
   :type '(repeat function)
   :group 'easysession)
 
+(defcustom easysession-quiet nil
+  "If non-nil, suppress all messages and only show errors and warnings.
+This includes messages such as 'Session deleted:', 'Session loaded:', 'Session
+saved:', etc. "
+  :type 'boolean
+  :group 'easysession)
+
 (defcustom easysession-save-interval nil
   "The interval between automatic session saves.
 If set to nil, it disables timer-based autosaving. Automatic session saves are
@@ -301,7 +308,13 @@ progress.")
 (defun easysession--message (&rest args)
   "Display a message with '[easysession]' prepended.
 The message is formatted with the provided arguments."
-  (apply 'message (concat "[easysession] " (car args)) (cdr args)))
+  (unless easysession-quiet
+    (apply 'message (concat "[easysession] " (car args)) (cdr args))))
+
+(defun easysession--warning (&rest args)
+  "Display a warning message with '[easysession] Warning: ' prepended.
+The message is formatted with the provided arguments."
+  (apply 'message (concat "[easysession] Warning: " (car args)) (cdr args)))
 
 (defun easysession--ensure-session-name-valid (session-name)
   "Validate the provided SESSION-NAME.
@@ -445,7 +458,7 @@ When LOAD-GEOMETRY is non-nil, load the frame geometry."
                                   :force-onscreen nil
                                   :cleanup-frames t)
                 t)
-        (easysession--message "%s: Warning: Failed to restore the frameset:"
+        (easysession--warning "%s: Failed to restore the frameset:"
                               session-name)))))
 
 (defun easysession--ensure-buffer-name (buffer name)
@@ -471,9 +484,8 @@ When LOAD-GEOMETRY is non-nil, load the frame geometry."
                        (buffer (if base-buffer base-buffer buffer)))
                   (when (and buffer (buffer-live-p buffer))
                     (easysession--ensure-buffer-name buffer buffer-name)))
-              (easysession--message
-               "Warning: Failed to restore the buffer '%s': %s"
-               buffer-name buffer-path))))))))
+              (easysession--warning "Failed to restore the buffer '%s': %s"
+                                    buffer-name buffer-path))))))))
 
 (defun easysession--handler-load-indirect-buffers (session-info)
   "Load indirect buffers from the SESSION-INFO variable."
@@ -497,8 +509,8 @@ When LOAD-GEOMETRY is non-nil, load the frame geometry."
                   (if indirect-buffer
                       (easysession--ensure-buffer-name indirect-buffer
                                                        indirect-buffer-name)
-                    (easysession--message
-                     (concat "Warning: Failed to restore the indirect "
+                    (easysession--warning
+                     (concat "Failed to restore the indirect "
                              "buffer (clone): %s")
                      indirect-buffer-name)))))))))))
 
