@@ -102,6 +102,20 @@ Easysession is lightweight and can persist and restore file editing buffers, ind
 
 The author uses `easysession.el` by setting up each session to represent a distinct project or a specific "view" on a particular project, including various tabs (built-in tab-bar), window splits, dired buffers, and file editing buffers. This organization allows for the creation of dedicated environments for different tasks or aspects of a project, such as development, debugging, specific issue, and documentation. The author switches between projects and views of the same projects multiple times a day, and `easysession.el` helps significantly by allowing quick transitions between them.
 
+## How to create an empty session setup
+
+To create a minimal environment when starting a new session with easysession, you can define a function that closes all other tabs, deletes all other windows, and switches to the scratch buffer. The following Emacs Lisp code demonstrates how to achieve this:
+
+``` emacs-lisp
+(defun my-empty-easysession ()
+    (when (and (boundp 'tab-bar-mode) tab-bar-mode)
+      (tab-bar-close-other-tabs))
+    (delete-other-windows)
+    (scratch-buffer))
+
+(add-hook 'easysession-after-new-session-created-hook #'my-empty-easysession)
+```
+
 ## License
 
 Copyright (C) 2024 [James Cherti](https://www.jamescherti.com)
