@@ -7,15 +7,18 @@ The `easysession.el` Emacs package is a lightweight session manager for Emacs th
 ## Table of contents
 
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
+**Table of Contents**
+
 - [Features](#features)
 - [Installation](#installation)
 - [Usage](#usage)
 - [Frequently asked questions](#frequently-asked-questions)
+    - [How to only persist and restore visible buffers](#how-to-only-persist-and-restore-visible-buffers)
     - [How to persist and restore global variables?](#how-to-persist-and-restore-global-variables)
+    - [How to create an empty session setup](#how-to-create-an-empty-session-setup)
+    - [How does the author use easysession?](#how-does-the-author-use-easysession)
     - [Why not use the desktop.el?](#why-not-use-the-desktopel)
     - [Why not use one of the other third-party session packages?](#why-not-use-one-of-the-other-third-party-session-packages)
-    - [How does the author use easysession?](#how-does-the-author-use-easysession)
-- [How to create an empty session setup](#how-to-create-an-empty-session-setup)
 - [License](#license)
 - [Links](#links)
 
