@@ -7,7 +7,6 @@ The `easysession.el` Emacs package is a lightweight session manager for Emacs th
 ## Table of contents
 
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
-**Table of Contents**
 
 - [Features](#features)
 - [Installation](#installation)
