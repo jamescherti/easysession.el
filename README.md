@@ -121,7 +121,9 @@ To set up a minimal environment when easysession creates a new session, you can 
 (add-hook 'easysession-new-session-hook #'my-empty-easysession)
 ```
 
-## How to persist and restore visible buffers
+## How to only persist and restore visible buffers
+
+By default, all file visiting buffers, dired buffers, and indirect buffers are persisted and restored.
 
 To ensure that only visible buffers are saved and restored in your sessions, follow these steps:
 - Create a function named `my-easysession-visible-buffer-list` to retrieve all buffers currently visible in your Emacs session. This function identifies buffers displayed in windows or tab-bar tabs.
