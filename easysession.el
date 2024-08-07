@@ -289,11 +289,6 @@ activated when `easysession-save-mode' is enabled."
 (defvar easysession-file-version 3
   "Version number of easysession file format.")
 
-(defvar easysession--load-geometry nil
-  "Non-nil to make `easysession-load' load the geometry.
-Do not modify this variable, use the `easysession-load-including-geometry'
-function instead.")
-
 (defvar easysession--current-session-name "main"
   "Current session.")
 
@@ -652,7 +647,7 @@ SESSION-NAME is the name of the session."
 
       (easysession--load-frameset session-info
                                   session-name
-                                  easysession--load-geometry)
+                                  (bound-and-true-p easysession--load-geometry))
       (setq easysession--current-session-loaded t)
       (when (called-interactively-p 'any)
         (easysession--message "Session loaded: %s" session-name))
