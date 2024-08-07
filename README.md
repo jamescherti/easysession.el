@@ -62,66 +62,7 @@ To facilitate session management, consider using the following key mappings: `C-
 
 ## Frequently asked questions
 
-### How to persist and restore global variables?
-
-To persist and restore global variables in Emacs, you can use the built-in `savehist` Emacs package. This package is designed to save and restore minibuffer histories, but it can also be configured to save other global variables:
-``` emacs-lisp
-(use-package savehist
-  :ensure nil
-  :hook
-  (after-init . savehist-mode)
-  :config
-  (add-to-list 'savehist-additional-variables 'kill-ring)
-  (add-to-list 'savehist-additional-variables 'mark-ring)
-  (add-to-list 'savehist-additional-variables 'search-ring)
-  (add-to-list 'savehist-additional-variables 'regexp-search-ring))
-```
-
-(Each element added to `savehist-additional-variables` is a variable that will be persisted across Emacs sessions that use `savehist`.)
-
-### Why not use the desktop.el?
-
-While `desktop.el` is a foundational session management tool for Emacs, it has several limitations:
-- It can be bulky and slow in operation.
-- It primarily saves Emacs' state on exit and restores it on startup, making it difficult to switch between different session files during an editing session.
-- The `desktop.el` package saves and restores major modes and important global variables, which can prevent some packages from initializing correctly. For example, the `vdiff` package may stop working after comparing two files and reloading Emacs and the `desktop.el` session. This issue has also occurred with a few other packages.
-- The `desktop.el` package lacks support for saving and restoring indirect buffers (clones). Indirect buffers are secondary buffers that share the same content as an existing buffer but can have different point positions, narrowing, folds, and other buffer-local settings. This allows users to view and edit the same file or text content in multiple ways simultaneously without duplicating the actual data. There are third-party packages, such as desktop+, that extend desktop.el to restore indirect buffers. However, packages like desktop+ are still based on desktop.el and can cause the issues described above.
-
-In contrast, `easysession.el` offers enhanced functionality:
-- It supports saving and loading various buffer types, including indirect buffers (clones).
-- It allows users to load or save different sessions while actively editing, without the need to restart Emacs.
-- It excels in speed and efficiency, enabling seamless session management within Emacs.
-
-### Why not use one of the other third-party session packages?
-
-There are some existing packages, such as minimal-session-saver, save-visited-files, sesman, and psession. However, these packages have the following limitations:
-- None of them can restore indirect buffers (clones). Indirect buffers, which can be created using `clone-indirect-buffer`, are secondary buffers that share the same content as an existing buffer but can have different point positions, narrowing, folds, and other buffer-local settings. This allows users to view and edit the same file or text content in multiple ways simultaneously without duplicating the actual data.
-- The minimal-session-saver and save-visited-files packages are no longer maintained and cannot restore the frameset and the tab-bar.
-- Sesman is designed to implement some IDE features in Emacs.
-- Psession cannot switch between sessions quickly, with or without modifying the the Emacs frame geometry. This last feature is important in easysession.el because it allows switching between sessions without the annoyance of changing the window position or size.
-
-Easysession is lightweight and can persist and restore file editing buffers, indirect buffers/clones, Dired buffers, the tab-bar, and the Emacs frames (with or without the Emacs frames geometry). It is similar to Vim or Neovim sessions because it loads and restores your editing environment, including buffers, windows, tabs, and other settings, allowing you to resume work exactly where you left off.
-
-### How does the author use easysession?
-
-The author uses `easysession.el` by setting up each session to represent a distinct project or a specific "view" on a particular project, including various tabs (built-in tab-bar), window splits, dired buffers, and file editing buffers. This organization allows for the creation of dedicated environments for different tasks or aspects of a project, such as development, debugging, specific issue, and documentation. The author switches between projects and views of the same projects multiple times a day, and `easysession.el` helps significantly by allowing quick transitions between them.
-
-## How to create an empty session setup
-
-To set up a minimal environment when easysession creates a new session, you can define a function that closes all other tabs, deletes all other windows, and switches to the scratch buffer. The following Emacs Lisp code demonstrates how to achieve this:
-
-``` emacs-lisp
-(defun my-empty-easysession ()
-  "Set up a minimal environment when easysession creates a new session."
-  (when (and (boundp 'tab-bar-mode) tab-bar-mode)
-    (tab-bar-close-other-tabs))
-  (delete-other-windows)
-  (scratch-buffer))
-
-(add-hook 'easysession-new-session-hook #'my-empty-easysession)
-```
-
-## How to only persist and restore visible buffers
+### How to only persist and restore visible buffers
 
 By default, all file visiting buffers, dired buffers, and indirect buffers are persisted and restored.
 
@@ -150,6 +91,65 @@ This includes buffers visible in windows or tab-bar tabs."
 ```
 
 (`get-buffer-window` checks if a buffer is visible in any window. `tab-bar-get-buffer-tab` checks if the buffer is visible in a tab-bar tab window. The function collects all visible buffers into the visible-buffers list and returns it.)
+
+### How to persist and restore global variables?
+
+To persist and restore global variables in Emacs, you can use the built-in `savehist` Emacs package. This package is designed to save and restore minibuffer histories, but it can also be configured to save other global variables:
+``` emacs-lisp
+(use-package savehist
+  :ensure nil
+  :hook
+  (after-init . savehist-mode)
+  :config
+  (add-to-list 'savehist-additional-variables 'kill-ring)
+  (add-to-list 'savehist-additional-variables 'mark-ring)
+  (add-to-list 'savehist-additional-variables 'search-ring)
+  (add-to-list 'savehist-additional-variables 'regexp-search-ring))
+```
+
+(Each element added to `savehist-additional-variables` is a variable that will be persisted across Emacs sessions that use `savehist`.)
+
+### How to create an empty session setup
+
+To set up a minimal environment when easysession creates a new session, you can define a function that closes all other tabs, deletes all other windows, and switches to the scratch buffer. The following Emacs Lisp code demonstrates how to achieve this:
+
+``` emacs-lisp
+(defun my-empty-easysession ()
+  "Set up a minimal environment when easysession creates a new session."
+  (when (and (boundp 'tab-bar-mode) tab-bar-mode)
+    (tab-bar-close-other-tabs))
+  (delete-other-windows)
+  (scratch-buffer))
+
+(add-hook 'easysession-new-session-hook #'my-empty-easysession)
+```
+
+### How does the author use easysession?
+
+The author uses `easysession.el` by setting up each session to represent a distinct project or a specific "view" on a particular project, including various tabs (built-in tab-bar), window splits, dired buffers, and file editing buffers. This organization allows for the creation of dedicated environments for different tasks or aspects of a project, such as development, debugging, specific issue, and documentation. The author switches between projects and views of the same projects multiple times a day, and `easysession.el` helps significantly by allowing quick transitions between them.
+
+### Why not use the desktop.el?
+
+While `desktop.el` is a foundational session management tool for Emacs, it has several limitations:
+- It can be bulky and slow in operation.
+- It primarily saves Emacs' state on exit and restores it on startup, making it difficult to switch between different session files during an editing session.
+- The `desktop.el` package saves and restores major modes and important global variables, which can prevent some packages from initializing correctly. For example, the `vdiff` package may stop working after comparing two files and reloading Emacs and the `desktop.el` session. This issue has also occurred with a few other packages.
+- The `desktop.el` package lacks support for saving and restoring indirect buffers (clones). Indirect buffers are secondary buffers that share the same content as an existing buffer but can have different point positions, narrowing, folds, and other buffer-local settings. This allows users to view and edit the same file or text content in multiple ways simultaneously without duplicating the actual data. There are third-party packages, such as desktop+, that extend desktop.el to restore indirect buffers. However, packages like desktop+ are still based on desktop.el and can cause the issues described above.
+
+In contrast, `easysession.el` offers enhanced functionality:
+- It supports saving and loading various buffer types, including indirect buffers (clones).
+- It allows users to load or save different sessions while actively editing, without the need to restart Emacs.
+- It excels in speed and efficiency, enabling seamless session management within Emacs.
+
+### Why not use one of the other third-party session packages?
+
+There are some existing packages, such as minimal-session-saver, save-visited-files, sesman, and psession. However, these packages have the following limitations:
+- None of them can restore indirect buffers (clones). Indirect buffers, which can be created using `clone-indirect-buffer`, are secondary buffers that share the same content as an existing buffer but can have different point positions, narrowing, folds, and other buffer-local settings. This allows users to view and edit the same file or text content in multiple ways simultaneously without duplicating the actual data.
+- The minimal-session-saver and save-visited-files packages are no longer maintained and cannot restore the frameset and the tab-bar.
+- Sesman is designed to implement some IDE features in Emacs.
+- Psession cannot switch between sessions quickly, with or without modifying the the Emacs frame geometry. This last feature is important in easysession.el because it allows switching between sessions without the annoyance of changing the window position or size.
+
+Easysession is lightweight and can persist and restore file editing buffers, indirect buffers/clones, Dired buffers, the tab-bar, and the Emacs frames (with or without the Emacs frames geometry). It is similar to Vim or Neovim sessions because it loads and restores your editing environment, including buffers, windows, tabs, and other settings, allowing you to resume work exactly where you left off.
 
 ## License
 
