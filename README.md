@@ -121,6 +121,34 @@ To set up a minimal environment when easysession creates a new session, you can 
 (add-hook 'easysession-new-session-hook #'my-empty-easysession)
 ```
 
+## How to persist and restore visible buffers
+
+To ensure that only visible buffers are saved and restored in your sessions, follow these steps:
+- Create a function named `my-easysession-visible-buffer-list` to retrieve all buffers currently visible in your Emacs session. This function identifies buffers displayed in windows or tab-bar tabs.
+- Set the variable `easysession-buffer-list-function` to use the newly defined function. This configuration ensures that only the buffers currently visible in windows or tab-bar tabs are persisted and restored.
+
+Here is the Lisp code:
+``` emacs-lisp
+(defun my-easysession-visible-buffer-list ()
+"Return a list of all visible buffers in the current session.
+This includes buffers visible in windows or tab-bar tabs."
+(let ((visible-buffers '()))
+    (dolist (buffer (buffer-list))
+    (when (or
+            ;; Windows
+            (get-buffer-window buffer 'visible)
+            ;; Tab-bar windows
+            (and (bound-and-true-p tab-bar-mode)
+                (fboundp 'tab-bar-get-buffer-tab)
+                (tab-bar-get-buffer-tab buffer t nil)))
+        (push buffer visible-buffers)))
+    visible-buffers))
+
+(setq easysession-buffer-list-function #'my-easysession-visible-buffer-list)
+```
+
+(`get-buffer-window` checks if a buffer is visible in any window. `tab-bar-get-buffer-tab` checks if the buffer is visible in a tab-bar tab window. The function collects all visible buffers into the visible-buffers list and returns it.)
+
 ## License
 
 Copyright (C) 2024 [James Cherti](https://www.jamescherti.com)

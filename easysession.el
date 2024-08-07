@@ -112,6 +112,16 @@ activated when `easysession-save-mode' is enabled."
                  (integer :tag "Seconds"))
   :group 'easysession)
 
+(defcustom easysession-buffer-list-function #'buffer-list
+  "Function used to retrieve the buffers for persistence and restoration.
+This holds a function that returns a list of buffers to be saved and restored
+during session management. By default, it is set to `buffer-list', which
+includes all buffers. You can customize this variable to use a different
+function, such as one that filters buffers based on visibility or other
+criteria."
+  :type 'function
+  :group 'easysession)
+
 (defvar easysession--timer nil)
 
 (defvar easysession--overwrite-frameset-filter-alist
@@ -585,15 +595,16 @@ SESSION-NAME is the name of the session."
     ;; Buffers and file buffers
     (let ((file-editing-buffers)
           (indirect-buffers))
-      (dolist (buf (buffer-list))
-        (let ((indirect-buf-info (easysession--get-indirect-buffer-info buf)))
-          (if indirect-buf-info
-              ;; Indirect buffers
-              (push indirect-buf-info indirect-buffers)
-            ;; File editing buffers and dired buffers
-            (let ((path (easysession--get-base-buffer-path buf)))
-              (when path
-                (push path file-editing-buffers))))))
+      (dolist (buf (funcall easysession-buffer-list-function))
+        (when buf
+          (let ((indirect-buf-info (easysession--get-indirect-buffer-info buf)))
+            (if indirect-buf-info
+                ;; Indirect buffers
+                (push indirect-buf-info indirect-buffers)
+              ;; File editing buffers and dired buffers
+              (let ((path (easysession--get-base-buffer-path buf)))
+                (when path
+                  (push path file-editing-buffers)))))))
 
       (push (cons "buffers" file-editing-buffers) session-data)
       (push (cons "indirect-buffers" indirect-buffers) session-data))
