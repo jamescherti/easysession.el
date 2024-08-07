@@ -100,7 +100,7 @@ after a new one is created."
 (defcustom easysession-quiet nil
   "If non-nil, suppress all messages and only show errors and warnings.
 This includes messages such as 'Session deleted:', 'Session loaded:', 'Session
-saved:', etc. "
+saved:', etc."
   :type 'boolean
   :group 'easysession)
 
@@ -307,14 +307,14 @@ progress.")
 
 (defun easysession--message (&rest args)
   "Display a message with '[easysession]' prepended.
-The message is formatted with the provided arguments."
+The message is formatted with the provided arguments ARGS."
   (unless easysession-quiet
-    (apply 'message (concat "[easysession] " (car args)) (cdr args))))
+    (apply #'message (concat "[easysession] " (car args)) (cdr args))))
 
 (defun easysession--warning (&rest args)
   "Display a warning message with '[easysession] Warning: ' prepended.
-The message is formatted with the provided arguments."
-  (apply 'message (concat "[easysession] Warning: " (car args)) (cdr args)))
+The message is formatted with the provided arguments ARGS."
+  (apply #'message (concat "[easysession] Warning: " (car args)) (cdr args)))
 
 (defun easysession--ensure-session-name-valid (session-name)
   "Validate the provided SESSION-NAME.
@@ -625,6 +625,7 @@ SESSION-NAME is the name of the session."
                            session-name
                          easysession--current-session-name))
          (session-info nil)
+         (file-contents nil)
          (session-file (easysession--get-session-file-name session-name)))
     (when (and session-file (file-exists-p session-file))
       ;; Load file
