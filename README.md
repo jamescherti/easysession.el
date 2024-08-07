@@ -33,7 +33,7 @@ Key features include:
 ## Installation
 
 The `easysession` package can be installed from MELPA by adding the following to your Emacs init file:
-```
+``` emacs-lisp
 (use-package easysession
   :ensure t
   :custom
@@ -55,7 +55,7 @@ It is recommended to use the following functions:
 - `easysession-save-as` to save the current session as the current name or another name.
 
 To facilitate session management, consider using the following key mappings: `C-c l` for switching sessions with `easysession-switch-to`, and `C-c s` for saving the current session with `easysession-save-as`:
-```
+``` emacs-lisp
 (global-set-key (kbd "C-c l") 'easysession-switch-to)
 (global-set-key (kbd "C-c s") 'easysession-save-as)
 ```
