@@ -350,10 +350,8 @@ Return t if the session name is successfully set."
   "Return the EasySession version of `frameset-filter-alist'.
 OVERWRITE-ALIST is an alist similar to
 `easysession--overwrite-frameset-filter-alist'."
-  (unless overwrite-alist
-    (setq overwrite-alist easysession--overwrite-frameset-filter-alist))
   (let ((result (copy-tree frameset-filter-alist)))
-    (dolist (pair overwrite-alist)
+    (dolist (pair result)
       (setf (alist-get (car pair) result)
             (cdr pair)))
     result))
