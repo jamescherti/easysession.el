@@ -310,6 +310,11 @@ criteria."
 This variable is used to indicate whether a session loading process is in
 progress.")
 
+(defvar easysession--load-geometry nil
+  "Non-nil to make `easysession-load' load the geometry.
+Do not modify this variable, use the `easysession-load-including-geometry'
+function instead.")
+
 (defun easysession--message (&rest args)
   "Display a message with '[easysession]' prepended.
 The message is formatted with the provided arguments ARGS."
