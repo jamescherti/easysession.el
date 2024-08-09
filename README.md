@@ -169,7 +169,7 @@ You should have received a copy of the GNU General Public License along with thi
 - [easysession.el @MELPA](https://melpa.org/#/easysession)
 - There is also a Vim version of Easysession: [vim-easysession](https://github.com/jamescherti/vim-easysession)
 
-Other Emacs packages from the same author:
+Other Emacs packages by the same author:
 - [minimal-emacs.d](https://github.com/jamescherti/minimal-emacs.d): This repository hosts a minimal Emacs configuration designed to serve as a foundation for your vanilla Emacs setup and provide a solid base for an enhanced Emacs experience.
 - [vim-tab-bar.el](https://github.com/jamescherti/vim-tab-bar.el): Make the Emacs tab-bar Look Like Vim’s Tab Bar.
 - [outline-indent.el](https://github.com/jamescherti/outline-indent.el): An Emacs package that provides a minor mode that enables code folding and outlining based on indentation levels for various indentation-based text files, such as YAML, Python, and other indented text files.
