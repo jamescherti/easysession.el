@@ -310,6 +310,12 @@ criteria."
 This variable is used to indicate whether a session loading process is in
 progress.")
 
+(defvar easysession--loading-session-name nil
+  "Name of the session currently being loaded.
+This variable holds the name of the session that is in the process of being
+loaded. It is set when a session loading operation begins and is used to track
+which session is being loaded.")
+
 (defvar easysession--load-geometry nil
   "Non-nil to make `easysession-load' load the geometry.
 Do not modify this variable, use the `easysession-load-including-geometry'
@@ -725,6 +731,7 @@ SESSION-NAME is the name of the session."
          (session-name (if session-name
                            session-name
                          easysession--current-session-name))
+         (easysession--loading-session-name session-name)
          (session-data nil)
          (file-contents nil)
          (session-file (easysession--get-session-file-name session-name)))
