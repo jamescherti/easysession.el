@@ -446,18 +446,17 @@ When SAVE-GEOMETRY is non-nil, include the frame geometry."
                    :predicate #'easysession--check-dont-save
                    :filters modified-filter-alist)))
 
-(defun easysession--load-frameset (session-info session-name &optional load-geometry)
-  "Load the frameset from the SESSION-INFO argument.
-SESSION-NAME is the session name.
+(defun easysession--load-frameset (session-data &optional load-geometry)
+  "Load the frameset from the SESSION-DATA argument.
 When LOAD-GEOMETRY is non-nil, load the frame geometry."
   (let* ((key (if load-geometry
                   "frameset-geo"
                 "frameset"))
-         (data (when (assoc key session-info)
-                 (assoc-default key session-info))))
+         (data (when (assoc key session-data)
+                 (assoc-default key session-data))))
     (when (and (not data) load-geometry)
-      (setq data (when (assoc "frameset" session-info)
-                   (assoc-default "frameset" session-info))))
+      (setq data (when (assoc "frameset" session-data)
+                   (assoc-default "frameset" session-data))))
     (when data
       (unless (ignore-errors
                 (frameset-restore data
@@ -466,8 +465,7 @@ When LOAD-GEOMETRY is non-nil, load the frame geometry."
                                   :force-onscreen nil
                                   :cleanup-frames t)
                 t)
-        (easysession--warning "%s: Failed to restore the frameset:"
-                              session-name)))))
+        (easysession--warning "%s: Failed to restore the frameset")))))
 
 (defun easysession--ensure-buffer-name (buffer name)
   "Ensure that BUFFER name is NAME."
@@ -475,53 +473,6 @@ When LOAD-GEOMETRY is non-nil, load the frame geometry."
   (when (not (string= (buffer-name buffer) name))
     (with-current-buffer buffer
       (rename-buffer name t))))
-
-(defun easysession--handler-load-base-buffers (session-info)
-  "Load base buffers from the SESSION-INFO variable."
-  (let ((buffer-file-names (assoc-default "buffers" session-info)))
-    (when buffer-file-names
-      (dolist (buffer-name-and-path buffer-file-names)
-        (let ((buffer-name (car buffer-name-and-path))
-              (buffer-path (cdr buffer-name-and-path)))
-          (let* ((buffer (ignore-errors
-                           (find-file-noselect buffer-path :nowarn))))
-            (if buffer
-                ;; We are going to be using buffer-base-buffer to make sure that
-                ;; the buffer that was returned by find-file-noselect is a base
-                ;; buffer and not a clone
-                (let* ((base-buffer (buffer-base-buffer buffer))
-                       (buffer (if base-buffer base-buffer buffer)))
-                  (when (and buffer (buffer-live-p buffer))
-                    (easysession--ensure-buffer-name buffer buffer-name)))
-              (easysession--warning "Failed to restore the buffer '%s': %s"
-                                    buffer-name buffer-path))))))))
-
-(defun easysession--handler-load-indirect-buffers (session-info)
-  "Load indirect buffers from the SESSION-INFO variable."
-  (let ((indirect-buffers (assoc-default "indirect-buffers"
-                                         session-info)))
-    (dolist (item indirect-buffers)
-      (let* ((indirect-buffer-name (alist-get 'indirect-buffer-name item))
-             (base-buffer-name (alist-get 'base-buffer-name
-                                          (cdr item))))
-        (when (and base-buffer-name indirect-buffer-name)
-          (let ((base-buffer (get-buffer base-buffer-name))
-                (indirect-buffer (get-buffer indirect-buffer-name)))
-            (when (and (or (not indirect-buffer)
-                           (not (buffer-live-p indirect-buffer)))
-                       base-buffer
-                       (buffer-live-p base-buffer))
-              (with-current-buffer base-buffer
-                (let ((indirect-buffer
-                       (ignore-errors (clone-indirect-buffer
-                                       indirect-buffer-name nil))))
-                  (if indirect-buffer
-                      (easysession--ensure-buffer-name indirect-buffer
-                                                       indirect-buffer-name)
-                    (easysession--warning
-                     (concat "Failed to restore the indirect "
-                             "buffer (clone): %s")
-                     indirect-buffer-name)))))))))))
 
 (defun easysession--check-dont-save (frame)
   "Check if FRAME is a real frame and should be saved.
@@ -576,6 +527,102 @@ Returns t if the session file exists, nil otherwise."
     (rename-file old-path new-path)
     (setq easysession--current-session-name new-session-name)))
 
+(defun easysession--handler-load-file-editing-buffers (session-data)
+  "Load base buffers from the SESSION-DATA variable."
+  (let ((buffer-file-names (assoc-default "buffers" session-data)))
+    (when buffer-file-names
+      (dolist (buffer-name-and-path buffer-file-names)
+        (let ((buffer-name (car buffer-name-and-path))
+              (buffer-path (cdr buffer-name-and-path)))
+          (let* ((buffer (ignore-errors
+                           (find-file-noselect buffer-path :nowarn))))
+            (if buffer
+                ;; We are going to be using buffer-base-buffer to make sure that
+                ;; the buffer that was returned by find-file-noselect is a base
+                ;; buffer and not a clone
+                (let* ((base-buffer (buffer-base-buffer buffer))
+                       (buffer (if base-buffer
+                                   base-buffer
+                                 buffer)))
+                  (when (and buffer (buffer-live-p buffer))
+                    (easysession--ensure-buffer-name buffer buffer-name)))
+              (easysession--warning "Failed to restore the buffer '%s': %s"
+                                    buffer-name buffer-path))))))))
+
+(defun easysession--handler-save-file-editing-buffers (buffers)
+  "Collect and categorize file editing buffers from the provided list.
+BUFFERS is the list of buffers to process. This function identifies buffers
+that are associated with files (file editing buffers) and those that are
+not. It returns an alist with the following structure."
+  (let ((file-editing-buffers '())
+        (remaining-buffers '()))
+    (dolist (buf buffers)
+      (if (and buf (easysession--get-base-buffer-path buf))
+          (push (easysession--get-base-buffer-path buf) file-editing-buffers)
+        (push buf remaining-buffers)))
+    `((key . "buffers")
+      (buffers . ,file-editing-buffers)
+      (remaining-buffers . ,remaining-buffers))))
+
+(defun easysession--handler-load-indirect-buffers (session-data)
+  "Load indirect buffers from the SESSION-DATA variable."
+  (let ((indirect-buffers (assoc-default "indirect-buffers"
+                                         session-data)))
+    (dolist (item indirect-buffers)
+      (let* ((indirect-buffer-name (alist-get 'indirect-buffer-name item))
+             (base-buffer-name (alist-get 'base-buffer-name
+                                          (cdr item))))
+        (when (and base-buffer-name indirect-buffer-name)
+          (let ((base-buffer (get-buffer base-buffer-name))
+                (indirect-buffer (get-buffer indirect-buffer-name)))
+            (when (and (or (not indirect-buffer)
+                           (not (buffer-live-p indirect-buffer)))
+                       base-buffer
+                       (buffer-live-p base-buffer))
+              (with-current-buffer base-buffer
+                (let ((indirect-buffer
+                       (ignore-errors (clone-indirect-buffer
+                                       indirect-buffer-name nil))))
+                  (if indirect-buffer
+                      (easysession--ensure-buffer-name indirect-buffer
+                                                       indirect-buffer-name)
+                    (easysession--warning
+                     (concat "Failed to restore the indirect "
+                             "buffer (clone): %s")
+                     indirect-buffer-name)))))))))))
+
+(defun easysession--handler-save-indirect-buffers (buffers)
+  "Collect and categorize indirect buffers from the provided list.
+BUFFERS is the list of buffers to process. This function identifies indirect
+buffers and separates them from other buffers."
+  (let ((indirect-buffers '())
+        (remaining-buffers '()))
+    (dolist (buf buffers)
+      (if (and buf (easysession--get-indirect-buffer-info buf))
+          (push (easysession--get-indirect-buffer-info buf) indirect-buffers)
+        (push buf remaining-buffers)))
+    `((key . "indirect-buffers")
+      (buffers . ,indirect-buffers)
+      (remaining-buffers . ,remaining-buffers))))
+
+(defvar easysession--load-handlers
+  '(easysession--handler-load-file-editing-buffers
+    easysession--handler-load-indirect-buffers)
+  "A list of functions used to load session data.
+Each function in this list is responsible for loading a specific type of
+buffer (e.g., file editing buffers, indirect buffers) from the session
+information. These functions are applied sequentially to restore the session
+state based on the saved session data.")
+
+(defvar easysession--save-handlers
+  '(easysession--handler-save-file-editing-buffers
+    easysession--handler-save-indirect-buffers)
+  "A list of functions used to save session data.
+Each function in this list is responsible for saving a specific type of
+buffer (e.g., file editing buffers, indirect buffers) from the current
+session. These functions are applied sequentially to capture the state of
+the session, which can later be restored by the corresponding load handlers.")
+
 (defun easysession-save (&optional session-name)
   "Save the current session.
 SESSION-NAME is the name of the session."
@@ -592,25 +639,30 @@ SESSION-NAME is the name of the session."
          (session-dir (file-name-directory session-file)))
 
     ;; Handlers
+    ;; TODO handlers for frameset and frameset-geo
     (push (cons "frameset" data-frameset) session-data)
     (push (cons "frameset-geo" data-frameset-geometry) session-data)
 
     ;; Buffers and file buffers
-    (let ((file-editing-buffers)
-          (indirect-buffers))
-      (dolist (buf (funcall easysession-buffer-list-function))
-        (when buf
-          (let ((indirect-buf-info (easysession--get-indirect-buffer-info buf)))
-            (if indirect-buf-info
-                ;; Indirect buffers
-                (push indirect-buf-info indirect-buffers)
-              ;; File editing buffers and dired buffers
-              (let ((path (easysession--get-base-buffer-path buf)))
-                (when path
-                  (push path file-editing-buffers)))))))
+    (let* ((buffers (funcall easysession-buffer-list-function)))
+      (dolist (handler easysession--save-handlers)
+        (let* ((result (funcall handler buffers))
+               (key (alist-get 'key result))
+               (buffer-list (alist-get 'buffers result))
+               (remaining-buffers (alist-get 'remaining-buffers result)))
 
-      (push (cons "buffers" file-editing-buffers) session-data)
-      (push (cons "indirect-buffers" indirect-buffers) session-data))
+          ;; Push results into session-data
+          (push (cons key buffer-list) session-data)
+
+          ;; The following optimizes buffer processing by updating the list of
+          ;; buffers for the next iteration By setting buffers to the
+          ;; remaining-buffers returned by each handler function, it ensures
+          ;; that each subsequent handler only processes buffers that have not
+          ;; yet been handled. This approach avoids redundant processing of
+          ;; buffers that have already been classified or processed by previous
+          ;; handlers, resulting in more efficient processing. As a result, each
+          ;; handler operates on a progressively reduced set of buffers.
+          (setq buffers remaining-buffers))))
 
     (unless (file-directory-p session-dir)
       (make-directory session-dir t))
@@ -634,7 +686,7 @@ SESSION-NAME is the name of the session."
          (session-name (if session-name
                            session-name
                          easysession--current-session-name))
-         (session-info nil)
+         (session-data nil)
          (file-contents nil)
          (session-file (easysession--get-session-file-name session-name)))
     (when (and session-file (file-exists-p session-file))
@@ -647,22 +699,24 @@ SESSION-NAME is the name of the session."
                session-name session-file))
 
       ;; Evaluate file
-      (setq session-info (ignore-errors (read file-contents)))
-      (when (not session-info)
+      (setq session-data (ignore-errors (read file-contents)))
+      (when (not session-data)
         (error
          "[easysession] %s: Failed to evaluate session information from %s"
          session-name session-file))
 
       (run-hooks 'easysession-before-load-hook)
-      ;; Load buffers first because the cursor might be changed by packages such
-      ;; as saveplace. This will allow frameset to change the cursor later
-      ;; on.
-      (easysession--handler-load-base-buffers session-info)
-      (easysession--handler-load-indirect-buffers session-info)
 
-      (easysession--load-frameset session-info
-                                  session-name
+      ;; Load buffers first because the cursor, window-start, or hscroll might
+      ;; be altered by packages such as saveplace. This will allow the frameset
+      ;; to modify the cursor later on.
+      (dolist (handler easysession--load-handlers)
+        (funcall handler session-data))
+
+      ;; Load the frame set
+      (easysession--load-frameset session-data
                                   (bound-and-true-p easysession--load-geometry))
+
       (setq easysession--current-session-loaded t)
       (when (called-interactively-p 'any)
         (easysession--message "Session loaded: %s" session-name))
