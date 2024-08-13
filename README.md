@@ -1,6 +1,7 @@
 # easysession.el - Easily persist and restore your Emacs editing sessions
 [![MELPA](https://melpa.org/packages/easysession-badge.svg)](https://melpa.org/#/easysession)
 ![](https://raw.githubusercontent.com/jamescherti/easysession.el/main/.images/made-for-gnu-emacs.svg)
+![License](https://img.shields.io/github/license/jamescherti/easysession.el)
 
 The `easysession.el` Emacs package is a lightweight session manager for Emacs that can persist and restore file editing buffers, indirect buffers/clones, Dired buffers, windows/splits, the built-in tab-bar (including tabs, their buffers, and windows), and Emacs frames. It offers a convenient and effortless way to manage Emacs editing sessions and utilizes built-in Emacs functions to persist and restore frames.
 
