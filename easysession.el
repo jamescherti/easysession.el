@@ -350,7 +350,7 @@ Raise an error if the session name is invalid."
     (error "[easysession] Invalid session name: %s" session-name))
   session-name)
 
-(defun easysession-set-current-session (&optional session-name)
+(defun easysession--set-current-session (&optional session-name)
   "Set the current session to SESSION-NAME.
 Return t if the session name is successfully set."
   (easysession--ensure-session-name-valid session-name)
@@ -716,8 +716,9 @@ SESSION-NAME is the name of the session."
                                           'utf-8 session-file)
                                  t)))
       (if fwrite-success
-          (when (called-interactively-p 'any)
-            (easysession--message "Session saved: %s" session-name)
+          (progn
+            (when (called-interactively-p 'any)
+              (easysession--message "Session saved: %s" session-name))
             (run-hooks 'easysession-after-save-hook))
         (error "[easysession] %s: failed to save the session to %s"
                session-name session-file)))
@@ -798,7 +799,7 @@ If the function is called interactively, ask the user."
          (previous-session-name easysession--current-session-name))
     (easysession--ensure-session-name-valid new-session-name)
     (easysession-save new-session-name)
-    (easysession-set-current-session new-session-name)
+    (easysession--set-current-session new-session-name)
     (if (string= previous-session-name easysession--current-session-name)
         (easysession--message "Saved the session: %s" new-session-name)
       (easysession--message "Saved and switched to session: %s"
@@ -841,7 +842,7 @@ initialized."
     (easysession-load session-name)
 
     (unless session-reloaded
-      (easysession-set-current-session session-name)
+      (easysession--set-current-session session-name)
       (unless (file-exists-p session-file)
         (run-hooks 'easysession-new-session-hook)
         (easysession-save)
