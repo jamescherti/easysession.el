@@ -122,6 +122,23 @@ criteria."
   :type 'function
   :group 'easysession)
 
+(defun easysession--default-auto-save-predicate ()
+  "Default predicate function for `easysession-save-predicate`.
+This function always returns non-nil, ensuring the session is saved."
+  t)
+
+(defcustom
+  easysession-save-mode-predicate #'easysession--default-auto-save-predicate
+  "Predicate that determines if the session is saved automatically.
+This function is called with no arguments and should return non-nil if
+`easysession-save-mode' should save the session automatically. The default
+predicate always returns non-nil, ensuring all sessions are saved
+automatically."
+  :type 'function
+  :group 'easysession)
+
+(defvar easysession--debug nil)
+
 (defvar easysession--timer nil)
 
 (defvar easysession--overwrite-frameset-filter-alist
@@ -856,6 +873,20 @@ initialized."
           (t (easysession--message "Switched to %ssession: %s"
                                    (if new-session "new " "") session-name)))))
 
+(defun easysession--auto-save ()
+  "Save the session automatically based on the auto-save predicate.
+This function is usually called by `easysession-save-mode'. It evaluates the
+`easysession-save-mode-predicate' function, and if the predicate returns
+non-nil, the current session is saved."
+  (interactive)
+  (if (funcall easysession-save-mode-predicate)
+      (easysession-save)
+    (when easysession--debug
+      (easysession--message
+       (concat "[DEBUG] Auto-save ignored: `easysession-save-mode-predicate' "
+               "returned nil."))
+      nil)))
+
 ;;;###autoload
 (define-minor-mode easysession-save-mode
   "Toggle `easysession-save-mode'."
@@ -869,8 +900,8 @@ initialized."
           (setq easysession--timer
 	              (run-with-timer easysession-save-interval
 			                          easysession-save-interval
-                                #'easysession-save)))
-        (add-hook 'kill-emacs-hook #'easysession-save))
+                                #'easysession--auto-save)))
+        (add-hook 'kill-emacs-hook #'easysession--auto-save))
     (when easysession--timer
       (cancel-timer easysession--timer)
       (setq easysession--timer nil))

@@ -71,7 +71,6 @@
   "Add and configure hooks for testing `easysession`.
 Tracks the execution of session-related hooks and performs checks
 to ensure expected buffer states before and after loading or saving."
-  (interactive)
   (when test-easysession--new-session-hook-triggered
     (error (concat "The `easysession-new-session-hook` should not be "
                    "triggered before the switch to another session.")))
@@ -102,7 +101,6 @@ to ensure expected buffer states before and after loading or saving."
 Test the `easysession-switch-to' function by switching to a test session. Checks
 if the `easysession-new-session-hook' is correctly executed and verifies the
 session name before and after the switch."
-  (interactive)
   ;; Verify the initial session name
   (unless (string= "main" (easysession-get-session-name))
     (error ("Expected the initial session to be named 'main', but found '%s'"
@@ -126,7 +124,6 @@ session name before and after the switch."
   "Test adding and removing easysession save and load handlers.
 This function ensures that handlers are correctly removed and re-added, and
 validates the handler lists after each operation."
-  (interactive)
   ;; Remove existing save and load handlers
   (easysession-remove-save-handler 'easysession--handler-save-file-editing-buffers)
   (easysession-remove-save-handler 'easysession--handler-save-indirect-buffers)
@@ -159,7 +156,6 @@ validates the handler lists after each operation."
   "Create and set up test buffers for easysession.
 This function creates file buffers, a Dired buffer, and an indirect buffer,
 storing them in respective variables for later use."
-  (interactive)
   ;; File editing buffers
   (with-temp-buffer
     (insert "hello world")
@@ -195,7 +191,6 @@ storing them in respective variables for later use."
 
 (defun test-easysession--save-load ()
   "Test persisting and restoring: file editing buffers and indirect-buffer."
-  (interactive)
   (unless (get-file-buffer test-easysession--file-buffer1-path)
     (error "Before-save: Buffer 1 should be open"))
 
@@ -205,19 +200,23 @@ storing them in respective variables for later use."
     (error "The easysession-after-save-hook was not triggered"))
   (unless test-easysession--before-save-hook-triggered
     (error "The easysession-before-save-hook was not triggered"))
-  (kill-buffer test-easysession--file-buffer1)
+  (when test-easysession--file-buffer1
+    (kill-buffer test-easysession--file-buffer1))
   (when (get-file-buffer test-easysession--file-buffer1-path)
     (error "The second buffer is still open"))
 
-  (kill-buffer test-easysession--file-buffer2)
+  (when test-easysession--file-buffer2
+    (kill-buffer test-easysession--file-buffer2))
   (when (get-file-buffer test-easysession--file-buffer2-path)
     (error "The second buffer is still open"))
 
-  (kill-buffer test-easysession--dired-buffer)
+  (when test-easysession--dired-buffer
+    (kill-buffer test-easysession--dired-buffer))
   (when (buffer-live-p test-easysession--dired-buffer)
     (error "The Dired buffer is still open"))
 
-  (kill-buffer test-easysession--indirect-buffer1)
+  (when test-easysession--indirect-buffer1
+    (kill-buffer test-easysession--indirect-buffer1))
   (when (get-buffer test-easysession--indirect-buffer1-name)
     (error "The indirect buffer is still open"))
 
@@ -257,19 +256,41 @@ storing them in respective variables for later use."
 
 (defun test-easysession--get-all-names ()
   "Test: `easysession--get-all-names'."
-  (interactive)
   (unless (equal (easysession--get-all-names) '("main" "test"))
     (error "The easysession--get-all-names failed")))
 
+(defun test-save-mode-predicate ()
+  "Test save-mode predicate."
+  (defun my-easysession-nothing-saved ()
+    "Nothing is saved."
+    nil)
+  (setq easysession-save-mode-predicate 'my-easysession-nothing-saved)
+  (easysession--auto-save)
+
+  (when test-easysession--file-buffer1
+    (kill-buffer test-easysession--file-buffer1))
+  (setq easysession-before-load-hook nil)
+  (easysession-load)
+  (setq test-easysession--file-buffer1
+        (get-buffer test-easysession--file-buffer1-path))
+  (when test-easysession--file-buffer1
+    (error (concat "easysession--auto-save or the "
+                   "easysession-save-mode-predicate do not seem to "
+                   "be working"))))
+
 (defun test-easysession ()
   "Test easysession."
-  (interactive)
+  ;; Init
   (test-easysession--add-hooks)
   (test-easysession--switch-session)
   (test-easysession--add-remove-handlers)
   (test-easysession--create-buffers)
+
+  ;; Tests
   (test-easysession--save-load)
   (test-easysession--get-all-names)
+  (test-save-mode-predicate)
+
   (message "Success: test-easysession"))
 
 (provide 'test-easysession)
