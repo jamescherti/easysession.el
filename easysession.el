@@ -392,7 +392,8 @@ OVERWRITE-ALIST is an alist similar to
     '()))
 
 (defun easysession--prompt-session-name (prompt &optional session-name)
-  "Prompt for a session name with PROMPT. Use SESSION-NAME as the default value."
+  "Prompt for a session name with PROMPT.
+Use SESSION-NAME as the default value."
   (completing-read (concat "[easysession] " prompt)
                    (easysession--get-all-names) nil nil nil nil session-name))
 
