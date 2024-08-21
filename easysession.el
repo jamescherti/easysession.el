@@ -558,18 +558,32 @@ Returns t if the session file exists, nil otherwise."
       (dolist (buffer-name-and-path buffer-file-names)
         (let ((buffer-name (car buffer-name-and-path))
               (buffer-path (cdr buffer-name-and-path)))
-          (let* ((buffer (ignore-errors
-                           (find-file-noselect buffer-path :nowarn))))
-            (if buffer
-                ;; We are going to be using buffer-base-buffer to make sure that
-                ;; the buffer that was returned by find-file-noselect is a base
-                ;; buffer and not a clone
-                (let* ((base-buffer (buffer-base-buffer buffer))
-                       (buffer (if base-buffer
-                                   base-buffer
-                                 buffer)))
-                  (when (and buffer (buffer-live-p buffer))
-                    (easysession--ensure-buffer-name buffer buffer-name)))
+          (let* ((buffer (get-file-buffer buffer-path)))
+            (unless buffer
+              (setq buffer (ignore-errors (find-file-noselect buffer-path
+                                                              :nowarn))))
+            (if (and buffer (buffer-live-p buffer))
+                (progn
+                  ;; We are going to be using buffer-base-buffer to make sure
+                  ;; that the buffer that was returned by find-file-noselect is
+                  ;; a base buffer and not a clone
+                  (let* ((base-buffer (buffer-base-buffer buffer))
+                         (buffer (if base-buffer
+                                     base-buffer
+                                   buffer)))
+                    ;; Fixes the issue preventing font-lock-mode from fontifying
+                    ;; restored buffers, causing the text to remain unfontified
+                    ;; until the user presses a key.
+                    (when (and
+                           (bound-and-true-p font-lock-mode)
+                           (bound-and-true-p
+                            redisplay-skip-fontification-on-input)
+                           (fboundp 'jit-lock-fontify-now))
+                      (with-current-buffer buffer
+                        (jit-lock-fontify-now)))
+
+                    (when buffer
+                      (easysession--ensure-buffer-name buffer buffer-name))))
               (easysession--warning "Failed to restore the buffer '%s': %s"
                                     buffer-name buffer-path))))))))
 
