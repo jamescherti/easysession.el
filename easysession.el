@@ -906,7 +906,7 @@ non-nil, the current session is saved."
 (define-minor-mode easysession-save-mode
   "Toggle `easysession-save-mode'."
   :global t
-  :lighter " EasySess"
+  :lighter " EasySes"
   :group 'easysession
   (if easysession-save-mode
       (progn
