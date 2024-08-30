@@ -110,6 +110,7 @@ session name before and after the switch."
 
   ;; Switch to the test session
   (easysession-save)
+  (easysession-delete "test")
   (easysession-switch-to "test")
 
   ;; Verify the session name after switching
