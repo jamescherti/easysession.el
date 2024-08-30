@@ -525,9 +525,14 @@ Returns t if the session file exists, nil otherwise."
          (session-file (easysession--get-session-file-name session-name)))
     (if-let ((session-buffer (find-buffer-visiting session-file)))
         (kill-buffer session-buffer))
-    (when (file-exists-p session-file)
-      (delete-file session-file nil))
-    (easysession--message "Session deleted: %s" session-name)))
+    (if (file-exists-p session-file)
+        (progn (delete-file session-file nil)
+               (easysession--message "Session deleted: %s" session-name)
+               t)
+      (easysession--warning
+       "The session '%s' cannot be deleted because it does not exist"
+       session-name)
+      nil)))
 
 (defun easysession-get-current-session-name ()
   "Return the name of the current session."
