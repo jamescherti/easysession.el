@@ -827,14 +827,14 @@ Emacs frames."
 If SESSION-NAME is provided, use it; otherwise, use current session.
 If the function is called interactively, ask the user."
   (interactive)
-  (unless session-name
-    (setq session-name
-          (easysession-get-current-session-name)))
   (let* ((new-session-name (or session-name
                                (if (called-interactively-p 'any)
                                    (easysession--prompt-session-name
-                                    "Save session as: " session-name)
-                                 session-name)))
+                                    "Save session as: "
+                                    (unless session-name
+                                      (easysession-get-current-session-name)))
+                                 (unless session-name
+                                   (easysession-get-current-session-name)))))
          (previous-session-name easysession--current-session-name))
     (easysession--ensure-session-name-valid new-session-name)
     (easysession-save new-session-name)
