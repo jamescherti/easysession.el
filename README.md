@@ -37,6 +37,7 @@ Key features include:
 ## Installation
 
 The `easysession` package can be installed from MELPA by adding the following to your Emacs init file:
+
 ``` emacs-lisp
 (use-package easysession
   :ensure t
