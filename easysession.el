@@ -580,7 +580,7 @@ Returns t if the session file exists, nil otherwise."
                             redisplay-skip-fontification-on-input)
                            (fboundp 'jit-lock-fontify-now))
                       (with-current-buffer buffer
-                        (jit-lock-fontify-now)))
+                        (ignore-errors (jit-lock-fontify-now))))
 
                     (when buffer
                       (easysession--ensure-buffer-name buffer buffer-name))))
