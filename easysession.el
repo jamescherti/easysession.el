@@ -519,8 +519,9 @@ Returns t if the session file exists, nil otherwise."
 (defun easysession-delete (&optional session-name)
   "Delete a session. Prompt for SESSION-NAME if not provided."
   (interactive)
-  (let* ((session-name (easysession--prompt-session-name
-                        "Delete session: " session-name))
+  (let* ((session-name (or session-name
+                           (easysession--prompt-session-name
+                            "Delete session: " session-name)))
          (session-file (easysession--get-session-file-name session-name)))
     (if-let ((session-buffer (find-buffer-visiting session-file)))
         (kill-buffer session-buffer))
@@ -539,10 +540,15 @@ Returns t if the session file exists, nil otherwise."
 (defun easysession-rename (&optional new-session-name)
   "Rename the current session to NEW-SESSION-NAME."
   (interactive)
+  (unless (and (not (called-interactively-p 'any)) (not new-session-name))
+    (error (concat "[easysession] easysession-rename: The 'new-session-name' "
+                   "argument must be specified when the function is "
+                   "called non-interactively.")))
   (unless new-session-name
-    (setq new-session-name (easysession--prompt-session-name
-                            (format "Rename session '%s' to: "
-                                    (easysession-get-session-name)))))
+    (setq new-session-name (or new-session-name
+                               (easysession--prompt-session-name
+                                (format "Rename session '%s' to: "
+                                        (easysession-get-session-name))))))
   (let* ((old-path (easysession--get-session-file-name
                     easysession--current-session-name))
          (new-path (easysession--get-session-file-name new-session-name)))
@@ -824,10 +830,11 @@ If the function is called interactively, ask the user."
   (unless session-name
     (setq session-name
           (easysession-get-current-session-name)))
-  (let* ((new-session-name (if (called-interactively-p 'any)
-                               (easysession--prompt-session-name
-                                "Save session as: " session-name)
-                             session-name))
+  (let* ((new-session-name (or session-name
+                               (if (called-interactively-p 'any)
+                                   (easysession--prompt-session-name
+                                    "Save session as: " session-name)
+                                 session-name)))
          (previous-session-name easysession--current-session-name))
     (easysession--ensure-session-name-valid new-session-name)
     (easysession-save new-session-name)
@@ -859,9 +866,10 @@ initialized."
   (interactive)
   (let* ((session-name (cond (session-name session-name)
                              ((called-interactively-p 'any)
-                              (easysession--prompt-session-name
-                               "Load and switch to session: "
-                               (easysession-get-current-session-name)))
+                              (or session-name
+                                  (easysession--prompt-session-name
+                                   "Load and switch to session: "
+                                   (easysession-get-current-session-name))))
                              (t (easysession-get-current-session-name))))
          (session-file (easysession--get-session-file-name session-name))
          (session-reloaded (string= session-name

@@ -71,6 +71,7 @@
   "Add and configure hooks for testing `easysession`.
 Tracks the execution of session-related hooks and performs checks
 to ensure expected buffer states before and after loading or saving."
+  (interactive)
   (when test-easysession--new-session-hook-triggered
     (error (concat "The `easysession-new-session-hook` should not be "
                    "triggered before the switch to another session.")))
@@ -101,6 +102,7 @@ to ensure expected buffer states before and after loading or saving."
 Test the `easysession-switch-to' function by switching to a test session. Checks
 if the `easysession-new-session-hook' is correctly executed and verifies the
 session name before and after the switch."
+  (interactive)
   ;; Verify the initial session name
   (unless (string= "main" (easysession-get-session-name))
     (error ("Expected the initial session to be named 'main', but found '%s'"
@@ -124,6 +126,7 @@ session name before and after the switch."
   "Test adding and removing easysession save and load handlers.
 This function ensures that handlers are correctly removed and re-added, and
 validates the handler lists after each operation."
+  (interactive)
   ;; Remove existing save and load handlers
   (easysession-remove-save-handler 'easysession--handler-save-file-editing-buffers)
   (easysession-remove-save-handler 'easysession--handler-save-indirect-buffers)
@@ -156,6 +159,7 @@ validates the handler lists after each operation."
   "Create and set up test buffers for easysession.
 This function creates file buffers, a Dired buffer, and an indirect buffer,
 storing them in respective variables for later use."
+  (interactive)
   ;; File editing buffers
   (with-temp-buffer
     (insert "hello world")
@@ -191,6 +195,7 @@ storing them in respective variables for later use."
 
 (defun test-easysession--save-load ()
   "Test persisting and restoring: file editing buffers and indirect-buffer."
+  (interactive)
   (unless (get-file-buffer test-easysession--file-buffer1-path)
     (error "Before-save: Buffer 1 should be open"))
 
@@ -256,11 +261,13 @@ storing them in respective variables for later use."
 
 (defun test-easysession--get-all-names ()
   "Test: `easysession--get-all-names'."
+  (interactive)
   (unless (equal (easysession--get-all-names) '("main" "test"))
     (error "The easysession--get-all-names failed")))
 
 (defun test-save-mode-predicate ()
   "Test save-mode predicate."
+  (interactive)
   (defun my-easysession-nothing-saved ()
     "Nothing is saved."
     nil)
@@ -280,6 +287,7 @@ storing them in respective variables for later use."
 
 (defun test-easysession ()
   "Test easysession."
+  (interactive)
   ;; Init
   (test-easysession--add-hooks)
   (test-easysession--switch-session)
