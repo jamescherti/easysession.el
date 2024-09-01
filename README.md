@@ -114,6 +114,11 @@ To persist and restore global variables in Emacs, you can use the built-in `save
 
 (Each element added to `savehist-additional-variables` is a variable that will be persisted across Emacs sessions that use `savehist`.)
 
+The `easysession` package can leverage `savehist` save the restore the current session name:
+``` emacs-lisp
+(add-to-list 'savehist-additional-variables 'easysession--current-session-name)
+```
+
 ### How to create an empty session setup
 
 To set up a minimal environment when easysession creates a new session, you can define a function that closes all other tabs, deletes all other windows, and switches to the scratch buffer. The following Emacs Lisp code demonstrates how to achieve this:
@@ -138,6 +143,23 @@ To set up `easysession-save-mode` to automatically save only the "main" session 
   (when (string= "main" (easysession-get-current-session-name))
     t))
 (setq easysession-save-mode-predicate 'my-easysession-only-main-saved)
+```
+
+### How to make EasySession kill all buffers before loading a session?
+
+Here is a code snippet shared by u/capuche on Reddit:
+
+``` emacs-lisp
+(defun kill-old-session-buffers ()
+  (save-some-buffers t)
+  (mapc #'kill-buffer
+        (cl-remove-if
+         (lambda (buffer)
+           (string= (buffer-name buffer) "*Messages*"))
+         (buffer-list)))
+  (delete-other-windows))
+(add-hook 'easysession-before-load-hook #'kill-old-session-buffers)
+(add-hook 'easysession-new-session-hook #'kill-old-session-buffers)
 ```
 
 ### How does the author use easysession?
