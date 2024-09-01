@@ -147,7 +147,7 @@ To set up `easysession-save-mode` to automatically save only the "main" session 
 
 ### How to make EasySession kill all buffers before loading a session?
 
-Here is a code snippet shared by u/capuche on Reddit:
+Here is a code snippet shared by u/capuche on Reddit that closes all buffers before loading a session:
 
 ``` emacs-lisp
 (defun kill-old-session-buffers ()
