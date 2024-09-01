@@ -99,8 +99,8 @@ after a new one is created."
 
 (defcustom easysession-quiet nil
   "If non-nil, suppress all messages and only show errors and warnings.
-This includes messages such as 'Session deleted:', 'Session loaded:', 'Session
-saved:', etc."
+This includes messages such as `Session deleted:`, `Session loaded:`, `Session
+saved:`, etc."
   :type 'boolean
   :group 'easysession)
 
