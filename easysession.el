@@ -126,7 +126,7 @@ activated when `easysession-save-mode' is enabled."
                                           easysession-mode-line-prefix
                                           ":"
                                           easysession-mode-line-session-name
-                                          "]")
+                                          "] ")
   "Mode-line format used to display the session name."
   :type 'sexp
   :group 'easysession
