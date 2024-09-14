@@ -158,13 +158,13 @@ activated when `easysession-save-mode' is enabled."
 (defvar easysession-save-mode-lighter-show-session-name nil
   "If non-nil, display the session name in the lighter.")
 
-(defvar easysession-save-mode-lighter-session-name
+(defvar easysession-save-mode-lighter-session-name-spec
   `((:eval (format "%s[" easysession-save-mode-lighter))
     (:propertize (:eval easysession--current-session-name)
                  face easysession-mode-line-session-name-face)
     "]")
   "Lighter spec for showing the current session.")
-(put 'easysession-save-mode-lighter-session-name 'risky-local-variable t)
+(put 'easysession-save-mode-lighter-session-name-spec 'risky-local-variable t)
 
 ;; Other
 (defcustom easysession-buffer-list-function #'buffer-list
@@ -1009,7 +1009,7 @@ session name in the mode line.")
   (lambda()
     (:eval
      (if easysession-save-mode-lighter-show-session-name
-         easysession-save-mode-lighter-session-name
+         easysession-save-mode-lighter-session-name-spec
        easysession-save-mode-lighter)))
   :group 'easysession
   (if easysession-save-mode
