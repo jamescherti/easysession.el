@@ -915,19 +915,29 @@ non-nil, the current session is saved."
                "returned nil."))
       nil)))
 
+(defface easysession-mode-line-current-session-face '((t :inherit success))
+  "Face used in mode line to indicate that session is current loaded.")
+
+(defcustom easysession-lighter
+  '(" [" (:propertize (:eval easysession--current-session-name)  face easysession-mode-line-current-session-face) "]")
+  "Lighter spec used by the default `easysession-ligther' showing the current session name."
+  :type 'sexp)
+
+(put 'easysession-lighter 'risky-local-variable t)
+
 ;;;###autoload
 (define-minor-mode easysession-save-mode
   "Toggle `easysession-save-mode'."
   :global t
-  :lighter " EasySes"
+  :lighter easysession-lighter
   :group 'easysession
   (if easysession-save-mode
       (progn
         (when (and easysession-save-interval
-	                 (null easysession--timer))
+	                     (null easysession--timer))
           (setq easysession--timer
-	              (run-with-timer easysession-save-interval
-			                          easysession-save-interval
+	               (run-with-timer easysession-save-interval
+			                                   easysession-save-interval
                                 #'easysession--auto-save)))
         (add-hook 'kill-emacs-hook #'easysession--auto-save))
     (when easysession--timer
