@@ -17,7 +17,7 @@ The `easysession.el` Emacs package is a lightweight session manager for Emacs th
         - [How to only persist and restore visible buffers](#how-to-only-persist-and-restore-visible-buffers)
         - [How to persist and restore global variables?](#how-to-persist-and-restore-global-variables)
         - [How to create an empty session setup](#how-to-create-an-empty-session-setup)
-        - [How can I configure easysession-save-mode to automatically save only the "main" session and let me manually save others?](#how-can-i-configure-easysession-save-mode-to-automatically-save-only-the-main-session-and-let-me-manually-save-others)
+        - [How to configure easysession-save-mode to automatically save only the "main" session and let me manually save others?](#how-to-configure-easysession-save-mode-to-automatically-save-only-the-main-session-and-let-me-manually-save-others)
         - [How to make EasySession kill all buffers before loading a session?](#how-to-make-easysession-kill-all-buffers-before-loading-a-session)
         - [How does the author use easysession?](#how-does-the-author-use-easysession)
         - [Why not use the desktop.el?](#why-not-use-the-desktopel)
@@ -140,7 +140,7 @@ To set up a minimal environment when easysession creates a new session, you can 
 (add-hook 'easysession-new-session-hook #'my-empty-easysession)
 ```
 
-### How can I configure easysession-save-mode to automatically save only the "main" session and let me manually save others?
+### How to configure easysession-save-mode to automatically save only the "main" session and let me manually save others?
 
 To set up `easysession-save-mode` to automatically save only the "main" session and allow you to manually save other sessions, add the following code to your configuration:
 ```emacs-lisp
@@ -196,6 +196,8 @@ There are some existing packages, such as minimal-session-saver, save-visited-fi
 Easysession is lightweight and can persist and restore file editing buffers, indirect buffers/clones, Dired buffers, the tab-bar, and the Emacs frames (with or without the Emacs frames geometry). It is similar to Vim or Neovim sessions because it loads and restores your editing environment, including buffers, windows, tabs, and other settings, allowing you to resume work exactly where you left off.
 
 ## License
+
+The `easysession` Emacs package has been written by [James Cherti](https://www.jamescherti.com/) and is distributed under terms of the GNU General Public License version 3, or, at your choice, any later version.
 
 Copyright (C) 2024 [James Cherti](https://www.jamescherti.com)
 
