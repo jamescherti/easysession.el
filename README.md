@@ -6,22 +6,24 @@
 
 The `easysession.el` Emacs package is a lightweight session manager for Emacs that can persist and restore file editing buffers, indirect buffers/clones, Dired buffers, windows/splits, the built-in tab-bar (including tabs, their buffers, and windows), and Emacs frames. It offers a convenient and effortless way to manage Emacs editing sessions and utilizes built-in Emacs functions to persist and restore frames.
 
-## Table of contents
-
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
+**Table of Contents**
 
-- [Features](#features)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Frequently asked questions](#frequently-asked-questions)
-    - [How to only persist and restore visible buffers](#how-to-only-persist-and-restore-visible-buffers)
-    - [How to persist and restore global variables?](#how-to-persist-and-restore-global-variables)
-    - [How to create an empty session setup](#how-to-create-an-empty-session-setup)
-    - [How does the author use easysession?](#how-does-the-author-use-easysession)
-    - [Why not use the desktop.el?](#why-not-use-the-desktopel)
-    - [Why not use one of the other third-party session packages?](#why-not-use-one-of-the-other-third-party-session-packages)
-- [License](#license)
-- [Links](#links)
+- [easysession.el - Easily persist and restore your Emacs editing sessions](#easysessionel---easily-persist-and-restore-your-emacs-editing-sessions)
+    - [Features](#features)
+    - [Installation](#installation)
+    - [Usage](#usage)
+    - [Frequently asked questions](#frequently-asked-questions)
+        - [How to only persist and restore visible buffers](#how-to-only-persist-and-restore-visible-buffers)
+        - [How to persist and restore global variables?](#how-to-persist-and-restore-global-variables)
+        - [How to create an empty session setup](#how-to-create-an-empty-session-setup)
+        - [How can I configure easysession-save-mode to automatically save only the "main" session and let me manually save others?](#how-can-i-configure-easysession-save-mode-to-automatically-save-only-the-main-session-and-let-me-manually-save-others)
+        - [How to make EasySession kill all buffers before loading a session?](#how-to-make-easysession-kill-all-buffers-before-loading-a-session)
+        - [How does the author use easysession?](#how-does-the-author-use-easysession)
+        - [Why not use the desktop.el?](#why-not-use-the-desktopel)
+        - [Why not use one of the other third-party session packages?](#why-not-use-one-of-the-other-third-party-session-packages)
+    - [License](#license)
+    - [Links](#links)
 
 <!-- markdown-toc end -->
 
@@ -43,6 +45,7 @@ The `easysession` package can be installed from MELPA by adding the following to
   :ensure t
   :custom
   (easysession-save-interval (* 10 60))
+  (easysession-mode-line t)
   :init
   (add-hook 'after-init-hook #'easysession-load-including-geometry 98)
   (add-hook 'after-init-hook #'easysession-save-mode 99))
@@ -50,6 +53,7 @@ The `easysession` package can be installed from MELPA by adding the following to
 
 Note that:
 - `easysession-load-including-geometry` is not needed after Emacs is loaded if you do not want EasySession to move or resize the Emacs frame when switching sessions. Instead, use `easysession-switch-to` or `easysession-load` to switch to another session or reload the current session without resizing or moving the Emacs frames.
+- `easysession-mode-line` determines whether the current session name appears in the mode line by adding `easysession` to `mode-line-misc-info`. Alternatively, `easysession-save-mode-lighter-show-session-name` can be used to display the session name in the lighter.
 - The `easysession-save-mode` ensures that the current session is automatically saved every `easysession-save-interval` seconds and when emacs quits.
 - The `easysession-save-interval` variable determines the interval between automatic session saves. Setting it to nil disables timer-based autosaving, causing `easysession-save-mode` to save only when Emacs exits.
 

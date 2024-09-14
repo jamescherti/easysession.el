@@ -112,6 +112,61 @@ activated when `easysession-save-mode' is enabled."
                  (integer :tag "Seconds"))
   :group 'easysession)
 
+;; Mode line
+(defcustom easysession-mode-line-prefix "EasySession"
+  "Prefix string used to customize the session name display in the mode-line."
+  :type 'string
+  :group 'easysession)
+
+(defface easysession-mode-line-session-name-face
+  '((t :inherit font-lock-constant-face :weight bold))
+  "Face used in the mode-line to indicate the current session.")
+
+(defcustom easysession-mode-line-format '(" ["
+                                          easysession-mode-line-prefix
+                                          ":"
+                                          easysession-mode-line-session-name
+                                          "]")
+  "Mode-line format used to display the session name."
+  :type 'sexp
+  :group 'easysession
+  :set (lambda (symbol value)
+         (set symbol value)
+         (setq mode-line-misc-info
+               (assq-delete-all 'easysession-mode-line mode-line-misc-info))
+         (add-to-list 'mode-line-misc-info `(easysession-mode-line
+                                             ,value))))
+(put 'easysession-mode-line-format 'risky-local-variable t)
+
+(defcustom easysession-mode-line nil
+  "If non-nil, add `easysession` to `mode-line-misc-info'. If nil, remove it."
+  :type 'boolean
+  :group 'easysession
+  :set (lambda (symbol value)
+         (set symbol value)
+         (setq mode-line-misc-info
+               (assq-delete-all
+                'easysession-mode-line mode-line-misc-info))
+         (add-to-list 'mode-line-misc-info
+                      `(easysession-mode-line
+                        ,easysession-mode-line-format))))
+
+;; Lighter
+(defvar easysession-save-mode-lighter " EasySeSave"
+  "Default lighter string for `easysession-save-mode'.")
+
+(defvar easysession-save-mode-lighter-show-session-name nil
+  "If non-nil, display the session name in the lighter.")
+
+(defvar easysession-save-mode-lighter-session-name
+  `((:eval (format "%s[" easysession-save-mode-lighter))
+    (:propertize (:eval easysession--current-session-name)
+                 face easysession-mode-line-session-name-face)
+    "]")
+  "Lighter spec for showing the current session.")
+(put 'easysession-save-mode-lighter-session-name 'risky-local-variable t)
+
+;; Other
 (defcustom easysession-buffer-list-function #'buffer-list
   "Function used to retrieve the buffers for persistence and restoration.
 This holds a function that returns a list of buffers to be saved and restored
@@ -915,11 +970,47 @@ non-nil, the current session is saved."
                "returned nil."))
       nil)))
 
+(defun easysession--mode-line-session-name-format ()
+  "Compose EasySession's mode-line."
+  (if (bound-and-true-p easysession--current-session-name)
+      (let* ((session-name (eval easysession--current-session-name)))
+        (list
+         (propertize session-name
+                     'face 'easysession-mode-line-session-name-face
+                     'help-echo (format "Current session: %s" session-name)
+                     'mouse-face 'mode-line-highlight)))
+    ""))
+
+(defun easysession--mode-line-prefix-format ()
+  "Compose EasySession's mode-line."
+  (if (bound-and-true-p easysession-mode-line-prefix)
+      (eval easysession-mode-line-prefix)
+    ""))
+
+(defvar easysession-mode-line-session-name
+  '(:eval (easysession--mode-line-session-name-format))
+  "Mode line specification for displaying the current session name.
+The value is evaluated to generate a formatted string that shows the current
+session name in the mode line.")
+(put 'easysession-mode-line-session-name 'risky-local-variable t)
+
+(defvar easysession-mode-line-prefix
+  '(:eval (easysession--mode-line-prefix-format))
+  "Prefix string for the mode line format.
+The value is evaluated to produce a prefix string that precedes the current
+session name in the mode line.")
+(put 'easysession-mode-line-prefix 'risky-local-variable t)
+
 ;;;###autoload
 (define-minor-mode easysession-save-mode
   "Toggle `easysession-save-mode'."
   :global t
-  :lighter " EasySes"
+  :lighter
+  (lambda()
+    (:eval
+     (if easysession-save-mode-lighter-show-session-name
+         easysession-save-mode-lighter-session-name
+       easysession-save-mode-lighter)))
   :group 'easysession
   (if easysession-save-mode
       (progn
