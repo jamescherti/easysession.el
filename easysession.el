@@ -620,8 +620,8 @@ Returns t if the session file exists, nil otherwise."
               (buffer-path (cdr buffer-name-and-path)))
           (let* ((buffer (get-file-buffer buffer-path)))
             (unless buffer
-              (setq buffer (ignore-errors (find-file-noselect buffer-path
-                                                              :nowarn))))
+              (setq buffer (ignore-errors
+                             (find-file-noselect buffer-path t))))
             (if (and buffer (buffer-live-p buffer))
                 (progn
                   ;; We are going to be using buffer-base-buffer to make sure
