@@ -38,7 +38,11 @@ Key features include:
 
 ## Installation
 
-The `easysession` package can be installed from MELPA by adding the following to your Emacs init file:
+To install the `easysession` from MELPA:
+
+1. If you haven't already done so, [add MELPA repository to your Emacs configuration](https://melpa.org/#/getting-started).
+
+2. Add the following code to your Emacs init file to install `easysession` from MELPA:
 
 ``` emacs-lisp
 (use-package easysession
