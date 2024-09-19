@@ -53,8 +53,8 @@ To install the `easysession` from MELPA:
   ;; Make the current session name appear in the mode-line
   (easysession-mode-line-misc-info t)
   :init
-  (add-hook 'after-init-hook #'easysession-load-including-geometry 98)
-  (add-hook 'after-init-hook #'easysession-save-mode 99))
+  (add-hook 'emacs-startup-hook #'easysession-load-including-geometry 98)
+  (add-hook 'emacs-startup-hook #'easysession-save-mode 99))
 ```
 
 Note that:
