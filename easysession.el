@@ -112,6 +112,11 @@ activated when `easysession-save-mode' is enabled."
                  (integer :tag "Seconds"))
   :group 'easysession)
 
+(defcustom easysession-restore-frames t
+  "Non-nil to restore frames."
+  :type 'boolean
+  :group 'easysession)
+
 ;; Mode line
 (defface easysession-mode-line-session-name-face
   '((t :inherit font-lock-constant-face :weight bold))
@@ -519,26 +524,37 @@ When SAVE-GEOMETRY is non-nil, include the frame geometry."
                    :predicate #'easysession--check-dont-save
                    :filters modified-filter-alist)))
 
+(defun easysession--can-restore-frameset-p ()
+  "True if calling `easysession--load-frameset' will actually restore it."
+  (and easysession-restore-frames
+       ;; Skip restoring frames when the current frame is the daemon's initial
+       ;; frame.
+       (not (and (daemonp)
+                 (not (frame-parameter nil 'client))))
+       t))
+
 (defun easysession--load-frameset (session-data &optional load-geometry)
   "Load the frameset from the SESSION-DATA argument.
 When LOAD-GEOMETRY is non-nil, load the frame geometry."
-  (let* ((key (if load-geometry
-                  "frameset-geo"
-                "frameset"))
-         (data (when (assoc key session-data)
-                 (assoc-default key session-data))))
-    (when (and (not data) load-geometry)
-      (setq data (when (assoc "frameset" session-data)
-                   (assoc-default "frameset" session-data))))
-    (when data
-      (unless (ignore-errors
-                (frameset-restore data
-                                  :reuse-frames t
-                                  :force-display t
-                                  :force-onscreen nil
-                                  :cleanup-frames t)
-                t)
-        (easysession--warning "%s: Failed to restore the frameset")))))
+  (when (and easysession-restore-frames
+             (easysession--can-restore-frameset-p))
+    (let* ((key (if load-geometry
+                    "frameset-geo"
+                  "frameset"))
+           (data (when (assoc key session-data)
+                   (assoc-default key session-data))))
+      (when (and (not data) load-geometry)
+        (setq data (when (assoc "frameset" session-data)
+                     (assoc-default "frameset" session-data))))
+      (when data
+        (unless (ignore-errors
+                  (frameset-restore data
+                                    :reuse-frames t
+                                    :force-display t
+                                    :force-onscreen nil
+                                    :cleanup-frames t)
+                  t)
+          (easysession--warning "%s: Failed to restore the frameset"))))))
 
 (defun easysession--ensure-buffer-name (buffer name)
   "Ensure that BUFFER name is NAME."
@@ -621,7 +637,7 @@ Returns t if the session file exists, nil otherwise."
           (let* ((buffer (get-file-buffer buffer-path)))
             (unless buffer
               (setq buffer (ignore-errors
-                             (find-file-noselect buffer-path t))))
+                             (find-file-noselect buffer-path :nowarn))))
             (if (and buffer (buffer-live-p buffer))
                 (progn
                   ;; We are going to be using buffer-base-buffer to make sure
