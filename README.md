@@ -62,7 +62,7 @@ Note that:
 - `easysession-mode-line` determines whether the current session name appears in the mode line by adding EasySession to `mode-line-misc-info`. Alternatively, the `easysession-save-mode-lighter-show-session-name` can be set to `t` to make EasySession display the session name in the lighter.
 - The `easysession-save-mode` ensures that the current session is automatically saved every `easysession-save-interval` seconds and when emacs quits.
 - The `easysession-save-interval` variable determines the interval between automatic session saves. Setting it to nil disables timer-based autosaving, causing `easysession-save-mode` to save only when Emacs exits.
-- I added `102` to `add-hook` to ensure that the session is loaded after everything else. Using `102` is particularly useful for those using [minimal-emacs.d](https://github.com/jamescherti/minimal-emacs.d), where some settings such as `file-name-handler-alist` are restored at depth `101` during `emacs-startup-hook`.
+- The author added `102` to `add-hook` to ensure that the session is loaded after everything else. Using `102` is particularly useful for those using [minimal-emacs.d](https://github.com/jamescherti/minimal-emacs.d), where some settings such as `file-name-handler-alist` are restored at depth `101` during `emacs-startup-hook`.
 
 ## Usage
 
