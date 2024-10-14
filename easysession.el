@@ -558,7 +558,6 @@ When LOAD-GEOMETRY is non-nil, load the frame geometry."
 
 (defun easysession--ensure-buffer-name (buffer name)
   "Ensure that BUFFER name is NAME."
-  (interactive)
   (when (not (string= (buffer-name buffer) name))
     (with-current-buffer buffer
       (rename-buffer name t))))
@@ -581,6 +580,7 @@ Returns t if the session file exists, nil otherwise."
   (when (file-exists-p (easysession--get-session-file-name session-name))
     t))
 
+;;;###autoload
 (defun easysession-delete (&optional session-name)
   "Delete a session. Prompt for SESSION-NAME if not provided."
   (interactive)
@@ -607,6 +607,7 @@ Returns t if the session file exists, nil otherwise."
   "Return the name of the current session."
   easysession--current-session-name)
 
+;;;###autoload
 (defun easysession-rename (&optional new-session-name)
   "Rename the current session to NEW-SESSION-NAME."
   (interactive)
@@ -777,6 +778,7 @@ HANDLER-FN is the function to be removed."
   (setq easysession--save-handlers (delete handler-fn
                                            easysession--save-handlers)))
 
+;;;###autoload
 (defun easysession-save (&optional session-name)
   "Save the current session.
 SESSION-NAME is the name of the session."
@@ -832,6 +834,7 @@ SESSION-NAME is the name of the session."
                session-name session-file)))
     t))
 
+;;;###autoload
 (defun easysession-load (&optional session-name)
   "Load the current session. SESSION-NAME is the session name."
   (interactive)
@@ -878,6 +881,7 @@ SESSION-NAME is the name of the session."
       (run-hooks 'easysession-after-load-hook)
       t)))
 
+;;;###autoload
 (defun easysession-load-including-geometry (&optional session-name)
   "Load the session and restore the position and size of the Emacs frames.
 SESSION-NAME is the session name.
@@ -915,6 +919,7 @@ If the function is called interactively, ask the user."
                             new-session-name))
     t))
 
+;;;###autoload
 (defun easysession-switch-to (&optional session-name)
   "Save the current session and load a new one.
 
@@ -971,7 +976,6 @@ initialized."
 This function is usually called by `easysession-save-mode'. It evaluates the
 `easysession-save-mode-predicate' function, and if the predicate returns
 non-nil, the current session is saved."
-  (interactive)
   (if (funcall easysession-save-mode-predicate)
       (easysession-save)
     (when easysession--debug
