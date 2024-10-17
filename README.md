@@ -81,7 +81,7 @@ To facilitate session management, consider using the following key mappings: `C-
 
 ### Configuring EasySession with Emacs daemon mode
 
-When using Emacs in daemon mode (`emacs --daemon`), loading sessions needs to be triggered appropriately. If using the after-init-hook results in issues on startup, an alternative approach is to use `server-after-make-frame-hook`. This hook ensures that the session is loaded once the client frame is created.
+When using Emacs in daemon mode (`emacs --daemon`), loading sessions needs to be triggered appropriately. If using the `after-init-hook` results in issues on startup, an alternative approach is to use `server-after-make-frame-hook`. This hook ensures that the session is loaded once the client frame is created.
 
 Here is an example:
 ```emacs-lisp
