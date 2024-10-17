@@ -14,6 +14,7 @@ The `easysession.el` Emacs package is a lightweight session manager for Emacs th
     - [Installation](#installation)
     - [Usage](#usage)
     - [Frequently asked questions](#frequently-asked-questions)
+        - [Configuring EasySession with Emacs daemon mode](#configuring-easysession-with-emacs-daemon-mode)
         - [How to only persist and restore visible buffers](#how-to-only-persist-and-restore-visible-buffers)
         - [How to persist and restore global variables?](#how-to-persist-and-restore-global-variables)
         - [How to create an empty session setup](#how-to-create-an-empty-session-setup)
@@ -77,6 +78,25 @@ To facilitate session management, consider using the following key mappings: `C-
 ```
 
 ## Frequently asked questions
+
+### Configuring EasySession with Emacs daemon mode
+
+When using Emacs in daemon mode (`emacs --daemon`), loading sessions needs to be triggered appropriately. If using the after-init-hook results in issues on startup, an alternative approach is to use `server-after-make-frame-hook`. This hook ensures that the session is loaded once the client frame is created.
+
+Here is an example:
+```emacs-lisp
+(use-package easysession
+  :ensure t
+  :config
+  (defun my-setup-easy-session ()
+    (easysession-load-including-geometry)
+    (easysession-save-mode)
+    (remove-hook 'server-after-make-frame-hook #'my-setup-easy-session))
+
+  (add-hook 'server-after-make-frame-hook #'my-setup-easy-session))
+```
+
+([read this discussion](https://github.com/jamescherti/easysession.el/discussions/15) for more information.)
 
 ### How to only persist and restore visible buffers
 
