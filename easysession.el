@@ -241,7 +241,7 @@ For more details, see the `frameset-restore' docstring."
                  (function :tag "Function to determine frame restoration"))
   :group 'easysession)
 
-(defcustom easysession-frameset-restore-force-onscreen t
+(defcustom easysession-frameset-restore-force-onscreen (display-graphic-p)
   "Specifies how frames are handled when they are offscreen:
 t        Only frames that are completely offscreen are forced onscreen.
 nil      No frames are forced back onscreen.
@@ -640,9 +640,7 @@ When LOAD-GEOMETRY is non-nil, load the frame geometry."
                    :reuse-frames easysession-frameset-restore-reuse-frames
                    :cleanup-frames easysession-frameset-restore-cleanup-frames
                    :force-display easysession-frameset-restore-force-display
-                   :force-onscreen
-                   (and easysession-frameset-restore-force-onscreen
-                        (display-graphic-p)))
+                   :force-onscreen easysession-frameset-restore-force-onscreen)
                   t)
           (easysession--warning "%s: Failed to restore the frameset"))))))
 
