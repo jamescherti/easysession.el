@@ -202,9 +202,26 @@ If set to nil, only the buffers will be restored, and frame restoration will be
 skipped.
 
 See related options:
+- `easysession-frameset-restore-reuse-frames'
 - `easysession-frameset-restore-force-display'
-- `easysession-frameset-restore-force-onscreen'"
+- `easysession-frameset-restore-force-onscreen'
+- `easysession-frameset-restore-cleanup-frames'"
   :type 'boolean
+  :group 'easysession)
+
+(defcustom easysession-frameset-restore-reuse-frames t
+  "Specifies the policy for reusing frames when restoring:
+t        All existing frames can be reused.
+nil      No existing frames can be reused.
+match    Only frames with matching frame IDs can be reused.
+PRED     A predicate function that receives a live frame as an argument
+         and returns non-nil to allow reusing it, or nil otherwise.
+
+For more details, see the `frameset-restore' docstring."
+  :type '(choice (const :tag "Reuse all frames" t)
+                 (const :tag "Reuse no frames" nil)
+                 (const :tag "Reuse frames with matching IDs" match)
+                 (function :tag "Predicate function"))
   :group 'easysession)
 
 (defcustom easysession-frameset-restore-force-display t
@@ -240,6 +257,25 @@ For more details, see the `frameset-restore' docstring."
                  (const :tag "Do not force any frames onscreen" nil)
                  (const :tag "Force onscreen any frame fully or partially offscreen" all)
                  (function :tag "Function to determine onscreen status"))
+  :group 'easysession)
+
+(defcustom easysession-frameset-restore-cleanup-frames t
+  "Specifies the policy for cleaning up the frame list after restoring.
+t        Delete all frames that were not created or restored.
+nil      Retain all frames.
+FUNC     A function called with two arguments:
+         - FRAME, a live frame.
+         - ACTION, which can be one of:
+           :rejected  Frame existed but was not a candidate for reuse.
+           :ignored   Frame existed, was a candidate, but was not reused.
+           :reused    Frame existed, was a candidate, and was reused.
+           :created   Frame did not exist, was created and restored upon.
+         The return value is ignored.
+
+For more details, see the `frameset-restore' docstring."
+  :type '(choice (const :tag "Delete all unneeded frames" t)
+                 (const :tag "Retain all frames" nil)
+                 (function :tag "Function to determine cleanup actions"))
   :group 'easysession)
 
 (defvar easysession--debug nil)
@@ -601,8 +637,8 @@ When LOAD-GEOMETRY is non-nil, load the frame geometry."
         (unless (ignore-errors
                   (frameset-restore
                    data
-                   :reuse-frames t
-                   :cleanup-frames t
+                   :reuse-frames easysession-frameset-restore-reuse-frames
+                   :cleanup-frames easysession-frameset-restore-cleanup-frames
                    :force-display easysession-frameset-restore-force-display
                    :force-onscreen
                    (and easysession-frameset-restore-force-onscreen
