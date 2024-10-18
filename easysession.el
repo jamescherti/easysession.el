@@ -112,11 +112,6 @@ activated when `easysession-save-mode' is enabled."
                  (integer :tag "Seconds"))
   :group 'easysession)
 
-(defcustom easysession-restore-frames t
-  "Non-nil to restore frames."
-  :type 'boolean
-  :group 'easysession)
-
 ;; Mode line
 (defface easysession-mode-line-session-name-face
   '((t :inherit font-lock-constant-face :weight bold))
@@ -181,14 +176,70 @@ criteria."
 This function always returns non-nil, ensuring the session is saved."
   t)
 
-(defcustom
-  easysession-save-mode-predicate #'easysession--default-auto-save-predicate
+(defcustom easysession-save-mode-predicate
+  #'easysession--default-auto-save-predicate
   "Predicate that determines if the session is saved automatically.
 This function is called with no arguments and should return non-nil if
 `easysession-save-mode' should save the session automatically. The default
 predicate always returns non-nil, ensuring all sessions are saved
 automatically."
   :type 'function
+  :group 'easysession)
+
+(define-obsolete-variable-alias
+  'easysession-restore-frames
+  'easysession-enable-frameset-restore
+  "1.1.1"
+  "Use `easysession-enable-frameset-restore' instead.")
+
+(defcustom easysession-enable-frameset-restore t
+  "Non-nil to restore frames.
+
+When non-nil, frames will be restored alongside buffers when a session is
+loaded.
+
+If set to nil, only the buffers will be restored, and frame restoration will be
+skipped.
+
+See related options:
+- `easysession-frameset-restore-force-display'
+- `easysession-frameset-restore-force-onscreen'"
+  :type 'boolean
+  :group 'easysession)
+
+(defcustom easysession-frameset-restore-force-display t
+  "Specifies how frames are restored with respect to display:
+t        Frames are restored on the current display.
+nil      Frames are restored, if possible, on their original displays.
+delete   Frames in other displays are deleted instead of being restored.
+PRED     A function called with two arguments: the parameter alist and
+         the window state (in that order). It must return t, nil, or
+         delete, as described above, but affecting only the frame
+         created from that parameter alist.
+
+For more details, see the `frameset-restore' docstring."
+  :type '(choice (const :tag "Restore on current display" t)
+                 (const :tag "Restore on original displays" nil)
+                 (const :tag "Delete frames in other displays" delete)
+                 (function :tag "Function to determine frame restoration"))
+  :group 'easysession)
+
+(defcustom easysession-frameset-restore-force-onscreen t
+  "Specifies how frames are handled when they are offscreen:
+t        Only frames that are completely offscreen are forced onscreen.
+nil      No frames are forced back onscreen.
+all      Any frame that is fully or partially offscreen is forced onscreen.
+PRED     A function called with three arguments:
+         - The live frame just restored.
+         - A list (LEFT TOP WIDTH HEIGHT) describing the frame.
+         - A list (LEFT TOP WIDTH HEIGHT) describing the work area.
+         It must return non-nil to force the frame onscreen, or nil otherwise.
+
+For more details, see the `frameset-restore' docstring."
+  :type '(choice (const :tag "Force onscreen only fully offscreen frames" t)
+                 (const :tag "Do not force any frames onscreen" nil)
+                 (const :tag "Force onscreen any frame fully or partially offscreen" all)
+                 (function :tag "Function to determine onscreen status"))
   :group 'easysession)
 
 (defvar easysession--debug nil)
@@ -526,7 +577,7 @@ When SAVE-GEOMETRY is non-nil, include the frame geometry."
 
 (defun easysession--can-restore-frameset-p ()
   "True if calling `easysession--load-frameset' will actually restore it."
-  (and easysession-restore-frames
+  (and easysession-enable-frameset-restore
        ;; Skip restoring frames when the current frame is the daemon's initial
        ;; frame.
        (not (and (daemonp)
@@ -536,7 +587,7 @@ When SAVE-GEOMETRY is non-nil, include the frame geometry."
 (defun easysession--load-frameset (session-data &optional load-geometry)
   "Load the frameset from the SESSION-DATA argument.
 When LOAD-GEOMETRY is non-nil, load the frame geometry."
-  (when (and easysession-restore-frames
+  (when (and easysession-enable-frameset-restore
              (easysession--can-restore-frameset-p))
     (let* ((key (if load-geometry
                     "frameset-geo"
@@ -548,11 +599,14 @@ When LOAD-GEOMETRY is non-nil, load the frame geometry."
                      (assoc-default "frameset" session-data))))
       (when data
         (unless (ignore-errors
-                  (frameset-restore data
-                                    :reuse-frames t
-                                    :force-display t
-                                    :force-onscreen nil
-                                    :cleanup-frames t)
+                  (frameset-restore
+                   data
+                   :reuse-frames t
+                   :cleanup-frames t
+                   :force-display easysession-frameset-restore-force-display
+                   :force-onscreen
+                   (and easysession-frameset-restore-force-onscreen
+                        (display-graphic-p)))
                   t)
           (easysession--warning "%s: Failed to restore the frameset"))))))
 
