@@ -772,28 +772,26 @@ not. It returns an alist with the following structure."
   "Load indirect buffers from the SESSION-DATA variable."
   (let ((indirect-buffers (assoc-default "indirect-buffers"
                                          session-data)))
-    (dolist (item indirect-buffers)
-      (let* ((indirect-buffer-name (alist-get 'indirect-buffer-name item))
-             (base-buffer-name (alist-get 'base-buffer-name
-                                          (cdr item))))
-        (when (and base-buffer-name indirect-buffer-name)
-          (let ((base-buffer (get-buffer base-buffer-name))
-                (indirect-buffer (get-buffer indirect-buffer-name)))
-            (when (and (or (not indirect-buffer)
-                           (not (buffer-live-p indirect-buffer)))
-                       base-buffer
-                       (buffer-live-p base-buffer))
-              (with-current-buffer base-buffer
-                (let ((indirect-buffer
-                       (ignore-errors (clone-indirect-buffer
-                                       indirect-buffer-name nil))))
-                  (if indirect-buffer
-                      (easysession--ensure-buffer-name indirect-buffer
-                                                       indirect-buffer-name)
-                    (easysession--warning
-                     (concat "Failed to restore the indirect "
-                             "buffer (clone): %s")
-                     indirect-buffer-name)))))))))))
+    (when indirect-buffers
+      (dolist (item indirect-buffers)
+        (let* ((indirect-buffer-name (alist-get 'indirect-buffer-name item))
+               (base-buffer-name (alist-get 'base-buffer-name (cdr item))))
+          (when (and base-buffer-name indirect-buffer-name)
+            (let ((base-buffer (get-buffer base-buffer-name))
+                  (indirect-buffer (get-buffer indirect-buffer-name)))
+              (when (and (not (buffer-live-p indirect-buffer))
+                         (buffer-live-p base-buffer))
+                (with-current-buffer base-buffer
+                  (let ((indirect-buffer
+                         (ignore-errors (clone-indirect-buffer
+                                         indirect-buffer-name nil))))
+                    (if indirect-buffer
+                        (easysession--ensure-buffer-name indirect-buffer
+                                                         indirect-buffer-name)
+                      (easysession--warning
+                       (concat "Failed to restore the indirect "
+                               "buffer (clone): %s")
+                       indirect-buffer-name))))))))))))
 
 (defun easysession--handler-save-indirect-buffers (buffers)
   "Collect and categorize indirect buffers from the provided list.
