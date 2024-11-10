@@ -914,17 +914,25 @@ SESSION-NAME is the name of the session."
     ;; Buffers and file buffers
     (let* ((buffers (funcall easysession-buffer-list-function)))
       (dolist (handler (easysession-get-save-handlers))
-        (let ((result (cond
-                       ((and (symbolp handler)
-                             (fboundp handler))
-                        (funcall handler buffers)))))
-          (when result
-            (let* ((key (alist-get 'key result))
-                   (buffer-list (alist-get 'buffers result))
-                   (remaining-buffers (alist-get 'remaining-buffers result)))
-              ;; Push results into session-data
-              (push (cons key buffer-list) session-data)
+        (let* ((result
+                       (funcall handler buffers))
+               (key nil)
+               (buffer-list nil)
+               (is-result-consp (consp result)))
+          (when is-result-consp
+            (setq key (alist-get 'key result)))
 
+          (if (or (not result)
+                  (not is-result-consp)
+                  (not key))
+              (easysession--warning
+               "The %s function returned an invalid value: %s"
+               handler result)
+            (setq buffer-list (alist-get 'buffer-list result))
+            ;; Push results into session-data
+            (push (cons key buffer-list) session-data)
+
+            (let* ((remaining-buffers (alist-get 'remaining-buffers result)))
               ;; The following optimizes buffer processing by updating the list
               ;; of buffers for the next iteration By setting buffers to the
               ;; remaining-buffers returned by each handler function, it ensures
