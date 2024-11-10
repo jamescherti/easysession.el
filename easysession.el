@@ -474,10 +474,35 @@ This variable holds the name of the session that is in the process of being
 loaded. It is set when a session loading operation begins and is used to track
 which session is being loaded.")
 
+(defvar easysession-mode-line-session-name
+  '(:eval (easysession--mode-line-session-name-format))
+  "Mode line specification for displaying the current session name.
+The value is evaluated to generate a formatted string that shows the current
+session name in the mode line.")
+(put 'easysession-mode-line-session-name 'risky-local-variable t)
+
 (defvar easysession--load-geometry nil
   "Non-nil to make `easysession-load' load the geometry.
 Do not modify this variable, use the `easysession-load-including-geometry'
 function instead.")
+
+(defvar easysession--load-handlers
+  '(easysession--handler-load-file-editing-buffers
+    easysession--handler-load-indirect-buffers)
+  "A list of functions used to load session data.
+Each function in this list is responsible for loading a specific type of
+buffer (e.g., file editing buffers, indirect buffers) from the session
+information. These functions are applied sequentially to restore the session
+state based on the saved session data.")
+
+(defvar easysession--save-handlers
+  '(easysession--handler-save-file-editing-buffers
+    easysession--handler-save-indirect-buffers)
+  "A list of functions used to save session data.
+Each function in this list is responsible for saving a specific type of
+buffer (e.g., file editing buffers, indirect buffers) from the current
+session. These functions are applied sequentially to capture the state of
+the session, which can later be restored by the corresponding load handlers.")
 
 (defun easysession--message (&rest args)
   "Display a message with '[easysession]' prepended.
@@ -808,24 +833,6 @@ buffers and separates them from other buffers."
       (buffers . ,indirect-buffers)
       (remaining-buffers . ,remaining-buffers))))
 
-(defvar easysession--load-handlers
-  '(easysession--handler-load-file-editing-buffers
-    easysession--handler-load-indirect-buffers)
-  "A list of functions used to load session data.
-Each function in this list is responsible for loading a specific type of
-buffer (e.g., file editing buffers, indirect buffers) from the session
-information. These functions are applied sequentially to restore the session
-state based on the saved session data.")
-
-(defvar easysession--save-handlers
-  '(easysession--handler-save-file-editing-buffers
-    easysession--handler-save-indirect-buffers)
-  "A list of functions used to save session data.
-Each function in this list is responsible for saving a specific type of
-buffer (e.g., file editing buffers, indirect buffers) from the current
-session. These functions are applied sequentially to capture the state of
-the session, which can later be restored by the corresponding load handlers.")
-
 (defun easysession-add-load-handler (handler-fn)
   "Add a load handler.
 The handler is only added if it's not already present and if HANDLER-FN is a
@@ -1080,13 +1087,6 @@ non-nil, the current session is saved."
                      'help-echo (format "Current session: %s" session-name)
                      'mouse-face 'mode-line-highlight)))
     ""))
-
-(defvar easysession-mode-line-session-name
-  '(:eval (easysession--mode-line-session-name-format))
-  "Mode line specification for displaying the current session name.
-The value is evaluated to generate a formatted string that shows the current
-session name in the mode line.")
-(put 'easysession-mode-line-session-name 'risky-local-variable t)
 
 ;;;###autoload
 (define-minor-mode easysession-save-mode
