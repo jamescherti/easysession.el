@@ -486,29 +486,23 @@ session name in the mode line.")
 Do not modify this variable, use the `easysession-load-including-geometry'
 function instead.")
 
-(defvar easysession--load-handlers '()
+(defvar easysession--load-handlers
+  '(easysession--handler-load-file-editing-buffers
+    easysession--handler-load-indirect-buffers)
   "A list of functions used to load session data.
 Each function in this list is responsible for loading a specific type of
 buffer (e.g., file editing buffers, indirect buffers) from the session
 information. These functions are applied sequentially to restore the session
 state based on the saved session data.")
 
-(defvar easysession--save-handlers '()
+(defvar easysession--save-handlers
+  '(easysession--handler-save-file-editing-buffers
+    easysession--handler-save-indirect-buffers)
   "A list of functions used to save session data.
 Each function in this list is responsible for saving a specific type of
 buffer (e.g., file editing buffers, indirect buffers) from the current
 session. These functions are applied sequentially to capture the state of
 the session, which can later be restored by the corresponding load handlers.")
-
-(defvar easysession--builtin-load-handlers
-  '(easysession--handler-load-file-editing-buffers
-    easysession--handler-load-indirect-buffers)
-  "Internal variable.")
-
-(defvar easysession--builtin-save-handlers
-  '(easysession--handler-save-file-editing-buffers
-    easysession--handler-save-indirect-buffers)
-  "Internal variable.")
 
 (defun easysession--message (&rest args)
   "Display a message with '[easysession]' prepended.
@@ -877,16 +871,6 @@ HANDLER-FN is the function to be removed."
   (setq easysession--save-handlers (delete handler-fn
                                            easysession--save-handlers)))
 
-(defun easysession-get-save-handlers ()
-  "Return a list of all built-in and user-defined save handlers."
-  (append easysession--builtin-save-handlers
-          easysession--save-handlers))
-
-(defun easysession-get-load-handlers ()
-  "Return a list of all built-in and user-defined load handlers."
-  (append easysession--builtin-load-handlers
-          easysession--load-handlers))
-
 ;;;###autoload
 (defun easysession-save (&optional session-name)
   "Save the current session.
@@ -909,7 +893,7 @@ SESSION-NAME is the name of the session."
 
     ;; Buffers and file buffers
     (let* ((buffers (funcall easysession-buffer-list-function)))
-      (dolist (handler (easysession-get-save-handlers))
+      (dolist (handler easysession--save-handlers)
         (let* ((result (funcall handler buffers))
                (key (alist-get 'key result))
                (buffer-list (alist-get 'buffers result))
@@ -977,7 +961,7 @@ SESSION-NAME is the name of the session."
       ;; Load buffers first because the cursor, window-start, or hscroll might
       ;; be altered by packages such as saveplace. This will allow the frameset
       ;; to modify the cursor later on.
-      (dolist (handler (easysession-get-load-handlers))
+      (dolist (handler easysession--load-handlers)
         (funcall handler session-data))
 
       ;; Load the frame set
