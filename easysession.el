@@ -486,23 +486,29 @@ session name in the mode line.")
 Do not modify this variable, use the `easysession-load-including-geometry'
 function instead.")
 
-(defvar easysession--load-handlers
-  '(easysession--handler-load-file-editing-buffers
-    easysession--handler-load-indirect-buffers)
+(defvar easysession--load-handlers '()
   "A list of functions used to load session data.
 Each function in this list is responsible for loading a specific type of
 buffer (e.g., file editing buffers, indirect buffers) from the session
 information. These functions are applied sequentially to restore the session
 state based on the saved session data.")
 
-(defvar easysession--save-handlers
-  '(easysession--handler-save-file-editing-buffers
-    easysession--handler-save-indirect-buffers)
+(defvar easysession--save-handlers '()
   "A list of functions used to save session data.
 Each function in this list is responsible for saving a specific type of
 buffer (e.g., file editing buffers, indirect buffers) from the current
 session. These functions are applied sequentially to capture the state of
 the session, which can later be restored by the corresponding load handlers.")
+
+(defvar easysession--builtin-load-handlers
+  '(easysession--handler-load-file-editing-buffers
+    easysession--handler-load-indirect-buffers)
+  "Internal variable.")
+
+(defvar easysession--builtin-save-handlers
+  '(easysession--handler-save-file-editing-buffers
+    easysession--handler-save-indirect-buffers)
+  "Internal variable.")
 
 (defun easysession--message (&rest args)
   "Display a message with '[easysession]' prepended.
@@ -838,7 +844,8 @@ buffers and separates them from other buffers."
 The handler is only added if it's not already present and if HANDLER-FN is a
 symbol representing an existing function. HANDLER-FN is the function to load
 session data."
-  (unless (and (symbolp handler-fn) (fboundp handler-fn))
+  (unless (and (symbolp handler-fn)
+               (fboundp handler-fn))
     (error "HANDLER-FN must be a symbol representing an existing function"))
   (unless (memq handler-fn easysession--load-handlers)
     (setq easysession--load-handlers
@@ -848,9 +855,11 @@ session data."
   "Add a save handler.
 HANDLER-FN is the function to save session data.
 The HANDLER-FN handler is only added if it's not already present."
-  (unless (and (symbolp handler-fn) (fboundp handler-fn))
+  (unless (and (symbolp handler-fn)
+               (fboundp handler-fn))
     (error "HANDLER-FN must be a symbol representing an existing function"))
   (unless (memq handler-fn easysession--save-handlers)
+    ;; (push handler-fn easysession--save-handlers)
     (setq easysession--save-handlers
           (append easysession--save-handlers (list handler-fn)))))
 
@@ -858,7 +867,8 @@ The HANDLER-FN handler is only added if it's not already present."
   "Remove a load handler.
 HANDLER-FN is the function to load session data.
 The HANDLER-FN handler is only added if it's not already present."
-  (unless (and (symbolp handler-fn) (fboundp handler-fn))
+  (unless (and (symbolp handler-fn)
+               (fboundp handler-fn))
     (error "HANDLER-FN must be a symbol representing an existing function"))
   (setq easysession--load-handlers
         (delq handler-fn easysession--load-handlers)))
@@ -866,10 +876,21 @@ The HANDLER-FN handler is only added if it's not already present."
 (defun easysession-remove-save-handler (handler-fn)
   "Remove a save handler.
 HANDLER-FN is the function to be removed."
-  (unless (and (symbolp handler-fn) (fboundp handler-fn))
+  (unless (and (symbolp handler-fn)
+               (fboundp handler-fn))
     (error "HANDLER-FN must be a symbol representing an existing function"))
   (setq easysession--save-handlers (delete handler-fn
                                            easysession--save-handlers)))
+
+(defun easysession-get-save-handlers ()
+  "Return a list of all built-in and user-defined save handlers."
+  (append easysession--builtin-save-handlers
+          easysession--save-handlers))
+
+(defun easysession-get-load-handlers ()
+  "Return a list of all built-in and user-defined load handlers."
+  (append easysession--builtin-load-handlers
+          easysession--load-handlers))
 
 ;;;###autoload
 (defun easysession-save (&optional session-name)
@@ -886,31 +907,34 @@ SESSION-NAME is the name of the session."
                                   session-name t))
          (session-data nil)
          (session-dir (file-name-directory session-file)))
-
-    ;; Handlers
+    ;; Frameset
     (push (cons "frameset" data-frameset) session-data)
     (push (cons "frameset-geo" data-frameset-geometry) session-data)
 
     ;; Buffers and file buffers
     (let* ((buffers (funcall easysession-buffer-list-function)))
-      (dolist (handler easysession--save-handlers)
-        (let* ((result (funcall handler buffers))
-               (key (alist-get 'key result))
-               (buffer-list (alist-get 'buffers result))
-               (remaining-buffers (alist-get 'remaining-buffers result)))
+      (dolist (handler (easysession-get-save-handlers))
+        (let ((result (cond
+                       ((and (symbolp handler)
+                             (fboundp handler))
+                        (funcall handler buffers)))))
+          (when result
+            (let* ((key (alist-get 'key result))
+                   (buffer-list (alist-get 'buffers result))
+                   (remaining-buffers (alist-get 'remaining-buffers result)))
+              ;; Push results into session-data
+              (push (cons key buffer-list) session-data)
 
-          ;; Push results into session-data
-          (push (cons key buffer-list) session-data)
-
-          ;; The following optimizes buffer processing by updating the list of
-          ;; buffers for the next iteration By setting buffers to the
-          ;; remaining-buffers returned by each handler function, it ensures
-          ;; that each subsequent handler only processes buffers that have not
-          ;; yet been handled. This approach avoids redundant processing of
-          ;; buffers that have already been classified or processed by previous
-          ;; handlers, resulting in more efficient processing. As a result, each
-          ;; handler operates on a progressively reduced set of buffers.
-          (setq buffers remaining-buffers))))
+              ;; The following optimizes buffer processing by updating the list
+              ;; of buffers for the next iteration By setting buffers to the
+              ;; remaining-buffers returned by each handler function, it ensures
+              ;; that each subsequent handler only processes buffers that have
+              ;; not yet been handled. This approach avoids redundant processing
+              ;; of buffers that have already been classified or processed by
+              ;; previous handlers, resulting in more efficient processing. As a
+              ;; result, each handler operates on a progressively reduced set of
+              ;; buffers.
+              (setq buffers remaining-buffers))))))
 
     (unless (file-directory-p session-dir)
       (make-directory session-dir t))
@@ -961,8 +985,12 @@ SESSION-NAME is the name of the session."
       ;; Load buffers first because the cursor, window-start, or hscroll might
       ;; be altered by packages such as saveplace. This will allow the frameset
       ;; to modify the cursor later on.
-      (dolist (handler easysession--load-handlers)
-        (funcall handler session-data))
+      (dolist (handler (easysession-get-load-handlers))
+        (when handler
+          (cond
+           ((and (symbolp handler)
+                 (fboundp handler))
+            (funcall handler session-data)))))
 
       ;; Load the frame set
       (easysession--load-frameset session-data

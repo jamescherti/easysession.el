@@ -129,6 +129,12 @@ This function ensures that handlers are correctly removed and re-added, and
 validates the handler lists after each operation."
   (interactive)
   ;; Remove existing save and load handlers
+  (setq easysession--save-handlers
+        '(easysession--handler-save-file-editing-buffers
+          easysession--handler-save-indirect-buffers))
+  (setq easysession--load-handlers
+        '(easysession--handler-load-file-editing-buffers
+          easysession--handler-load-indirect-buffers))
   (easysession-remove-save-handler 'easysession--handler-save-file-editing-buffers)
   (easysession-remove-save-handler 'easysession--handler-save-indirect-buffers)
   (easysession-remove-load-handler 'easysession--handler-load-file-editing-buffers)
@@ -136,9 +142,11 @@ validates the handler lists after each operation."
 
   ;; Validate that handler lists are empty after removal
   (unless (null easysession--load-handlers)
-    (error "Load handlers list is not empty after removal"))
+    (error "Load handlers list is not empty after removal: %s"
+           easysession--load-handlers))
   (unless (null easysession--save-handlers)
-    (error "Save handlers list is not empty after removal"))
+    (error "Save handlers list is not empty after removal: %s"
+           easysession--save-handlers))
 
   ;; Re-add save and load handlers
   (easysession-add-save-handler 'easysession--handler-save-file-editing-buffers)
@@ -154,7 +162,15 @@ validates the handler lists after each operation."
   (unless (equal easysession--save-handlers
                  '(easysession--handler-save-file-editing-buffers
                    easysession--handler-save-indirect-buffers))
-    (error "Save handlers were not added correctly")))
+    (error "Save handlers were not added correctly"))
+
+  ;; Transfer them to builtin and empty user handlers
+  (setq easysession--builtin-load-handlers
+        (copy-sequence easysession--builtin-load-handlers))
+  (setq easysession--builtin-save-handlers
+        (copy-sequence easysession--builtin-save-handlers))
+  (setq easysession--load-handlers nil)
+  (setq easysession--save-handlers nil))
 
 (defun test-easysession--create-buffers ()
   "Create and set up test buffers for easysession.
