@@ -20,7 +20,7 @@ The `easysession.el` Emacs package is a lightweight session manager for Emacs th
     - [How to create an empty session setup](#how-to-create-an-empty-session-setup)
     - [How to configure easysession-save-mode to automatically save only the "main" session and let me manually save others?](#how-to-configure-easysession-save-mode-to-automatically-save-only-the-main-session-and-let-me-manually-save-others)
     - [How to make EasySession kill all buffers before loading a session?](#how-to-make-easysession-kill-all-buffers-before-loading-a-session)
-    - [How to load non file visiting buffers?](#how-to-load-non-file-visiting-buffers)
+    - [How to Create Custom Load and Save Handlers for Non-File-Visiting Buffers](#how-to-create-custom-load-and-save-handlers-for-non-file-visiting-buffers)
     - [How does the author use easysession?](#how-does-the-author-use-easysession)
     - [Why not use the desktop.el?](#why-not-use-the-desktopel)
     - [How does it compare to activities.el?](#how-does-it-compare-to-activitiesel)
@@ -196,7 +196,7 @@ Here is a code snippet shared by u/capuche on Reddit that closes all buffers bef
 (add-hook 'easysession-new-session-hook #'kill-old-session-buffers)
 ```
 
-### How to load non file visiting buffers?
+### How to Create Custom Load and Save Handlers for Non-File-Visiting Buffers
 
 EasySession is customizable. Users can implement their own handlers to manage non-file-backed buffers, enabling the creation of custom functions for restoring such buffers.
 
