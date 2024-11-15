@@ -202,16 +202,16 @@ EasySession is customizable. Users can implement their own handlers to manage no
 
 Here is an example:
 ```elisp
-(setq my-easysession-key "MY-BUFFERS")
+(setq my-easysession-buffers-key "MY-BUFFERS")
 
 (defun my-easysession-load-handler (session-data)
   "Load handler for restoring specific buffers from SESSION-DATA."
-  (let ((data (assoc-default my-easysession-key session-data)))
+  (let ((data (assoc-default my-easysession-buffers-key session-data)))
     (when data
       (message "[MY EASYSESSION TEST] LOAD HANDLER: Loaded data: %s" data)
 
       ;; TODO: Add code to process and restore session data associated
-      ;; with `my-easysession-key'
+      ;; with `my-easysession-buffers-key'
       )))
 
 (defun my-easysession-save-handler (buffers)
@@ -236,7 +236,7 @@ Here is an example:
             (push buf remaining-buffers)))))
     ;; Return an alist with the saved data and remaining buffers
     (list
-     (cons 'key my-easysession-key)
+     (cons 'key my-easysession-buffers-key)
      (cons 'buffers saved-buffers)
      (cons 'remaining-buffers remaining-buffers))))
 ```
