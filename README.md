@@ -239,6 +239,13 @@ Here is an example:
      (cons 'key my-easysession-buffers-key)
      (cons 'buffers saved-buffers)
      (cons 'remaining-buffers remaining-buffers))))
+
+(defun my-easysession-setup-handlers ()
+  "Configure EasySession load and save handlers."
+  (easysession-add-load-handler 'my-easysession-load-handler)
+  (easysession-add-save-handler 'my-easysession-save-handler))
+
+(add-hook 'easysession-before-load-hook #'my-easysession-setup-handlers)
 ```
 
 Replace `TODO` with the appropriate code and remove `[MY EASYSESSION TEST]` after debugging is complete.
