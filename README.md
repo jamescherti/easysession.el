@@ -248,6 +248,7 @@ Here is an example:
   (easysession-add-save-handler 'my-easysession-save-handler))
 
 (add-hook 'easysession-before-load-hook #'my-easysession-setup-handlers)
+(add-hook 'easysession-before-save-hook #'my-easysession-setup-handlers)
 ```
 
 Replace `TODO` with the appropriate code and remove `[MY EASYSESSION TEST]` after debugging is complete.
