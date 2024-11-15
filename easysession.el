@@ -917,9 +917,8 @@ SESSION-NAME is the name of the session."
         (if (not (and handler
                       (symbolp handler)
                       (fboundp handler)))
-            (easysession--message
-             "Warning: The following save handler is not a defined function: %s"
-             handler)
+            (easysession--warning
+             "The following save handler is not a defined function: %s" handler)
           (let ((result (funcall handler buffers)))
             (when result
               (let* ((key (alist-get 'key result))
@@ -993,7 +992,12 @@ SESSION-NAME is the name of the session."
           (cond
            ((and (symbolp handler)
                  (fboundp handler))
-            (funcall handler session-data)))))
+            (funcall handler session-data))
+
+           (t
+            (easysession--warning
+             "The following load handler is not a defined function: %s"
+             handler)))))
 
       ;; Load the frame set
       (easysession--load-frameset session-data
