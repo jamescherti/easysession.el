@@ -202,6 +202,8 @@ EasySession is customizable. Users can implement their own handlers to manage no
 
 Here is an example:
 ```elisp
+;; NOTE: You cannot use the following reserved Easy Session keys:
+;;       buffers, indirect-buffers, frameset, frameset-geo.
 (setq my-easysession-buffers-key "MY-BUFFERS")
 
 (defun my-easysession-load-handler (session-data)
