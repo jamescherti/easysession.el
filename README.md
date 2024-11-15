@@ -22,6 +22,7 @@ The `easysession.el` Emacs package is a lightweight session manager for Emacs th
     - [How to make EasySession kill all buffers before loading a session?](#how-to-make-easysession-kill-all-buffers-before-loading-a-session)
     - [How does the author use easysession?](#how-does-the-author-use-easysession)
     - [Why not use the desktop.el?](#why-not-use-the-desktopel)
+    - [How does it compare to activities.el?](#how-does-it-compare-to-activitiesel)
     - [Why not use one of the other third-party session packages?](#why-not-use-one-of-the-other-third-party-session-packages)
   - [License](#license)
   - [Links](#links)
@@ -54,8 +55,8 @@ To install `easysession` from MELPA:
   ;; Make the current session name appear in the mode-line
   (easysession-mode-line-misc-info t)
   :init
-  (add-hook 'emacs-startup-hook #'easysession-load-including-geometry 101)
-  (add-hook 'emacs-startup-hook #'easysession-save-mode 102))
+  (add-hook 'emacs-startup-hook #'easysession-load-including-geometry 102)
+  (add-hook 'emacs-startup-hook #'easysession-save-mode 103))
 ```
 
 Note that:
@@ -63,7 +64,7 @@ Note that:
 - `easysession-mode-line` determines whether the current session name appears in the mode line by adding EasySession to `mode-line-misc-info`. Alternatively, the `easysession-save-mode-lighter-show-session-name` can be set to `t` to make EasySession display the session name in the lighter.
 - The `easysession-save-mode` ensures that the current session is automatically saved every `easysession-save-interval` seconds and when emacs quits.
 - The `easysession-save-interval` variable determines the interval between automatic session saves. Setting it to nil disables timer-based autosaving, causing `easysession-save-mode` to save only when Emacs exits.
-- The author added `102` to `add-hook` to ensure that the session is loaded after everything else. Using `102` is particularly useful for those using [minimal-emacs.d](https://github.com/jamescherti/minimal-emacs.d), where some settings such as `file-name-handler-alist` are restored at depth `101` during `emacs-startup-hook`.
+- The author added `102`/`103 to `add-hook` in the code snippet above to ensure that the session is loaded after all other packages. (Using `102` is particularly useful for those using [minimal-emacs.d](https://github.com/jamescherti/minimal-emacs.d), where some optimizations restore `file-name-handler-alist` at depth `101` during `emacs-startup-hook`.)
 - When using Emacs in daemon mode (`emacs --daemon`), if using the `after-init-hook` results in issues on startup, an alternative approach is to use `server-after-make-frame-hook`. This hook ensures that the session is loaded once the client frame is created.
 
 ## Usage
@@ -211,6 +212,14 @@ In contrast, `easysession.el` offers enhanced functionality:
 - It supports saving and loading various buffer types, including indirect buffers (clones).
 - It allows users to load or save different sessions while actively editing, without the need to restart Emacs.
 - It excels in speed and efficiency, enabling seamless session management within Emacs.
+
+### How does it compare to activities.el?
+
+- EasySession is designed for loading, saving, and switching entire sessions, while Activities focuses on managing "activities" and allows for multiple activities within a single session.
+- EasySession supports restoring indirect buffers, whereas Activities does not.
+- EasySession allows you to choose whether to restore the geometry (position, width, and height) of your frames.
+- EasySession relies on built-in Emacs functions for saving and loading frames and tab-bar tabs, ensuring compatibility and support from Emacs developers. In contrast, Activities uses custom functions, such as those for restoring the tab-bar.
+- EasySession is customizable. Users can implement their own handlers to manage non-file-backed buffers, enabling the creation of custom functions for restoring such buffers.
 
 ### Why not use one of the other third-party session packages?
 
