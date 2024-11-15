@@ -198,7 +198,7 @@ Here is a code snippet shared by u/capuche on Reddit that closes all buffers bef
 
 ### How to create custom load and save handlers for non-file-visiting buffers
 
-EasySession is customizable. Users can implement their own handlers to manage non-file-backed buffers, enabling the creation of custom functions for restoring such buffers.
+EasySession is customizable. Users can implement their own handlers to manage non-file-editing buffers, enabling the creation of custom functions for restoring such buffers.
 
 Here is an example:
 ```elisp
