@@ -20,6 +20,7 @@ The `easysession.el` Emacs package is a lightweight session manager for Emacs th
     - [How to create an empty session setup](#how-to-create-an-empty-session-setup)
     - [How to configure easysession-save-mode to automatically save only the "main" session and let me manually save others?](#how-to-configure-easysession-save-mode-to-automatically-save-only-the-main-session-and-let-me-manually-save-others)
     - [How to make EasySession kill all buffers before loading a session?](#how-to-make-easysession-kill-all-buffers-before-loading-a-session)
+    - [How to load non file visiting buffers?](#how-to-load-non-file-visiting-buffers)
     - [How does the author use easysession?](#how-does-the-author-use-easysession)
     - [Why not use the desktop.el?](#why-not-use-the-desktopel)
     - [How does it compare to activities.el?](#how-does-it-compare-to-activitiesel)
@@ -193,6 +194,51 @@ Here is a code snippet shared by u/capuche on Reddit that closes all buffers bef
   (delete-other-windows))
 (add-hook 'easysession-before-load-hook #'kill-old-session-buffers)
 (add-hook 'easysession-new-session-hook #'kill-old-session-buffers)
+```
+
+### How to load non file visiting buffers?
+
+EasySession is customizable. Users can implement their own handlers to manage non-file-backed buffers, enabling the creation of custom functions for restoring such buffers.
+
+Here is an example:
+```elisp
+(setq my-easysession-key "MY-BUFFERS")
+
+(defun my-easysession-load-handler (session-data)
+  "Load handler for restoring specific buffers from SESSION-DATA."
+  (let ((data (assoc-default my-easysession-key session-data)))
+    (when data
+      (message "[MY EASYSESSION TEST] LOAD HANDLER: Loaded data: %s" data)
+
+      ;; TODO: Add code to process and restore session data associated
+      ;; with `my-easysession-key'
+      )))
+
+(defun my-easysession-save-handler (buffers)
+  "Save handler for saving specific buffers from the given BUFFERS list."
+  (let ((saved-buffers '())
+        (remaining-buffers buffers))
+    (dolist (buf buffers)
+      (with-current-buffer buf
+        (let ((buffer-name (buffer-name)))
+          (message "[MY EASYSESSION TEST] SAVE HANDLER: Processing buffer %s"
+                   buffer-name)
+          ;; TODO: Replace t with a condition like: (derived-mode-p 'MY-MODE)
+          (if t
+              ;; TODO: Replace "MY-BUFFER-DATA" with your data. It does not
+              ;;       have to be a string; it can be a list, hash table, or
+              ;;       any other data structure.
+              (let ((buffer-data (cons buffer-name "MY-BUFFER-DATA")))
+                (push buffer-data saved-buffers)
+                (message "[MY EASYSESSION TEST] SAVE HANDLER: Buffer %s saved"
+                         buffer-name))
+            ;; If the buffer should not be saved, add it to remaining-buffers
+            (push buf remaining-buffers)))))
+    ;; Return an alist with the saved data and remaining buffers
+    (list
+     (cons 'key my-easysession-key)
+     (cons 'buffers saved-buffers)
+     (cons 'remaining-buffers remaining-buffers))))
 ```
 
 ### How does the author use easysession?

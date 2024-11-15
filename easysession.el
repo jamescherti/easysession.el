@@ -914,27 +914,30 @@ SESSION-NAME is the name of the session."
     ;; Buffers and file buffers
     (let* ((buffers (funcall easysession-buffer-list-function)))
       (dolist (handler (easysession-get-save-handlers))
-        (let ((result (cond
-                       ((and (symbolp handler)
-                             (fboundp handler))
-                        (funcall handler buffers)))))
-          (when result
-            (let* ((key (alist-get 'key result))
-                   (buffer-list (alist-get 'buffers result))
-                   (remaining-buffers (alist-get 'remaining-buffers result)))
-              ;; Push results into session-data
-              (push (cons key buffer-list) session-data)
+        (if (not (and handler
+                      (symbolp handler)
+                      (fboundp handler)))
+            (easysession--message
+             "Warning: The following save handler is not a defined function: %s"
+             handler)
+          (let ((result (funcall handler buffers)))
+            (when result
+              (let* ((key (alist-get 'key result))
+                     (buffer-list (alist-get 'buffers result))
+                     (remaining-buffers (alist-get 'remaining-buffers result)))
+                ;; Push results into session-data
+                (push (cons key buffer-list) session-data)
 
-              ;; The following optimizes buffer processing by updating the list
-              ;; of buffers for the next iteration By setting buffers to the
-              ;; remaining-buffers returned by each handler function, it ensures
-              ;; that each subsequent handler only processes buffers that have
-              ;; not yet been handled. This approach avoids redundant processing
-              ;; of buffers that have already been classified or processed by
-              ;; previous handlers, resulting in more efficient processing. As a
-              ;; result, each handler operates on a progressively reduced set of
-              ;; buffers.
-              (setq buffers remaining-buffers))))))
+                ;; The following optimizes buffer processing by updating the
+                ;; list of buffers for the next iteration By setting buffers to
+                ;; the remaining-buffers returned by each handler function, it
+                ;; ensures that each subsequent handler only processes buffers
+                ;; that have not yet been handled. This approach avoids
+                ;; redundant processing of buffers that have already been
+                ;; classified or processed by previous handlers, resulting in
+                ;; more efficient processing. As a result, each handler operates
+                ;; on a progressively reduced set of buffers.
+                (setq buffers remaining-buffers)))))))
 
     (unless (file-directory-p session-dir)
       (make-directory session-dir t))
