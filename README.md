@@ -10,21 +10,21 @@ The `easysession.el` Emacs package is a lightweight session manager for Emacs th
 **Table of Contents**
 
 - [easysession.el - Easily persist and restore your Emacs editing sessions](#easysessionel---easily-persist-and-restore-your-emacs-editing-sessions)
-    - [Features](#features)
-    - [Installation](#installation)
-    - [Usage](#usage)
-    - [Frequently asked questions](#frequently-asked-questions)
-        - [Configuring EasySession with Emacs daemon mode](#configuring-easysession-with-emacs-daemon-mode)
-        - [How to only persist and restore visible buffers](#how-to-only-persist-and-restore-visible-buffers)
-        - [How to persist and restore global variables?](#how-to-persist-and-restore-global-variables)
-        - [How to create an empty session setup](#how-to-create-an-empty-session-setup)
-        - [How to configure easysession-save-mode to automatically save only the "main" session and let me manually save others?](#how-to-configure-easysession-save-mode-to-automatically-save-only-the-main-session-and-let-me-manually-save-others)
-        - [How to make EasySession kill all buffers before loading a session?](#how-to-make-easysession-kill-all-buffers-before-loading-a-session)
-        - [How does the author use easysession?](#how-does-the-author-use-easysession)
-        - [Why not use the desktop.el?](#why-not-use-the-desktopel)
-        - [Why not use one of the other third-party session packages?](#why-not-use-one-of-the-other-third-party-session-packages)
-    - [License](#license)
-    - [Links](#links)
+  - [Features](#features)
+  - [Installation](#installation)
+  - [Usage](#usage)
+  - [Frequently asked questions](#frequently-asked-questions)
+    - [Configuring EasySession with Emacs daemon mode](#configuring-easysession-with-emacs-daemon-mode)
+    - [How to only persist and restore visible buffers](#how-to-only-persist-and-restore-visible-buffers)
+    - [How to persist and restore global variables?](#how-to-persist-and-restore-global-variables)
+    - [How to create an empty session setup](#how-to-create-an-empty-session-setup)
+    - [How to configure easysession-save-mode to automatically save only the "main" session and let me manually save others?](#how-to-configure-easysession-save-mode-to-automatically-save-only-the-main-session-and-let-me-manually-save-others)
+    - [How to make EasySession kill all buffers before loading a session?](#how-to-make-easysession-kill-all-buffers-before-loading-a-session)
+    - [How does the author use easysession?](#how-does-the-author-use-easysession)
+    - [Why not use the desktop.el?](#why-not-use-the-desktopel)
+    - [Why not use one of the other third-party session packages?](#why-not-use-one-of-the-other-third-party-session-packages)
+  - [License](#license)
+  - [Links](#links)
 
 <!-- markdown-toc end -->
 
@@ -201,9 +201,10 @@ The author uses `easysession.el` by setting up each session to represent a disti
 ### Why not use the desktop.el?
 
 While `desktop.el` is a foundational session management tool for Emacs, it has several limitations:
-- It can be bulky and slow in operation.
 - It primarily saves Emacs' state on exit and restores it on startup, making it difficult to switch between different session files during an editing session.
+- The `desktop.el` package does not allow the user to easily choose whether to load sessions with or without modifying the Emacs frame geometry. This last feature is important in easysession.el because it allows switching between sessions without the annoyance of changing the window position or size.
 - The `desktop.el` package saves and restores major modes and important global variables, which can prevent some packages from initializing correctly. For example, the `vdiff` package may stop working after comparing two files and reloading Emacs and the `desktop.el` session. This issue has also occurred with a few other packages.
+- The `desktop.el` package can be bulky and slow in operation.
 - The `desktop.el` package lacks support for saving and restoring indirect buffers (clones). Indirect buffers are secondary buffers that share the same content as an existing buffer but can have different point positions, narrowing, folds, and other buffer-local settings. This allows users to view and edit the same file or text content in multiple ways simultaneously without duplicating the actual data. There are third-party packages, such as desktop+, that extend desktop.el to restore indirect buffers. However, packages like desktop+ are still based on desktop.el and can cause the issues described above.
 
 In contrast, `easysession.el` offers enhanced functionality:
