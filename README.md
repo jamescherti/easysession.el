@@ -23,6 +23,7 @@ The `easysession.el` Emacs package is a lightweight session manager for Emacs th
     - [How to create custom load and save handlers for non-file-visiting buffers](#how-to-create-custom-load-and-save-handlers-for-non-file-visiting-buffers)
     - [How does the author use easysession?](#how-does-the-author-use-easysession)
     - [Why not use the desktop.el?](#why-not-use-the-desktopel)
+    - [Why not just improve and submit patches to desktop.el?](#why-not-just-improve-and-submit-patches-to-desktopel)
     - [How does it compare to activities.el?](#how-does-it-compare-to-activitiesel)
     - [Why not use one of the other third-party session packages?](#why-not-use-one-of-the-other-third-party-session-packages)
   - [License](#license)
@@ -270,6 +271,10 @@ In contrast, `easysession.el` offers enhanced functionality:
 - It supports saving and loading various buffer types, including indirect buffers (clones).
 - It allows users to load or save different sessions while actively editing, without the need to restart Emacs.
 - It excels in speed and efficiency, enabling seamless session management within Emacs.
+
+### Why not just improve and submit patches to desktop.el?
+
+It is preferable for EasySession to remain a third-party plugin, as this provides more flexibility for implementing new features. EasySession relies on the same built-in functions as desktop.el (e.g., frameset) but includes additional features that enhance the experience of persisting and restoring sessions. EasySession is also customizable, allowing users to implement their own handlers to persist and restore new types of non-file-visiting buffers.
 
 ### How does it compare to activities.el?
 
