@@ -46,6 +46,38 @@
 ;;   and `easysession-save-as', delete the current Emacs session with
 ;;   `easysession-delete', and rename the current Emacs session with
 ;;   `easysession-rename'.
+;;
+;; Installation from MELPA:
+;; ------------------------
+;; (use-package easysession
+;;   :ensure t
+;;   :custom
+;;   ;; Interval between automatic session saves
+;;   (easysession-save-interval (* 10 60))
+;;   ;; Make the current session name appear in the mode-line
+;;   (easysession-mode-line-misc-info t)
+;;   :init
+;;   (add-hook 'emacs-startup-hook #'easysession-load-including-geometry 102)
+;;   (add-hook 'emacs-startup-hook #'easysession-save-mode 103))
+;;
+;; Usage:
+;; ------
+;; It is recommended to use the following functions:
+;; - (easysession-switch-to) to switch to another session or (easysession-load)
+;;   to reload the current one,
+;; - (easysession-save-as) to save the current session as the current name or
+;;   another name.
+;;
+;; To facilitate session management, consider using the following key mappings:
+;; C-c l for switching sessions with easysession-switch-to, and C-c s for
+;; saving the current session with easysession-save-as:
+;;   (global-set-key (kbd "C-c l") 'easysession-switch-to)
+;;   (global-set-key (kbd "C-c s") 'easysession-save-as)
+;;
+;; Links:
+;; ------
+;; - More information about easysession (Frequently asked questions, usage...):
+;;   https://github.com/jamescherti/easysession.el
 
 ;;; Code:
 
