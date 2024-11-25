@@ -17,6 +17,7 @@ The `easysession.el` Emacs package is a lightweight session manager for Emacs th
     - [Configuring EasySession with Emacs daemon mode](#configuring-easysession-with-emacs-daemon-mode)
     - [How to only persist and restore visible buffers](#how-to-only-persist-and-restore-visible-buffers)
     - [How to persist and restore global variables?](#how-to-persist-and-restore-global-variables)
+    - [How to make the current session name appear in the mode-line?](#how-to-make-the-current-session-name-appear-in-the-mode-line)
     - [How to create an empty session setup](#how-to-create-an-empty-session-setup)
     - [How to configure easysession-save-mode to automatically save only the "main" session and let me manually save others?](#how-to-configure-easysession-save-mode-to-automatically-save-only-the-main-session-and-let-me-manually-save-others)
     - [How to make EasySession kill all buffers before loading a session?](#how-to-make-easysession-kill-all-buffers-before-loading-a-session)
@@ -54,8 +55,6 @@ To install `easysession` from MELPA:
   :custom
   ;; Interval between automatic session saves
   (easysession-save-interval (* 10 60))
-  ;; Make the current session name appear in the mode-line
-  (easysession-mode-line-misc-info t)
   :init
   (add-hook 'emacs-startup-hook #'easysession-load-including-geometry 102)
   (add-hook 'emacs-startup-hook #'easysession-save-mode 103))
@@ -152,6 +151,13 @@ To persist and restore global variables in Emacs, you can use the built-in `save
 The `easysession` package can leverage `savehist` save the restore the current session name:
 ``` emacs-lisp
 (add-to-list 'savehist-additional-variables 'easysession--current-session-name)
+```
+
+### How to make the current session name appear in the mode-line?
+
+You can display the current session name in the mode line by setting the following variable to t:
+```
+(setq easysession-mode-line-misc-info t)
 ```
 
 ### How to create an empty session setup
