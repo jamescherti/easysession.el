@@ -704,6 +704,16 @@ When LOAD-GEOMETRY is non-nil, load the frame geometry."
                    :cleanup-frames easysession-frameset-restore-cleanup-frames
                    :force-display easysession-frameset-restore-force-display
                    :force-onscreen easysession-frameset-restore-force-onscreen)
+
+                  (when (fboundp 'tab-bar-mode)
+                    (when (seq-some
+                           (lambda (frame)
+                             (menu-bar-positive-p
+                              (frame-parameter frame 'tab-bar-lines)))
+                           (frame-list))
+                      (tab-bar-mode 1)))
+
+                  ;; Return t
                   t)
           (easysession--warning "%s: Failed to restore the frameset"))))))
 
@@ -739,7 +749,7 @@ Returns t if the session file exists, nil otherwise."
                            (easysession--prompt-session-name
                             "Delete session: " session-name)))
          (session-file (easysession--get-session-file-name session-name)))
-    (if-let ((session-buffer (find-buffer-visiting session-file)))
+    (if-let* ((session-buffer (find-buffer-visiting session-file)))
         (kill-buffer session-buffer))
     (if (file-exists-p session-file)
         (progn (delete-file session-file nil)

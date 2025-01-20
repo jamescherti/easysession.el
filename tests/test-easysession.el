@@ -279,7 +279,8 @@ storing them in respective variables for later use."
 (defun test-easysession--get-all-names ()
   "Test: `easysession--get-all-names'."
   (interactive)
-  (unless (equal (easysession--get-all-names) '("main" "test"))
+  (unless (equal (sort (easysession--get-all-names) #'string<)
+                 (sort (list "main" "test") #'string<))
     (error "The easysession--get-all-names failed")))
 
 (defun test-save-mode-predicate ()
