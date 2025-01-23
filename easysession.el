@@ -659,7 +659,8 @@ determined."
                                    &optional save-geometry)
   "Return a frameset for FRAME-LIST, a list of frames.
 SESSION-NAME is the session name.
-When SAVE-GEOMETRY is non-nil, include the frame geometry."
+When SAVE-GEOMETRY is non-nil, include the frame geometry.
+Return nil if there is no frame to save."
   (let ((modified-filter-alist
          (if save-geometry
              ;; Include geometry
@@ -668,11 +669,13 @@ When SAVE-GEOMETRY is non-nil, include the frame geometry."
            ;; Exclude geometry
            (easysession--init-frame-parameters-filters
             easysession--overwrite-frameset-filter-alist))))
-    (frameset-save nil
-                   :app `(easysession . ,easysession-file-version)
-                   :name session-name
-                   :predicate #'easysession--check-dont-save
-                   :filters modified-filter-alist)))
+    ;; Auto save when there is at least one frame
+    (when (frame-list)
+      (frameset-save nil
+                     :app `(easysession . ,easysession-file-version)
+                     :name session-name
+                     :predicate #'easysession--check-dont-save
+                     :filters modified-filter-alist))))
 
 (defun easysession--can-restore-frameset-p ()
   "True if calling `easysession--load-frameset' will actually restore it."
@@ -1146,13 +1149,17 @@ initialized."
 This function is usually called by `easysession-save-mode'. It evaluates the
 `easysession-save-mode-predicate' function, and if the predicate returns
 non-nil, the current session is saved."
-  (if (funcall easysession-save-mode-predicate)
-      (easysession-save)
-    (when easysession--debug
-      (easysession--message
-       (concat "[DEBUG] Auto-save ignored: `easysession-save-mode-predicate' "
-               "returned nil."))
-      nil)))
+  (unwind-protect
+      ;; Auto save when there is at least one frame
+      (when (frame-list)
+        (if (funcall easysession-save-mode-predicate)
+            (easysession-save)
+          (when easysession--debug
+            (easysession--message
+             (concat
+              "[DEBUG] Auto-save ignored: `easysession-save-mode-predicate' "
+              "returned nil.")))))
+    t))
 
 (defun easysession--mode-line-session-name-format ()
   "Compose EasySession's mode-line."
@@ -1184,11 +1191,18 @@ non-nil, the current session is saved."
 	              (run-with-timer easysession-save-interval
 			                          easysession-save-interval
                                 #'easysession--auto-save)))
+        ;; `kill-emacs-query-functions' is preferable to `kill-emacs-hook' for
+        ;; saving frames, as it is called before frames are closed.
+        ;; In contrast, `kill-emacs-hook' is invoked after the frames are
+        ;; killed, such as when Emacs is terminated using `xkill` or the
+        ;; `kill-emacs' Emacs function.
+        (add-hook 'kill-emacs-query-functions #'easysession--auto-save)
         (add-hook 'kill-emacs-hook #'easysession--auto-save))
     (when easysession--timer
       (cancel-timer easysession--timer)
       (setq easysession--timer nil))
-    (remove-hook 'kill-emacs-hook #'easysession-save)))
+    (remove-hook 'kill-emacs-hook #'easysession--auto-save)
+    (remove-hook 'kill-emacs-query-functions #'easysession--auto-save)))
 
 (provide 'easysession)
 ;;; easysession.el ends here
