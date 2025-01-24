@@ -3,7 +3,7 @@
 ;; Copyright (C) 2024-2025 James Cherti | https://www.jamescherti.com/contact/
 
 ;; Author: James Cherti
-;; Version: 1.1.1
+;; Version: 1.1.2
 ;; URL: https://github.com/jamescherti/easysession.el
 ;; Keywords: convenience
 ;; Package-Requires: ((emacs "25.1") (f "0.18.2"))
@@ -221,7 +221,7 @@ automatically."
 (define-obsolete-variable-alias
   'easysession-restore-frames
   'easysession-enable-frameset-restore
-  "1.1.1"
+  "1.1.2"
   "Use `easysession-enable-frameset-restore' instead.")
 
 (defcustom easysession-enable-frameset-restore t
