@@ -27,6 +27,7 @@ The `easysession.el` Emacs package is a lightweight session manager for Emacs th
     - [Why not just improve and submit patches to desktop.el?](#why-not-just-improve-and-submit-patches-to-desktopel)
     - [How does it compare to activities.el?](#how-does-it-compare-to-activitiesel)
     - [Why not use one of the other third-party session packages?](#why-not-use-one-of-the-other-third-party-session-packages)
+    - [Are there any testimonials from users?](#are-there-any-testimonials-from-users)
   - [License](#license)
   - [Links](#links)
 
@@ -299,6 +300,10 @@ There are some existing packages, such as minimal-session-saver, save-visited-fi
 - Psession cannot switch between sessions quickly, with or without modifying the the Emacs frame geometry. This last feature is important in easysession.el because it allows switching between sessions without the annoyance of changing the window position or size.
 
 Easysession is lightweight and can persist and restore file editing buffers, indirect buffers/clones, Dired buffers, the tab-bar, and the Emacs frames (with or without the Emacs frames geometry). It is similar to Vim or Neovim sessions because it loads and restores your editing environment, including buffers, windows, tabs, and other settings, allowing you to resume work exactly where you left off.
+
+### Are there any testimonials from users?
+
+- [Hungariantoast on Reddit](https://www.reddit.com/r/emacs/comments/1i93ly5/comment/m980q04/): "I have a single raylib-experiments repository that I have been writing a bunch of separate, miniature gamedev projects in. This package has made the process of creating, managing, and restoring each of those little coding sessions such a breeze. Thanks for writing it"
 
 ## License
 
