@@ -85,6 +85,8 @@
 (require 'frameset)
 (require 'f)
 
+;;; Variables
+
 (defgroup easysession nil
   "Non-nil if easysession mode mode is enabled."
   :group 'easysession
@@ -322,6 +324,8 @@ Set this variable to t only if you want `easysession-load' or
 By default, this variable is nil, meaning `easysession-load' does not restore
 geometry.")
 
+;;; Internal variables
+
 (defvar easysession--debug nil)
 
 (defvar easysession--timer nil)
@@ -549,6 +553,8 @@ the session, which can later be restored by the corresponding load handlers.")
     easysession--handler-save-indirect-buffers)
   "Internal variable.")
 
+;;; Helper functions
+
 (defun easysession--message (&rest args)
   "Display a message with '[easysession]' prepended.
 The message is formatted with the provided arguments ARGS."
@@ -751,25 +757,6 @@ Returns t if the session file exists, nil otherwise."
   (when (file-exists-p (easysession--get-session-file-name session-name))
     t))
 
-;;;###autoload
-(defun easysession-delete (&optional session-name)
-  "Delete a session. Prompt for SESSION-NAME if not provided."
-  (interactive)
-  (let* ((session-name (or session-name
-                           (easysession--prompt-session-name
-                            "Delete session: " session-name)))
-         (session-file (easysession--get-session-file-name session-name)))
-    (if-let* ((session-buffer (find-buffer-visiting session-file)))
-        (kill-buffer session-buffer))
-    (if (file-exists-p session-file)
-        (progn (delete-file session-file nil)
-               (easysession--message "Session deleted: %s" session-name)
-               t)
-      (easysession--warning
-       "The session '%s' cannot be deleted because it does not exist"
-       session-name)
-      nil)))
-
 (defun easysession-get-current-session-name ()
   "Return the name of the current session."
   easysession--current-session-name)
@@ -777,27 +764,6 @@ Returns t if the session file exists, nil otherwise."
 (defun easysession-get-session-name ()
   "Return the name of the current session."
   easysession--current-session-name)
-
-;;;###autoload
-(defun easysession-rename (&optional new-session-name)
-  "Rename the current session to NEW-SESSION-NAME."
-  (interactive)
-  (unless (and (not (called-interactively-p 'any)) (not new-session-name))
-    (error (concat "[easysession] easysession-rename: The 'new-session-name' "
-                   "argument must be specified when the function is "
-                   "called non-interactively.")))
-  (unless new-session-name
-    (setq new-session-name (or new-session-name
-                               (easysession--prompt-session-name
-                                (format "Rename session '%s' to: "
-                                        (easysession-get-session-name))))))
-  (let* ((old-path (easysession--get-session-file-name
-                    easysession--current-session-name))
-         (new-path (easysession--get-session-file-name new-session-name)))
-    (unless (file-regular-p old-path)
-      (error "[easysession] No such file or directory: %s" old-path))
-    (rename-file old-path new-path)
-    (setq easysession--current-session-name new-session-name)))
 
 (defun easysession--handler-load-file-editing-buffers (session-data)
   "Load base buffers from the SESSION-DATA variable."
@@ -944,66 +910,75 @@ HANDLER-FN is the function to be removed."
   (append easysession--builtin-load-handlers
           easysession--load-handlers))
 
-;;;###autoload
-(defun easysession-save (&optional session-name)
-  "Save the current session.
-SESSION-NAME is the name of the session."
-  (interactive)
-  (run-hooks 'easysession-before-save-hook)
-  (let* ((session-name (if session-name
-                           session-name
-                         (easysession-get-session-name)))
-         (session-file (easysession--get-session-file-name session-name))
-         (data-frameset (easysession--save-frameset session-name))
-         (data-frameset-geometry (easysession--save-frameset
-                                  session-name t))
-         (session-data nil)
-         (session-dir (file-name-directory session-file)))
-    ;; Frameset
-    (push (cons "frameset" data-frameset) session-data)
-    (push (cons "frameset-geo" data-frameset-geometry) session-data)
-
-    ;; Buffers and file buffers
-    (let* ((buffers (funcall easysession-buffer-list-function)))
-      (dolist (handler (easysession-get-save-handlers))
-        (if (not (and handler
-                      (symbolp handler)
-                      (fboundp handler)))
-            (easysession--warning
-             "The following save handler is not a defined function: %s" handler)
-          (let ((result (funcall handler buffers)))
-            (when result
-              (let* ((key (alist-get 'key result))
-                     (buffer-list (alist-get 'buffers result))
-                     (remaining-buffers (alist-get 'remaining-buffers result)))
-                ;; Push results into session-data
-                (push (cons key buffer-list) session-data)
-
-                ;; The following optimizes buffer processing by updating the
-                ;; list of buffers for the next iteration By setting buffers to
-                ;; the remaining-buffers returned by each handler function, it
-                ;; ensures that each subsequent handler only processes buffers
-                ;; that have not yet been handled. This approach avoids
-                ;; redundant processing of buffers that have already been
-                ;; classified or processed by previous handlers, resulting in
-                ;; more efficient processing. As a result, each handler operates
-                ;; on a progressively reduced set of buffers.
-                (setq buffers remaining-buffers)))))))
-
-    (unless (file-directory-p session-dir)
-      (make-directory session-dir t))
-
-    (let ((fwrite-success (progn (f-write (prin1-to-string session-data)
-                                          'utf-8 session-file)
-                                 t)))
-      (if fwrite-success
-          (progn
-            (when (called-interactively-p 'any)
-              (easysession--message "Session saved: %s" session-name))
-            (run-hooks 'easysession-after-save-hook))
-        (error "[easysession] %s: failed to save the session to %s"
-               session-name session-file)))
+(defun easysession--auto-save ()
+  "Save the session automatically based on the auto-save predicate.
+This function is usually called by `easysession-save-mode'. It evaluates the
+`easysession-save-mode-predicate' function, and if the predicate returns
+non-nil, the current session is saved."
+  (unwind-protect
+      ;; Auto save when there is at least one frame
+      (when (frame-list)
+        (if (funcall easysession-save-mode-predicate)
+            (easysession-save)
+          (when easysession--debug
+            (easysession--message
+             (concat
+              "[DEBUG] Auto-save ignored: `easysession-save-mode-predicate' "
+              "returned nil.")))))
     t))
+
+(defun easysession--mode-line-session-name-format ()
+  "Compose EasySession's mode-line."
+  (if (bound-and-true-p easysession--current-session-name)
+      (let* ((session-name (eval easysession--current-session-name)))
+        (list
+         (propertize session-name
+                     'face 'easysession-mode-line-session-name-face
+                     'help-echo (format "Current session: %s" session-name)
+                     'mouse-face 'mode-line-highlight)))
+    ""))
+
+;;; Autoloaded functions
+
+;;;###autoload
+(defun easysession-rename (&optional new-session-name)
+  "Rename the current session to NEW-SESSION-NAME."
+  (interactive)
+  (unless (and (not (called-interactively-p 'any)) (not new-session-name))
+    (error (concat "[easysession] easysession-rename: The 'new-session-name' "
+                   "argument must be specified when the function is "
+                   "called non-interactively.")))
+  (unless new-session-name
+    (setq new-session-name (or new-session-name
+                               (easysession--prompt-session-name
+                                (format "Rename session '%s' to: "
+                                        (easysession-get-session-name))))))
+  (let* ((old-path (easysession--get-session-file-name
+                    easysession--current-session-name))
+         (new-path (easysession--get-session-file-name new-session-name)))
+    (unless (file-regular-p old-path)
+      (error "[easysession] No such file or directory: %s" old-path))
+    (rename-file old-path new-path)
+    (setq easysession--current-session-name new-session-name)))
+
+;;;###autoload
+(defun easysession-delete (&optional session-name)
+  "Delete a session. Prompt for SESSION-NAME if not provided."
+  (interactive)
+  (let* ((session-name (or session-name
+                           (easysession--prompt-session-name
+                            "Delete session: " session-name)))
+         (session-file (easysession--get-session-file-name session-name)))
+    (if-let* ((session-buffer (find-buffer-visiting session-file)))
+        (kill-buffer session-buffer))
+    (if (file-exists-p session-file)
+        (progn (delete-file session-file nil)
+               (easysession--message "Session deleted: %s" session-name)
+               t)
+      (easysession--warning
+       "The session '%s' cannot be deleted because it does not exist"
+       session-name)
+      nil)))
 
 ;;;###autoload
 (defun easysession-load (&optional session-name)
@@ -1076,6 +1051,68 @@ Emacs frames."
   (let ((easysession-frameset-restore-geometry t))
     (easysession-load session-name)))
 
+;;;###autoload
+(defun easysession-save (&optional session-name)
+  "Save the current session.
+SESSION-NAME is the name of the session."
+  (interactive)
+  (run-hooks 'easysession-before-save-hook)
+  (let* ((session-name (if session-name
+                           session-name
+                         (easysession-get-session-name)))
+         (session-file (easysession--get-session-file-name session-name))
+         (data-frameset (easysession--save-frameset session-name))
+         (data-frameset-geometry (easysession--save-frameset
+                                  session-name t))
+         (session-data nil)
+         (session-dir (file-name-directory session-file)))
+    ;; Frameset
+    (push (cons "frameset" data-frameset) session-data)
+    (push (cons "frameset-geo" data-frameset-geometry) session-data)
+
+    ;; Buffers and file buffers
+    (let* ((buffers (funcall easysession-buffer-list-function)))
+      (dolist (handler (easysession-get-save-handlers))
+        (if (not (and handler
+                      (symbolp handler)
+                      (fboundp handler)))
+            (easysession--warning
+             "The following save handler is not a defined function: %s" handler)
+          (let ((result (funcall handler buffers)))
+            (when result
+              (let* ((key (alist-get 'key result))
+                     (buffer-list (alist-get 'buffers result))
+                     (remaining-buffers (alist-get 'remaining-buffers result)))
+                ;; Push results into session-data
+                (push (cons key buffer-list) session-data)
+
+                ;; The following optimizes buffer processing by updating the
+                ;; list of buffers for the next iteration By setting buffers to
+                ;; the remaining-buffers returned by each handler function, it
+                ;; ensures that each subsequent handler only processes buffers
+                ;; that have not yet been handled. This approach avoids
+                ;; redundant processing of buffers that have already been
+                ;; classified or processed by previous handlers, resulting in
+                ;; more efficient processing. As a result, each handler operates
+                ;; on a progressively reduced set of buffers.
+                (setq buffers remaining-buffers)))))))
+
+    (unless (file-directory-p session-dir)
+      (make-directory session-dir t))
+
+    (let ((fwrite-success (progn (f-write (prin1-to-string session-data)
+                                          'utf-8 session-file)
+                                 t)))
+      (if fwrite-success
+          (progn
+            (when (called-interactively-p 'any)
+              (easysession--message "Session saved: %s" session-name))
+            (run-hooks 'easysession-after-save-hook))
+        (error "[easysession] %s: failed to save the session to %s"
+               session-name session-file)))
+    t))
+
+;;;###autoload
 (defun easysession-save-as (&optional session-name)
   "Save the state of all frames into a session with the given name.
 If SESSION-NAME is provided, use it; otherwise, use current session.
@@ -1150,34 +1187,6 @@ initialized."
                                  (if new-session "new " "") session-name))
           (t (easysession--message "Switched to %ssession: %s"
                                    (if new-session "new " "") session-name)))))
-
-(defun easysession--auto-save ()
-  "Save the session automatically based on the auto-save predicate.
-This function is usually called by `easysession-save-mode'. It evaluates the
-`easysession-save-mode-predicate' function, and if the predicate returns
-non-nil, the current session is saved."
-  (unwind-protect
-      ;; Auto save when there is at least one frame
-      (when (frame-list)
-        (if (funcall easysession-save-mode-predicate)
-            (easysession-save)
-          (when easysession--debug
-            (easysession--message
-             (concat
-              "[DEBUG] Auto-save ignored: `easysession-save-mode-predicate' "
-              "returned nil.")))))
-    t))
-
-(defun easysession--mode-line-session-name-format ()
-  "Compose EasySession's mode-line."
-  (if (bound-and-true-p easysession--current-session-name)
-      (let* ((session-name (eval easysession--current-session-name)))
-        (list
-         (propertize session-name
-                     'face 'easysession-mode-line-session-name-face
-                     'help-echo (format "Current session: %s" session-name)
-                     'mouse-face 'mode-line-highlight)))
-    ""))
 
 ;;;###autoload
 (define-minor-mode easysession-save-mode
