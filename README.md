@@ -54,9 +54,9 @@ To install `easysession` from MELPA:
 (use-package easysession
   :ensure t
   :custom
-  ;; Interval between automatic session saves
-  (easysession-save-interval (* 10 60))
   :init
+  ;; Interval between automatic session saves
+  (setq easysession-save-interval (* 10 60))
   (add-hook 'emacs-startup-hook #'easysession-load-including-geometry 102)
   (add-hook 'emacs-startup-hook #'easysession-save-mode 103))
 ```
@@ -64,9 +64,9 @@ To install `easysession` from MELPA:
 Note that:
 - `easysession-load-including-geometry` is not needed after Emacs is loaded if you do not want EasySession to move or resize the Emacs frame when switching sessions. Instead, use `easysession-switch-to` or `easysession-load` to switch to another session or reload the current session without resizing or moving the Emacs frames.
 - `easysession-mode-line` determines whether the current session name appears in the mode line by adding EasySession to `mode-line-misc-info`. Alternatively, the `easysession-save-mode-lighter-show-session-name` can be set to `t` to make EasySession display the session name in the lighter.
-- The `easysession-save-mode` ensures that the current session is automatically saved every `easysession-save-interval` seconds and when emacs quits.
+- `easysession-save-mode` ensures that the current session is automatically saved every `easysession-save-interval` seconds and when emacs quits.
 - The `easysession-save-interval` variable determines the interval between automatic session saves. Setting it to nil disables timer-based autosaving, causing `easysession-save-mode` to save only when Emacs exits.
-- The author added `102`/`103 to `add-hook` in the code snippet above to ensure that the session is loaded after all other packages. (Using `102` is particularly useful for those using [minimal-emacs.d](https://github.com/jamescherti/minimal-emacs.d), where some optimizations restore `file-name-handler-alist` at depth `101` during `emacs-startup-hook`.)
+- The author added 102 and 103 to `add-hook` in the code snippet above to ensure that the session is loaded after all other packages. (Using 102 is particularly useful for those using [minimal-emacs.d](https://github.com/jamescherti/minimal-emacs.d), where some optimizations restore `file-name-handler-alist` at depth 101 during `emacs-startup-hook`.)
 - When using Emacs in daemon mode (`emacs --daemon`), if using the `after-init-hook` results in issues on startup, an alternative approach is to use `server-after-make-frame-hook`. This hook ensures that the session is loaded once the client frame is created.
 
 ## Usage
