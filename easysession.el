@@ -310,6 +310,18 @@ For more details, see the `frameset-restore' docstring."
                  (function :tag "Function to determine cleanup actions"))
   :group 'easysession)
 
+(defvar easysession-frameset-restore-geometry nil
+  "If non-nil, `easysession-load' restores frame position and size.
+
+Do not modify this variable directly; use `easysession-load-including-geometry'
+instead.
+
+Set this variable to t only if you want `easysession-load' or
+`easysession-switch-to' to always restore frame geometry.
+
+By default, this variable is nil, meaning `easysession-load' does not restore
+geometry.")
+
 (defvar easysession--debug nil)
 
 (defvar easysession--timer nil)
@@ -512,11 +524,6 @@ which session is being loaded.")
 The value is evaluated to generate a formatted string that shows the current
 session name in the mode line.")
 (put 'easysession-mode-line-session-name 'risky-local-variable t)
-
-(defvar easysession--load-geometry nil
-  "Non-nil to make `easysession-load' load the geometry.
-Do not modify this variable, use the `easysession-load-including-geometry'
-function instead.")
 
 (defvar easysession--load-handlers '()
   "A list of functions used to load session data.
@@ -1046,7 +1053,7 @@ SESSION-NAME is the name of the session."
 
       ;; Load the frame set
       (easysession--load-frameset session-data
-                                  (bound-and-true-p easysession--load-geometry))
+                                  (bound-and-true-p easysession-frameset-restore-geometry))
 
       (setq easysession--current-session-loaded t)
       (when (called-interactively-p 'any)
@@ -1066,7 +1073,7 @@ are restored.
 For subsequent session switching, consider using `easysession-load' or
 `easysession-switch-to', which load the session without resizing or moving the
 Emacs frames."
-  (let ((easysession--load-geometry t))
+  (let ((easysession-frameset-restore-geometry t))
     (easysession-load session-name)))
 
 (defun easysession-save-as (&optional session-name)
