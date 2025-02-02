@@ -304,6 +304,7 @@ Easysession is lightweight and can persist and restore file editing buffers, ind
 ### Are there any testimonials from users?
 
 - [Hungariantoast on Reddit](https://www.reddit.com/r/emacs/comments/1i93ly5/comment/m980q04/): "I have a single raylib-experiments repository that I have been writing a bunch of separate, miniature gamedev projects in. This package has made the process of creating, managing, and restoring each of those little coding sessions such a breeze. Thanks for writing it"
+- [ghoseb on GitHub](https://github.com/jamescherti/easysession.el/issues/21): Thanks a lot for your amazing packages! Easysession works great 🎉
 
 ## License
 
