@@ -927,7 +927,8 @@ non-nil, the current session is saved."
              (concat
               "[DEBUG] Auto-save ignored: `easysession-save-mode-predicate' "
               "returned nil.")))))
-    t))
+    t)
+  t)
 
 (defun easysession--mode-line-session-name-format ()
   "Compose EasySession's mode-line."
