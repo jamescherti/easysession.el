@@ -105,8 +105,8 @@ session name before and after the switch."
   (interactive)
   ;; Verify the initial session name
   (unless (string= "main" (easysession-get-session-name))
-    (error ("Expected the initial session to be named 'main', but found '%s'"
-            (easysession-get-session-name))))
+    (error "Expected the initial session to be named 'main', but found '%s'"
+           (easysession-get-session-name)))
 
   ;; Switch to the test session
   (easysession-save)

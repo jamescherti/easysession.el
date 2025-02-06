@@ -287,10 +287,12 @@ PRED     A function called with three arguments:
          It must return non-nil to force the frame onscreen, or nil otherwise.
 
 For more details, see the `frameset-restore' docstring."
-  :type '(choice (const :tag "Force onscreen only fully offscreen frames" t)
-                 (const :tag "Do not force any frames onscreen" nil)
-                 (const :tag "Force onscreen any frame fully or partially offscreen" all)
-                 (function :tag "Function to determine onscreen status"))
+  :type '(choice
+          (const :tag "Force onscreen only fully offscreen frames" t)
+          (const :tag "Do not force any frames onscreen" nil)
+          (const
+           :tag "Force onscreen any frame fully or partially offscreen" all)
+          (function :tag "Function to determine onscreen status"))
   :group 'easysession)
 
 (defcustom easysession-frameset-restore-cleanup-frames t
@@ -510,19 +512,11 @@ geometry.")
 (defvar easysession--current-session-name "main"
   "Current session.")
 
-(defvar easysession--current-session-loaded nil
-  "Was the current session loaded at least once?")
+(defvar easysession--load-error nil
+  "Non-nil indicates whether loading the current session has failed.
 
-(defvar easysession--is-loading nil
-  "Non-nil if a session is currently being loaded.
-This variable is used to indicate whether a session loading process is in
-progress.")
-
-(defvar easysession--loading-session-name nil
-  "Name of the session currently being loaded.
-This variable holds the name of the session that is in the process of being
-loaded. It is set when a session loading operation begins and is used to track
-which session is being loaded.")
+This variable is non-nil if an error occurred while attempting to load
+the current session, otherwise it remains nil.")
 
 (defvar easysession-mode-line-session-name
   '(:eval (easysession--mode-line-session-name-format))
@@ -554,6 +548,12 @@ the session, which can later be restored by the corresponding load handlers.")
   '(easysession--handler-save-file-editing-buffers
     easysession--handler-save-indirect-buffers)
   "Internal variable.")
+
+(defvar easysession-load-in-progress nil
+  "Session name (string) if a session is currently being loaded.
+This is an internal variable that is meant to be read-only. Do not modify it.
+This variable is used to indicate whether a session loading process is in
+progress.")
 
 ;;; Helper functions
 
@@ -987,12 +987,12 @@ non-nil, the current session is saved."
 (defun easysession-load (&optional session-name)
   "Load the current session. SESSION-NAME is the session name."
   (interactive)
-  (setq easysession--is-loading nil)
-  (let* ((easysession--is-loading t)
-         (session-name (if session-name
+  (setq easysession-load-in-progress nil)
+  (setq easysession--load-error t)
+  (let* ((session-name (if session-name
                            session-name
                          easysession--current-session-name))
-         (easysession--loading-session-name session-name)
+         (easysession-load-in-progress session-name)
          (session-data nil)
          (file-contents nil)
          (session-file (easysession--get-session-file-name session-name)))
@@ -1030,14 +1030,15 @@ non-nil, the current session is saved."
              handler)))))
 
       ;; Load the frame set
-      (easysession--load-frameset session-data
-                                  (bound-and-true-p easysession-frameset-restore-geometry))
+      (easysession--load-frameset
+       session-data (bound-and-true-p easysession-frameset-restore-geometry))
 
-      (setq easysession--current-session-loaded t)
+      (setq easysession--load-error nil)
       (when (called-interactively-p 'any)
         (easysession--message "Session loaded: %s" session-name))
-      (run-hooks 'easysession-after-load-hook)
-      t)))
+      (run-hooks 'easysession-after-load-hook)))
+  ;; Return easysession--load-error
+  (not easysession--load-error))
 
 ;;;###autoload
 (defun easysession-load-including-geometry (&optional session-name)
@@ -1080,7 +1081,8 @@ SESSION-NAME is the name of the session."
                       (symbolp handler)
                       (fboundp handler)))
             (easysession--warning
-             "The following save handler is not a defined function: %s" handler)
+             "The following save handler is not a defined function: %s"
+             handler)
           (let ((result (funcall handler buffers)))
             (when result
               (let* ((key (alist-get 'key result))
@@ -1090,14 +1092,14 @@ SESSION-NAME is the name of the session."
                 (push (cons key buffer-list) session-data)
 
                 ;; The following optimizes buffer processing by updating the
-                ;; list of buffers for the next iteration By setting buffers to
-                ;; the remaining-buffers returned by each handler function, it
-                ;; ensures that each subsequent handler only processes buffers
-                ;; that have not yet been handled. This approach avoids
-                ;; redundant processing of buffers that have already been
-                ;; classified or processed by previous handlers, resulting in
-                ;; more efficient processing. As a result, each handler operates
-                ;; on a progressively reduced set of buffers.
+                ;; list of buffers for the next iteration By setting buffers
+                ;; to the remaining-buffers returned by each handler function,
+                ;; it ensures that each subsequent handler only processes
+                ;; buffers that have not yet been handled. This approach
+                ;; avoids redundant processing of buffers that have already
+                ;; been classified or processed by previous handlers,
+                ;; resulting in more efficient processing. As a result, each
+                ;; handler operates on a progressively reduced set of buffers.
                 (setq buffers remaining-buffers)))))))
 
     (unless (file-directory-p session-dir)
@@ -1110,10 +1112,14 @@ SESSION-NAME is the name of the session."
           (progn
             (when (called-interactively-p 'any)
               (easysession--message "Session saved: %s" session-name))
-            (run-hooks 'easysession-after-save-hook))
+            (run-hooks 'easysession-after-save-hook)
+
+            ;; Return t
+            t)
         (error "[easysession] %s: failed to save the session to %s"
-               session-name session-file)))
-    t))
+               session-name session-file)
+        ;; Return nil
+        nil))))
 
 ;;;###autoload
 (defun easysession-save-as (&optional session-name)
@@ -1171,13 +1177,15 @@ initialized."
                                     easysession--current-session-name))
          (saved nil)
          (new-session nil))
-    (when (and easysession--current-session-loaded (not session-reloaded))
+    ;; TODO: Prompt the user for confirmation before loading a new session
+    ;;       if the current session has not been loaded.
+    (when (and (not easysession--load-error) (not session-reloaded))
       (easysession-save easysession--current-session-name)
       (setq saved t))
     (easysession-load session-name)
+    (easysession--set-current-session session-name)
 
     (unless session-reloaded
-      (easysession--set-current-session session-name)
       (unless (file-exists-p session-file)
         (run-hooks 'easysession-new-session-hook)
         (easysession-save)
