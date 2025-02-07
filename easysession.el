@@ -332,6 +332,8 @@ geometry.")
 
 (defvar easysession--timer nil)
 
+;; Overrides `frameset-filter-alist' while preserving its keys,
+;; but replaces their values with the ones specified in the following alist:
 (defvar easysession--overwrite-frameset-filter-alist
   '((GUI:bottom . :never)
     (GUI:font . :never)
@@ -419,91 +421,32 @@ geometry.")
     (z-group . :never))
   "Alist of frame parameters and filtering functions.")
 
+(defun easysession--filter-out-frameset-filters (list-keys)
+  "Remove geometry.
+LIST-KEYS is the list of keys (e.g., GUI:left, bottom, height...)
+from `easysession--overwrite-frameset-filter-alist`."
+  (seq-remove (lambda (entry)
+                (memq (car entry) list-keys))
+              easysession--overwrite-frameset-filter-alist))
+
 (defvar easysession--overwrite-frameset-filter-include-geometry-alist
-  '(;; (GUI:bottom . :never)
-    (GUI:font . :never)
-    ;; (GUI:fullscreen . :never)
-    ;; (GUI:height . :never)
-    ;; (GUI:left . :never)
-    ;; (GUI:right . :never)
-    ;; (GUI:top . :never)
-    ;; (GUI:width . :never)
-    (alpha . :never)
-    (alpha-background . :never)
-    (auto-lower . :never)
-    (auto-raise . :never)
-    (background-color . :never)
-    (background-mode . :never)
-    (border-color . :never)
-    (border-width . :never)
-    ;; (bottom . :never)
-    (bottom-divider-width . :never)
-    (buffer-list . :never)
-    (buffer-predicate . :never)
-    (buried-buffer-list . :never)
-    (child-frame-border-width . :never)
-    (client . :never)
-    (cursor-color . :never)
-    (cursor-type . :never)
-    (delete-before . :never)
-    (display-type . :never)
-    (environment . :never)
-    (font . :never)
-    (font-backend . :never)
-    (font-parameter . :never)
-    (foreground-color . :never)
-    ;; (frameset--text-pixel-height . :never)
-    ;; (frameset--text-pixel-width . :never)
-    ;; (fullscreen . :never)
-    ;; (height . :never)
-    (horizontal-scroll-bars . :never)
-    (icon-type . :never)
-    (inhibit-double-buffering . :never)
-    (internal-border-width . :never)
-    ;; (left . :never)
-    (left-fringe . :never)
-    (line-spacing . :never)
-    (menu-bar-lines . :never)
-    (minibuffer . :never)
-    (mouse-color . :never)
-    (mouse-wheel-frame . :never)
-    (name . :never)
-    (no-accept-focus . :never)
-    (no-focus-on-map . :never)
-    (no-special-glyphs . :never)
-    (ns-appearance . :never)
-    (outer-window-id . :never)
-    (override-redirect . :never)
-    (parent-frame . :never)
-    (parent-id . :never)
-    ;; (right . :never)
-    (right-divider-width . :never)
-    (right-fringe . :never)
-    (screen-gamma . :never)
-    (scroll-bar-background . :never)
-    (scroll-bar-foreground . :never)
-    (scroll-bar-height . :never)
-    (scroll-bar-width . :never)
-    (shaded . :never)
-    (skip-taskbar . :never)
-    (sticky . :never)
-    (tab-bar-lines . :never)
-    (title . :never)
-    (tool-bar-lines . :never)
-    (tool-bar-position . :never)
-    ;; (top . :never)
-    (tty . :never)
-    (tty-type . :never)
-    (undecorated . :never)
-    (use-frame-synchronization . :never)
-    (vertical-scroll-bars . :never)
-    ;; (visibility . :never) ; Commenting this fixes: #24
-    (wait-for-wm . :never)
-    ;; (width . :never)
-    (window-id . :never)
-    (window-system . :never)
-    (lsp-ui-doc-buffer . :never)  ; Third party package (Fixes #22)
-    (z-group . :never))
+  (easysession--filter-out-frameset-filters '(GUI:bottom
+                                              GUI:fullscreen
+                                              GUI:height
+                                              GUI:left
+                                              GUI:right
+                                              GUI:top
+                                              GUI:width
+                                              bottom
+                                              frameset--text-pixel-height
+                                              frameset--text-pixel-width
+                                              fullscreen
+                                              height
+                                              left
+                                              right
+                                              top
+                                              visibility
+                                              width))
   "Alist of frame parameters and filtering functions.")
 
 (defvar easysession-file-version 3
