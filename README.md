@@ -177,6 +177,9 @@ To set up a minimal environment when easysession creates a new session, you can 
 (add-hook 'easysession-new-session-hook #'my-empty-easysession)
 ```
 
+NOTE: The `easysession-new-session-hook` functions are called when the user switches to a non-existent session using the `easysession-switch-to` function.
+
+
 ### How to configure easysession-save-mode to automatically save only the "main" session and let me manually save others?
 
 To set up `easysession-save-mode` to automatically save only the "main" session and allow you to manually save other sessions, add the following code to your configuration:
@@ -204,6 +207,8 @@ Here is a code snippet shared by u/capuche on Reddit that closes all buffers bef
 (add-hook 'easysession-before-load-hook #'kill-old-session-buffers)
 (add-hook 'easysession-new-session-hook #'kill-old-session-buffers)
 ```
+
+NOTE: The `easysession-new-session-hook` functions are called when the user switches to a non-existent session using the `easysession-switch-to` function.
 
 ### How to create custom load and save handlers for non-file-visiting buffers
 
