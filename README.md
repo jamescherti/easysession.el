@@ -42,6 +42,9 @@ Key features include:
 - Design focused on performance, simplicity, and efficiency.
 - Helper functions: Switch to a session (i.e., load and change the current session) with `easysession-switch-to`, load the Emacs editing session with `easysession-load`, save the Emacs editing session with `easysession-save` and `easysession-save-as`, delete the current Emacs session with `easysession-delete`, and rename the current Emacs session with `easysession-rename`.
 - Customizable: Users can implement their own handlers to manage non-file-editing buffers, enabling the creation of custom functions for restoring buffers.
+- The ability to exclude specific functions from being executed in `find-file-hook` when Easysession restores a file.
+- Display the currently loaded session in the modeline or as a lighter.
+- Predicate that determines if the session is saved automatically.
 
 ## Installation
 

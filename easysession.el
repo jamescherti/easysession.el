@@ -326,6 +326,17 @@ Set this variable to t only if you want `easysession-load' or
 By default, this variable is nil, meaning `easysession-load' does not restore
 geometry.")
 
+(defcustom easysession-exclude-from-find-file-hook '(recentf-track-opened-file)
+  "List of hooks to be excluded from `find-file-hook'.
+
+When EasySession restores a file editing buffer using `find-file-noselect', the
+functions in this list are skipped and not executed by `find-file-hook'. This
+provides control over which hooks should be bypassed during the file restoration
+process, ensuring that certain actions (e.g., tracking opened files) are not
+triggered in this context."
+  :type '(repeat symbol)
+  :group 'easysession)
+
 ;;; Internal variables
 
 (defvar easysession--debug nil)
@@ -719,8 +730,12 @@ Returns t if the session file exists, nil otherwise."
               (buffer-path (cdr buffer-name-and-path)))
           (let* ((buffer (get-file-buffer buffer-path)))
             (unless buffer
-              (setq buffer (ignore-errors
-                             (find-file-noselect buffer-path :nowarn))))
+              (setq buffer
+                    (ignore-errors
+                      (let ((find-file-hook
+                             (seq-difference find-file-hook
+                                             easysession-exclude-from-find-file-hook)))
+                        (find-file-noselect buffer-path :nowarn)))))
             (if (and buffer (buffer-live-p buffer))
                 (progn
                   ;; We are going to be using buffer-base-buffer to make sure
