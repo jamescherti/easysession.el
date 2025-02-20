@@ -1,4 +1,4 @@
-;;; easysession.el --- Easily persist and restore your editing sessions -*- lexical-binding: t; -*-
+;;; easysession.el --- Persist and restore your sessions (desktop.el alternative) -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2024-2025 James Cherti | https://www.jamescherti.com/contact/
 
