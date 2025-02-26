@@ -25,8 +25,10 @@
 
 ;;; Code:
 
+(require 'ert)
 (require 'dired)
 (require 'easysession)
+
 
 (defvar test-easysession--before-load-hook-triggered nil
   "Flag indicating whether `easysession-before-load-hook' has been executed.")
@@ -283,7 +285,7 @@ storing them in respective variables for later use."
                  (sort (list "main" "test") #'string<))
     (error "The easysession--get-all-names failed")))
 
-(defun test-save-mode-predicate ()
+(defun test-easysession-save-mode-predicate ()
   "Test save-mode predicate."
   (interactive)
   (defun my-easysession-nothing-saved ()
@@ -303,21 +305,20 @@ storing them in respective variables for later use."
                    "easysession-save-mode-predicate do not seem to "
                    "be working"))))
 
-(defun test-easysession ()
-  "Test easysession."
-  (interactive)
+(defun test-easysession--init ()
+  "Init tests."
   ;; Init
   (test-easysession--add-hooks)
   (test-easysession--switch-session)
   (test-easysession--add-remove-handlers)
-  (test-easysession--create-buffers)
+  (test-easysession--create-buffers))
 
-  ;; Tests
+(ert-deftest test-easysession ()
+  "Test EasySession."
+  (test-easysession--init)
   (test-easysession--save-load)
   (test-easysession--get-all-names)
-  (test-save-mode-predicate)
-
-  (message "Success: test-easysession"))
+  (test-easysession-save-mode-predicate))
 
 (provide 'test-easysession)
 ;;; test-easysession.el ends here

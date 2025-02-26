@@ -774,7 +774,7 @@ not. It returns an alist with the following structure."
             (push base-buffer-info file-editing-buffers)
           (push buf remaining-buffers))))
     `((key . "buffers")
-      (buffers . ,file-editing-buffers)
+      (value . ,file-editing-buffers)
       (remaining-buffers . ,remaining-buffers))))
 
 (defun easysession--handler-load-indirect-buffers (session-data)
@@ -814,7 +814,7 @@ buffers and separates them from other buffers."
             (push indirect-buffer-info indirect-buffers)
           (push buf remaining-buffers))))
     `((key . "indirect-buffers")
-      (buffers . ,indirect-buffers)
+      (value . ,indirect-buffers)
       (remaining-buffers . ,remaining-buffers))))
 
 (defun easysession-add-load-handler (handler-fn)
@@ -1044,10 +1044,15 @@ SESSION-NAME is the name of the session."
           (let ((result (funcall handler buffers)))
             (when result
               (let* ((key (alist-get 'key result))
-                     (buffer-list (alist-get 'buffers result))
+                     (value (let ((value (alist-get 'buffers result)))
+                              (if value
+                                  ;; Backward compatibility
+                                  value
+                                ;; New: 'value
+                                (alist-get 'value result))))
                      (remaining-buffers (alist-get 'remaining-buffers result)))
                 ;; Push results into session-data
-                (push (cons key buffer-list) session-data)
+                (push (cons key value) session-data)
 
                 ;; The following optimizes buffer processing by updating the
                 ;; list of buffers for the next iteration By setting buffers
