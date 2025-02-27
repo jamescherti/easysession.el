@@ -81,7 +81,6 @@
 
 ;;; Code:
 
-(require 'dired)
 (require 'frameset)
 (require 'f)
 
@@ -577,7 +576,7 @@ Return a cons cell (buffer-name . path)."
   (when (and buffer (buffer-live-p buffer))
     (with-current-buffer buffer
       (let* ((path (cond ((derived-mode-p 'dired-mode)
-                          (dired-current-directory))
+                          default-directory)
                          (t (buffer-file-name)))))
         (if path
             ;; File visiting buffer and base buffers (not carbon copies)
