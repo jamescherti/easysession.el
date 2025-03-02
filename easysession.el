@@ -730,10 +730,6 @@ Returns t if the session file exists, nil otherwise."
   (when (file-exists-p (easysession-get-session-file-path session-name))
     t))
 
-(defun easysession-get-session-name ()
-  "Return the name of the current session."
-  easysession--current-session-name)
-
 (defun easysession--handler-load-file-editing-buffers (session-data)
   "Load base buffers from the SESSION-DATA variable."
   (let ((buffer-file-names (assoc-default "buffers" session-data)))
