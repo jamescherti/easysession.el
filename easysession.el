@@ -619,12 +619,24 @@ determined."
               `((indirect-buffer-name . ,indirect-buffer-name)
                 (base-buffer-name . ,base-buffer-name)))))))))
 
-(defun easysession-path (&optional session-name)
+(defun easysession-get-session-name ()
+  "Return the name of the current session."
+  easysession--current-session-name)
+
+(defalias 'easysession-get-current-session-name
+  'easysession-get-session-name
+  "Renamed to `easysession-get-session-name'.")
+
+(make-obsolete 'easysession-get-current-session-name
+               'easysession-get-session-name
+               "1.1.3")
+
+(defun easysession-get-session-path (&optional session-name)
   "Return the absolute path to the session file for SESSION-NAME.
 If SESSION-NAME is nil, use the currently loaded session.
 Return nil if no session is loaded."
   (unless session-name
-    (setq session-name (easysession-get-current-session-name)))
+    (setq session-name (easysession-get-session-name)))
   (when session-name
     (easysession--ensure-session-name-valid session-name)
     (expand-file-name session-name easysession-directory)))
@@ -715,12 +727,8 @@ Also checks if `easysession-dont-save' is set to t."
   "Check if a session with the given SESSION-NAME exists.
 
 Returns t if the session file exists, nil otherwise."
-  (when (file-exists-p (easysession-path session-name))
+  (when (file-exists-p (easysession-get-session-path session-name))
     t))
-
-(defun easysession-get-current-session-name ()
-  "Return the name of the current session."
-  easysession--current-session-name)
 
 (defun easysession-get-session-name ()
   "Return the name of the current session."
@@ -919,9 +927,9 @@ non-nil, the current session is saved."
                                (easysession--prompt-session-name
                                 (format "Rename session '%s' to: "
                                         (easysession-get-session-name))))))
-  (let* ((old-path (easysession-path
+  (let* ((old-path (easysession-get-session-path
                     easysession--current-session-name))
-         (new-path (easysession-path new-session-name)))
+         (new-path (easysession-get-session-path new-session-name)))
     (unless (file-regular-p old-path)
       (error "[easysession] No such file or directory: %s" old-path))
     (rename-file old-path new-path)
@@ -934,7 +942,7 @@ non-nil, the current session is saved."
   (let* ((session-name (or session-name
                            (easysession--prompt-session-name
                             "Delete session: " session-name)))
-         (session-file (easysession-path session-name)))
+         (session-file (easysession-get-session-path session-name)))
     (if-let* ((session-buffer (find-buffer-visiting session-file)))
         (kill-buffer session-buffer))
     (if (file-exists-p session-file)
@@ -958,7 +966,7 @@ non-nil, the current session is saved."
          (easysession-load-in-progress session-name)
          (session-data nil)
          (file-contents nil)
-         (session-file (easysession-path session-name)))
+         (session-file (easysession-get-session-path session-name)))
     (when (and session-file (file-exists-p session-file))
       ;; Load file
       (setq file-contents (ignore-errors (f-read session-file)))
@@ -1027,7 +1035,7 @@ SESSION-NAME is the name of the session."
   (let* ((session-name (if session-name
                            session-name
                          (easysession-get-session-name)))
-         (session-file (easysession-path session-name))
+         (session-file (easysession-get-session-path session-name))
          (data-frameset (easysession--save-frameset session-name))
          (data-frameset-geometry (easysession--save-frameset
                                   session-name t))
@@ -1100,9 +1108,9 @@ If the function is called interactively, ask the user."
                                    (easysession--prompt-session-name
                                     "Save session as: "
                                     (unless session-name
-                                      (easysession-get-current-session-name)))
+                                      (easysession-get-session-name)))
                                  (unless session-name
-                                   (easysession-get-current-session-name)))))
+                                   (easysession-get-session-name)))))
          (previous-session-name easysession--current-session-name))
     (easysession--ensure-session-name-valid new-session-name)
     (easysession-save new-session-name)
@@ -1138,9 +1146,9 @@ initialized."
                               (or session-name
                                   (easysession--prompt-session-name
                                    "Load and switch to session: "
-                                   (easysession-get-current-session-name))))
-                             (t (easysession-get-current-session-name))))
-         (session-file (easysession-path session-name))
+                                   (easysession-get-session-name))))
+                             (t (easysession-get-session-name))))
+         (session-file (easysession-get-session-path session-name))
          (session-reloaded (string= session-name
                                     easysession--current-session-name))
          (saved nil)
