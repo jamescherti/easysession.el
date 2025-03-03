@@ -428,6 +428,7 @@ triggered in this context."
     (window-id . :never)
     (window-system . :never)
     (lsp-ui-doc-buffer . :never)  ; Third party package (Fixes #22)
+    (dv-preview-last . :never)  ; Third party package (Fixes #32)
     (z-group . :never))
   "Alist of frame parameters and filtering functions.")
 
