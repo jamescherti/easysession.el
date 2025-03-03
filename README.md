@@ -13,7 +13,7 @@ The `easysession.el` Emacs package is a session manager for Emacs that can persi
   - [Features](#features)
   - [Installation](#installation)
   - [Usage](#usage)
-  - [Frequently asked questions](#frequently-asked-questions)
+  - [Customization](#customization)
     - [Configuring EasySession with Emacs daemon mode](#configuring-easysession-with-emacs-daemon-mode)
     - [How to only persist and restore visible buffers](#how-to-only-persist-and-restore-visible-buffers)
     - [How to persist and restore global variables?](#how-to-persist-and-restore-global-variables)
@@ -22,6 +22,7 @@ The `easysession.el` Emacs package is a session manager for Emacs that can persi
     - [How to configure easysession-save-mode to automatically save only the "main" session and let me manually save others?](#how-to-configure-easysession-save-mode-to-automatically-save-only-the-main-session-and-let-me-manually-save-others)
     - [How to make EasySession kill all buffers before loading a session?](#how-to-make-easysession-kill-all-buffers-before-loading-a-session)
     - [How to create custom load and save handlers for non-file-visiting buffers](#how-to-create-custom-load-and-save-handlers-for-non-file-visiting-buffers)
+  - [Frequently asked questions](#frequently-asked-questions)
     - [How does the author use easysession?](#how-does-the-author-use-easysession)
     - [Why not use the desktop.el?](#why-not-use-the-desktopel)
     - [Why not just improve and submit patches to desktop.el?](#why-not-just-improve-and-submit-patches-to-desktopel)
@@ -91,7 +92,7 @@ To facilitate session management, consider using the following key mappings: `C-
 (global-set-key (kbd "C-c s") 'easysession-save-as)
 ```
 
-## Frequently asked questions
+## Customization
 
 ### Configuring EasySession with Emacs daemon mode
 
@@ -160,14 +161,14 @@ To persist and restore global variables in Emacs, you can use the built-in `save
 (Each element added to `savehist-additional-variables` is a variable that will be persisted across Emacs sessions that use `savehist`.)
 
 The `easysession` package can leverage `savehist` save the restore the current session name:
-``` emacs-lisp
+```emacs-lisp
 (add-to-list 'savehist-additional-variables 'easysession--current-session-name)
 ```
 
 ### How to make the current session name appear in the mode-line?
 
 You can display the current session name in the mode line by setting the following variable to t:
-```
+```emacs-lisp
 (setq easysession-mode-line-misc-info t)
 ```
 
@@ -275,6 +276,8 @@ Here is an example:
 ```
 
 Replace `TODO` with the appropriate code and remove `[MY EASYSESSION TEST]` after debugging is complete.
+
+## Frequently asked questions
 
 ### How does the author use easysession?
 
