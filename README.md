@@ -13,7 +13,7 @@ The `easysession.el` Emacs package is a session manager for Emacs that can persi
   - [Features](#features)
   - [Installation](#installation)
   - [Usage](#usage)
-  - [Customization](#customization)
+  - [Customizations](#customizations)
     - [Configuring EasySession with Emacs daemon mode](#configuring-easysession-with-emacs-daemon-mode)
     - [How to only persist and restore visible buffers](#how-to-only-persist-and-restore-visible-buffers)
     - [How to persist and restore global variables?](#how-to-persist-and-restore-global-variables)
@@ -92,7 +92,7 @@ To facilitate session management, consider using the following key mappings: `C-
 (global-set-key (kbd "C-c s") 'easysession-save-as)
 ```
 
-## Customization
+## Customizations
 
 ### Configuring EasySession with Emacs daemon mode
 
