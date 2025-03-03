@@ -13,13 +13,13 @@ The `easysession.el` Emacs package is a session manager for Emacs that can persi
   - [Features](#features)
   - [Installation](#installation)
   - [Usage](#usage)
-  - [Customizations](#customizations)
-    - [Configuring EasySession with Emacs daemon mode](#configuring-easysession-with-emacs-daemon-mode)
+  - [Customization](#customization)
     - [How to only persist and restore visible buffers](#how-to-only-persist-and-restore-visible-buffers)
     - [How to persist and restore global variables?](#how-to-persist-and-restore-global-variables)
     - [How to make the current session name appear in the mode-line?](#how-to-make-the-current-session-name-appear-in-the-mode-line)
     - [How to create an empty session setup](#how-to-create-an-empty-session-setup)
     - [How to configure easysession-save-mode to automatically save only the "main" session and let me manually save others?](#how-to-configure-easysession-save-mode-to-automatically-save-only-the-main-session-and-let-me-manually-save-others)
+    - [Configuring EasySession with Emacs daemon mode](#configuring-easysession-with-emacs-daemon-mode)
     - [How to make EasySession kill all buffers before loading a session?](#how-to-make-easysession-kill-all-buffers-before-loading-a-session)
     - [How to create custom load and save handlers for non-file-visiting buffers](#how-to-create-custom-load-and-save-handlers-for-non-file-visiting-buffers)
   - [Frequently asked questions](#frequently-asked-questions)
@@ -92,26 +92,7 @@ To facilitate session management, consider using the following key mappings: `C-
 (global-set-key (kbd "C-c s") 'easysession-save-as)
 ```
 
-## Customizations
-
-### Configuring EasySession with Emacs daemon mode
-
-When using Emacs in daemon mode (`emacs --daemon`), loading sessions needs to be triggered appropriately. If using the `after-init-hook` results in issues on startup, an alternative approach is to use `server-after-make-frame-hook`. This hook ensures that the session is loaded once the client frame is created.
-
-Here is an example:
-```emacs-lisp
-(use-package easysession
-  :ensure t
-  :config
-  (defun my-setup-easy-session ()
-    (easysession-load-including-geometry)
-    (easysession-save-mode)
-    (remove-hook 'server-after-make-frame-hook #'my-setup-easy-session))
-
-  (add-hook 'server-after-make-frame-hook #'my-setup-easy-session))
-```
-
-([read this discussion](https://github.com/jamescherti/easysession.el/discussions/15) for more information.)
+## Customization
 
 ### How to only persist and restore visible buffers
 
@@ -200,6 +181,25 @@ To set up `easysession-save-mode` to automatically save only the "main" session 
     t))
 (setq easysession-save-mode-predicate 'my-easysession-only-main-saved)
 ```
+
+### Configuring EasySession with Emacs daemon mode
+
+When using Emacs in daemon mode (`emacs --daemon`), loading sessions needs to be triggered appropriately. If using the `after-init-hook` results in issues on startup, an alternative approach is to use `server-after-make-frame-hook`. This hook ensures that the session is loaded once the client frame is created.
+
+Here is an example:
+```emacs-lisp
+(use-package easysession
+  :ensure t
+  :config
+  (defun my-setup-easy-session ()
+    (easysession-load-including-geometry)
+    (easysession-save-mode)
+    (remove-hook 'server-after-make-frame-hook #'my-setup-easy-session))
+
+  (add-hook 'server-after-make-frame-hook #'my-setup-easy-session))
+```
+
+([read this discussion](https://github.com/jamescherti/easysession.el/discussions/15) for more information.)
 
 ### How to make EasySession kill all buffers before loading a session?
 
