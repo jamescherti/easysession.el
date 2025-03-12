@@ -6,7 +6,7 @@
 ;; Version: 1.1.2
 ;; URL: https://github.com/jamescherti/easysession.el
 ;; Keywords: convenience
-;; Package-Requires: ((emacs "25.1") (f "0.18.2"))
+;; Package-Requires: ((emacs "25.1"))
 ;; SPDX-License-Identifier: GPL-3.0-or-later
 
 ;; This file is free software; you can redistribute it and/or modify
@@ -82,7 +82,6 @@
 ;;; Code:
 
 (require 'frameset)
-(require 'f)
 
 ;;; Variables
 
@@ -100,25 +99,25 @@
 (defcustom easysession-before-load-hook nil
   "Hooks to run before the session is loaded.
 Each element should be a function to be called with no arguments."
-  :type '(repeat function)
+  :type 'hook
   :group 'easysession)
 
 (defcustom easysession-after-load-hook nil
   "Hooks to run after the session is loaded.
 Each element should be a function to be called with no arguments."
-  :type '(repeat function)
+  :type 'hook
   :group 'easysession)
 
 (defcustom easysession-before-save-hook nil
   "Hooks to run before the session is saved.
 Each element should be a function to be called with no arguments."
-  :type '(repeat function)
+  :type 'hook
   :group 'easysession)
 
 (defcustom easysession-after-save-hook nil
   "Hooks to run after the session is saved.
 Each element should be a function to be called with no arguments."
-  :type '(repeat function)
+  :type 'hook
   :group 'easysession)
 
 (defcustom easysession-new-session-hook nil
@@ -127,7 +126,7 @@ Each element should be a function to be called with no arguments.
 
 This can be used to customize behavior, such as emptying a session
 after a new one is created."
-  :type '(repeat function)
+  :type 'hook
   :group 'easysession)
 
 (defcustom easysession-quiet nil
@@ -964,11 +963,12 @@ non-nil, the current session is saved."
          (file-contents nil)
          (session-file (easysession-get-session-file-path session-name)))
     (when (and session-file (file-exists-p session-file))
-      ;; Load file
-      (setq file-contents (ignore-errors (f-read session-file)))
-      (when file-contents
-        (setq file-contents (string-trim file-contents)))
-      (when (or (not file-contents) (string= file-contents ""))
+      (setq file-contents (with-temp-buffer
+                            (insert-file-contents session-file)
+                            (buffer-string)))
+      (when (or (not file-contents)
+                (and (stringp file-contents)
+                     (string= (string-trim file-contents) "")))
         (error "[easysession] %s: Failed to read session information from %s"
                session-name session-file))
 
@@ -1077,21 +1077,16 @@ SESSION-NAME is the name of the session."
     (unless (file-directory-p session-dir)
       (make-directory session-dir t))
 
-    (let ((fwrite-success (progn (f-write (prin1-to-string session-data)
-                                          'utf-8 session-file)
-                                 t)))
-      (if fwrite-success
-          (progn
-            (when (called-interactively-p 'any)
-              (easysession--message "Session saved: %s" session-name))
-            (run-hooks 'easysession-after-save-hook)
+    (let* ((serialized-data (prin1-to-string session-data)))
+      (with-temp-buffer
+        (insert serialized-data)
+        (let ((coding-system-for-write 'utf-8-emacs))
+		      (write-region (point-min) (point-max) session-file nil 'nomessage)))
 
-            ;; Return t
-            t)
-        (error "[easysession] %s: failed to save the session to %s"
-               session-name session-file)
-        ;; Return nil
-        nil))))
+      (when (called-interactively-p 'any)
+        (easysession--message "Session saved: %s" session-name))
+
+      (run-hooks 'easysession-after-save-hook))))
 
 ;;;###autoload
 (defun easysession-save-as (&optional session-name)
