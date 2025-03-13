@@ -25,7 +25,7 @@ The `easysession.el` Emacs package is a session manager for Emacs that can persi
     - [How to create custom load and save handlers for non-file-visiting buffers](#how-to-create-custom-load-and-save-handlers-for-non-file-visiting-buffers)
   - [Frequently asked questions](#frequently-asked-questions)
     - [How does the author use easysession?](#how-does-the-author-use-easysession)
-    - [Why not use the desktop.el?](#why-not-use-the-desktopel)
+    - [What does EasySession offer that desktop.el doesn't?](#what-does-easysession-offer-that-desktopel-doesnt)
     - [Why not just improve and submit patches to desktop.el?](#why-not-just-improve-and-submit-patches-to-desktopel)
     - [How does it compare to activities.el?](#how-does-it-compare-to-activitiesel)
     - [Why not use one of the other third-party session packages?](#why-not-use-one-of-the-other-third-party-session-packages)
@@ -284,7 +284,7 @@ Replace `TODO` with the appropriate code and remove `[MY EASYSESSION TEST]` afte
 
 The author uses `easysession.el` by setting up each session to represent a distinct project or a specific "view" on a particular project, including various tabs (built-in tab-bar), window splits, dired buffers, and file editing buffers. This organization allows for the creation of dedicated environments for different tasks or aspects of a project, such as development, debugging, specific issue, and documentation. The author switches between projects and views of the same projects multiple times a day, and `easysession.el` helps significantly by allowing quick transitions between them.
 
-### Why not use the desktop.el?
+### What does EasySession offer that desktop.el doesn't?
 
 While `desktop.el` is a foundational session management tool for Emacs, it has several limitations:
 - It primarily saves Emacs' state on exit and restores it on startup, making it difficult to switch between different session files during an editing session.
