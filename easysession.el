@@ -1095,8 +1095,11 @@ SESSION-NAME is the name of the session."
            (serialized-data (prin1-to-string session-data)))
       (with-temp-buffer
         (insert serialized-data)
-        (let ((coding-system-for-write 'utf-8-emacs))
-		      (write-region (point-min) (point-max) session-file nil 'nomessage)))
+        (let ((coding-system-for-write 'utf-8-emacs)
+              (write-region-annotate-functions nil)
+              (write-region-post-annotation-function nil))
+          (write-region (point-min) (point-max) session-file nil :silent)
+          nil))
 
       (when (called-interactively-p 'any)
         (easysession--message "Session saved: %s" session-name)))
