@@ -971,9 +971,11 @@ non-nil, the current session is saved."
          (file-contents nil)
          (session-file (easysession--exists session-name)))
     (when session-file
-      (setq file-contents (with-temp-buffer
-                            (insert-file-contents session-file)
-                            (buffer-string)))
+      (setq file-contents (let ((coding-system-for-read 'utf-8-emacs)
+                                (file-coding-system-alist nil))
+                            (with-temp-buffer
+                              (insert-file-contents session-file)
+                              (buffer-string))))
       (when (or (not file-contents)
                 (and (stringp file-contents)
                      (string= (string-trim file-contents) "")))
