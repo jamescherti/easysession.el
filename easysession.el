@@ -1100,7 +1100,7 @@ SESSION-NAME is the name of the session."
         (let ((coding-system-for-write 'utf-8-emacs)
               (write-region-annotate-functions nil)
               (write-region-post-annotation-function nil))
-          (write-region (point-min) (point-max) session-file nil :silent)
+          (write-region (point-min) (point-max) session-file nil 'silent)
           nil))
 
       (when (called-interactively-p 'any)
