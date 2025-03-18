@@ -533,7 +533,9 @@ Errors:
 Raise an error if the session name is invalid."
   (when (or (not session-name)
             (string= session-name "")
-            (string-match-p "/" session-name)
+            (let ((case-fold-search nil))
+              (or (string-match-p "\\\\" session-name)
+                  (string-match-p "/" session-name)))
             (string= session-name "..")
             (string= session-name "."))
     (error "[easysession] Invalid session name: %s" session-name))
@@ -722,12 +724,13 @@ Also checks if `easysession-dont-save' is set to t."
   (and (not (frame-parameter frame 'parent-frame))
        (not (frame-parameter frame 'easysession-dont-save))))
 
-(defun easysession-exists (session-name)
+(defun easysession--exists (session-name)
   "Check if a session with the given SESSION-NAME exists.
-
-Returns t if the session file exists, nil otherwise."
-  (when (file-exists-p (easysession-get-session-file-path session-name))
-    t))
+Returns the session file if the session file exists, nil otherwise."
+  (let ((file-name-handler-alist nil))
+    (let ((file-name (easysession-get-session-file-path session-name)))
+      (when (file-exists-p file-name)
+        file-name))))
 
 (defun easysession--handler-load-file-editing-buffers (session-data)
   "Load base buffers from the SESSION-DATA variable."
@@ -937,13 +940,16 @@ non-nil, the current session is saved."
   (let* ((session-name (or session-name
                            (easysession--prompt-session-name
                             "Delete session: " session-name)))
-         (session-file (easysession-get-session-file-path session-name)))
-    (if-let* ((session-buffer (find-buffer-visiting session-file)))
-        (kill-buffer session-buffer))
-    (if (file-exists-p session-file)
-        (progn (delete-file session-file nil)
-               (easysession--message "Session deleted: %s" session-name)
-               t)
+         (session-file (easysession--exists session-name)))
+    (if session-file
+        (progn
+          (let ((session-buffer (find-buffer-visiting session-file)))
+            (when session-buffer
+              (kill-buffer session-buffer)))
+
+          (delete-file session-file nil)
+          (easysession--message "Session deleted: %s" session-name)
+          t)
       (easysession--warning
        "The session '%s' cannot be deleted because it does not exist"
        session-name)
@@ -955,17 +961,21 @@ non-nil, the current session is saved."
   (interactive)
   (setq easysession-load-in-progress nil)
   (setq easysession--load-error t)
-  (let* ((session-name (if session-name
+  (let* ((original-file-name-handler-alist file-name-handler-alist)
+         (file-name-handler-alist nil)
+         (session-name (if session-name
                            session-name
                          easysession--current-session-name))
          (easysession-load-in-progress session-name)
          (session-data nil)
          (file-contents nil)
-         (session-file (easysession-get-session-file-path session-name)))
-    (when (and session-file (file-exists-p session-file))
-      (setq file-contents (with-temp-buffer
-                            (insert-file-contents session-file)
-                            (buffer-string)))
+         (session-file (easysession--exists session-name)))
+    (when session-file
+      (setq file-contents (let ((coding-system-for-read 'utf-8-emacs)
+                                (file-coding-system-alist nil))
+                            (with-temp-buffer
+                              (insert-file-contents session-file)
+                              (buffer-string))))
       (when (or (not file-contents)
                 (and (stringp file-contents)
                      (string= (string-trim file-contents) "")))
@@ -979,22 +989,23 @@ non-nil, the current session is saved."
          "[easysession] %s: Failed to evaluate session information from %s"
          session-name session-file))
 
-      (run-hooks 'easysession-before-load-hook)
-
       ;; Load buffers first because the cursor, window-start, or hscroll might
       ;; be altered by packages such as saveplace. This will allow the frameset
       ;; to modify the cursor later on.
-      (dolist (handler (easysession-get-load-handlers))
-        (when handler
-          (cond
-           ((and (symbolp handler)
-                 (fboundp handler))
-            (funcall handler session-data))
+      (let ((file-name-handler-alist original-file-name-handler-alist))
+        (run-hooks 'easysession-before-load-hook)
 
-           (t
-            (easysession--warning
-             "The following load handler is not a defined function: %s"
-             handler)))))
+        (dolist (handler (easysession-get-load-handlers))
+          (when handler
+            (cond
+             ((and (symbolp handler)
+                   (fboundp handler))
+              (funcall handler session-data))
+
+             (t
+              (easysession--warning
+               "The following load handler is not a defined function: %s"
+               handler))))))
 
       ;; Load the frame set
       (easysession--load-frameset
@@ -1003,7 +1014,9 @@ non-nil, the current session is saved."
       (setq easysession--load-error nil)
       (when (called-interactively-p 'any)
         (easysession--message "Session loaded: %s" session-name))
-      (run-hooks 'easysession-after-load-hook)))
+
+      (let ((file-name-handler-alist original-file-name-handler-alist))
+        (run-hooks 'easysession-after-load-hook))))
   ;; Return easysession--load-error
   (not easysession--load-error))
 
@@ -1028,7 +1041,9 @@ Emacs frames."
 SESSION-NAME is the name of the session."
   (interactive)
   (run-hooks 'easysession-before-save-hook)
-  (let* ((session-name (if session-name
+  (let* ((original-file-name-handler-alist file-name-handler-alist)
+         (file-name-handler-alist nil)
+         (session-name (if session-name
                            session-name
                          (easysession-get-session-name)))
          (session-file (easysession-get-session-file-path session-name))
@@ -1042,7 +1057,8 @@ SESSION-NAME is the name of the session."
     (push (cons "frameset-geo" data-frameset-geometry) session-data)
 
     ;; Buffers and file buffers
-    (let* ((buffers (funcall easysession-buffer-list-function)))
+    (let* ((file-name-handler-alist original-file-name-handler-alist)
+           (buffers (funcall easysession-buffer-list-function)))
       (dolist (handler (easysession-get-save-handlers))
         (if (not (and handler
                       (symbolp handler)
@@ -1075,18 +1091,22 @@ SESSION-NAME is the name of the session."
                 (setq buffers remaining-buffers)))))))
 
     (unless (file-directory-p session-dir)
-      (make-directory session-dir t))
+      (make-directory session-dir :parents))
 
-    (let* ((serialized-data (prin1-to-string session-data)))
+    (let* ((file-name-handler-alist nil)
+           (serialized-data (prin1-to-string session-data)))
       (with-temp-buffer
         (insert serialized-data)
-        (let ((coding-system-for-write 'utf-8-emacs))
-		      (write-region (point-min) (point-max) session-file nil 'nomessage)))
+        (let ((coding-system-for-write 'utf-8-emacs)
+              (write-region-annotate-functions nil)
+              (write-region-post-annotation-function nil))
+          (write-region (point-min) (point-max) session-file nil 'silent)
+          nil))
 
       (when (called-interactively-p 'any)
-        (easysession--message "Session saved: %s" session-name))
+        (easysession--message "Session saved: %s" session-name)))
 
-      (run-hooks 'easysession-after-save-hook))))
+    (run-hooks 'easysession-after-save-hook)))
 
 ;;;###autoload
 (defun easysession-save-as (&optional session-name)
