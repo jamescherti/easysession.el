@@ -564,7 +564,8 @@ OVERWRITE-ALIST is an alist similar to
     result))
 
 (defun easysession--get-all-names (&optional exclude-current)
-  "Return a list of all session names."
+  "Return a list of all session names.
+If EXCLUDE-CURRENT is non-nil, exclude the current session name from the list."
   (if (file-directory-p easysession-directory)
       (seq-filter (lambda (session-name)
                     (not (or (string-equal session-name ".")
@@ -577,7 +578,9 @@ OVERWRITE-ALIST is an alist similar to
 
 (defun easysession--prompt-session-name (prompt &optional session-name exclude-current)
   "Prompt for a session name with PROMPT.
-Use SESSION-NAME as the default value."
+Use SESSION-NAME as the default value.
+If EXCLUDE-CURRENT is non-nil, exclude the current session from
+completion candidates."
   (completing-read (concat "[easysession] " prompt)
                    (easysession--get-all-names exclude-current)
                    nil nil nil nil session-name))
