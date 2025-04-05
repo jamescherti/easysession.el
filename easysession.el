@@ -177,6 +177,11 @@ activated when `easysession-save-mode' is enabled."
                       `(easysession-mode-line-misc-info
                         easysession-mode-line-misc-info-format))))
 
+(defcustom easysession-switch-to-exclude-current nil
+  "If non-nil, don't suggest current session when switching sessions."
+  :type 'boolean
+  :group 'easysession)
+
 ;; Lighter
 (defvar easysession-save-mode-lighter " EasySeSave"
   "Default lighter string for `easysession-save-mode'.")
@@ -558,18 +563,24 @@ OVERWRITE-ALIST is an alist similar to
             (cdr pair)))
     result))
 
-(defun easysession--get-all-names ()
+(defun easysession--get-all-names (&optional exclude-current)
   "Return a list of all session names."
   (if (file-directory-p easysession-directory)
-      (remove "." (remove ".." (directory-files easysession-directory nil
-                                                nil t)))
+      (seq-filter (lambda (session-name)
+                    (not (or (string-equal session-name ".")
+                             (string-equal session-name "..")
+                             (and exclude-current
+                                  (string-equal session-name
+                                                (easysession-get-session-name))))))
+                  (directory-files easysession-directory nil nil t))
     '()))
 
-(defun easysession--prompt-session-name (prompt &optional session-name)
+(defun easysession--prompt-session-name (prompt &optional session-name exclude-current)
   "Prompt for a session name with PROMPT.
 Use SESSION-NAME as the default value."
   (completing-read (concat "[easysession] " prompt)
-                   (easysession--get-all-names) nil nil nil nil session-name))
+                   (easysession--get-all-names exclude-current)
+                   nil nil nil nil session-name))
 
 (defun easysession--get-base-buffer-info (buffer)
   "Get the name and path of the buffer BUFFER.
@@ -1157,7 +1168,9 @@ initialized."
                               (or session-name
                                   (easysession--prompt-session-name
                                    "Load and switch to session: "
-                                   (easysession-get-session-name))))
+                                   (unless easysession-switch-to-exclude-current
+                                     (easysession-get-session-name))
+                                   easysession-switch-to-exclude-current)))
                              (t (easysession-get-session-name))))
          (session-file (easysession-get-session-file-path session-name))
          (session-reloaded (string= session-name
