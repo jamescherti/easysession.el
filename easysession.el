@@ -178,7 +178,11 @@ activated when `easysession-save-mode' is enabled."
                         easysession-mode-line-misc-info-format))))
 
 (defcustom easysession-switch-to-exclude-current nil
-  "If non-nil, don't suggest current session when switching sessions."
+  "Non-nil to exclude the current session when switching sessions.
+
+This can be useful to prevent accidental re-selection of the session already in
+use, especially when cycling through or interactively selecting among available
+sessions."
   :type 'boolean
   :group 'easysession)
 
