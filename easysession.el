@@ -86,7 +86,7 @@
 ;;; Variables
 
 (defgroup easysession nil
-  "Non-nil if easysession mode mode is enabled."
+  "Persist and restore your sessions."
   :group 'easysession
   :prefix "easysession-")
 
