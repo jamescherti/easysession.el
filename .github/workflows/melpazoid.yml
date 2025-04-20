@@ -1,0 +1,35 @@
+---
+
+# melpazoid <https://github.com/riscy/melpazoid> build checks.
+
+# If your package is on GitHub, enable melpazoid's checks by copying this file
+# to .github/workflows/melpazoid.yml and modifying RECIPE and EXIST_OK below.
+
+name: melpazoid
+on:
+  - workflow_dispatch
+  - pull_request
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          sudo apt-get install emacs && emacs --version
+          git clone https://github.com/riscy/melpazoid.git ~/melpazoid
+          pip install ~/melpazoid
+          cat ~/melpazoid/melpazoid/melpazoid.el
+      - name: Run
+        env:
+          LOCAL_REPO: "${{ github.workspace }}"
+          RECIPE: (easysession :fetcher github :repo "jamescherti/easysession.el" :branch "${{ github.ref_name }}" :files ("easysession.el"))
+          # Set EXIST_OK to false (or remove it) if the package isn't on MELPA
+          EXIST_OK: true
+        run: echo $GITHUB_REF && make -C ~/melpazoid
