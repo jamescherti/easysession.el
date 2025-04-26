@@ -580,14 +580,16 @@ If EXCLUDE-CURRENT is non-nil, exclude the current session name from the list."
                   (directory-files easysession-directory nil nil t))
     '()))
 
-(defun easysession--prompt-session-name (prompt &optional session-name exclude-current)
+(defun easysession--prompt-session-name (prompt &optional session-name
+                                                exclude-current initial-input)
   "Prompt for a session name with PROMPT.
 Use SESSION-NAME as the default value.
 If EXCLUDE-CURRENT is non-nil, exclude the current session from
+If INITIAL-INPUT is non-nil, insert it in the minibuffer initially.
 completion candidates."
   (completing-read (concat "[easysession] " prompt)
                    (easysession--get-all-names exclude-current)
-                   nil nil nil nil session-name))
+                   nil nil initial-input nil session-name))
 
 (defun easysession--get-base-buffer-info (buffer)
   "Get the name and path of the buffer BUFFER.
@@ -935,7 +937,10 @@ non-nil, the current session is saved."
   "Rename the current session to NEW-SESSION-NAME."
   (interactive (list (easysession--prompt-session-name
                       (format "Rename session '%s' to: "
-                              (easysession-get-session-name)))))
+                              (easysession-get-session-name))
+                      nil
+                      nil
+                      (easysession-get-session-name))))
   (unless new-session-name
     (error (concat "[easysession] easysession-rename: You need to specify"
                    "the new session name.")))
