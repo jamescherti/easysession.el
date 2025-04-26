@@ -517,7 +517,7 @@ This is an internal variable that is meant to be read-only. Do not modify it.
 This variable is used to indicate whether a session loading process is in
 progress.")
 
-;;; Helper functions
+;;; Internal functions
 
 (defun easysession--message (&rest args)
   "Display a message with '[easysession]' prepended.
@@ -752,6 +752,37 @@ Returns the session file if the session file exists, nil otherwise."
       (when (file-exists-p file-name)
         file-name))))
 
+(defun easysession--auto-save ()
+  "Save the session automatically based on the auto-save predicate.
+This function is usually called by `easysession-save-mode'. It evaluates the
+`easysession-save-mode-predicate' function, and if the predicate returns
+non-nil, the current session is saved."
+  (unwind-protect
+      ;; Auto save when there is at least one frame
+      (when (frame-list)
+        (if (funcall easysession-save-mode-predicate)
+            (easysession-save)
+          (when easysession--debug
+            (easysession--message
+             (concat
+              "[DEBUG] Auto-save ignored: `easysession-save-mode-predicate' "
+              "returned nil.")))))
+    t)
+  t)
+
+(defun easysession--mode-line-session-name-format ()
+  "Compose EasySession's mode-line."
+  (if (bound-and-true-p easysession--current-session-name)
+      (let* ((session-name (eval easysession--current-session-name)))
+        (list
+         (propertize session-name
+                     'face 'easysession-mode-line-session-name-face
+                     'help-echo (format "Current session: %s" session-name)
+                     'mouse-face 'mode-line-highlight)))
+    ""))
+
+;;; Internal functions: handlers
+
 (defun easysession--handler-load-file-editing-buffers (session-data)
   "Load base buffers from the SESSION-DATA variable."
   (let ((buffer-file-names (assoc-default "buffers" session-data)))
@@ -900,35 +931,6 @@ HANDLER-FN is the function to be removed."
   "Return a list of all built-in and user-defined load handlers."
   (append easysession--builtin-load-handlers
           easysession--load-handlers))
-
-(defun easysession--auto-save ()
-  "Save the session automatically based on the auto-save predicate.
-This function is usually called by `easysession-save-mode'. It evaluates the
-`easysession-save-mode-predicate' function, and if the predicate returns
-non-nil, the current session is saved."
-  (unwind-protect
-      ;; Auto save when there is at least one frame
-      (when (frame-list)
-        (if (funcall easysession-save-mode-predicate)
-            (easysession-save)
-          (when easysession--debug
-            (easysession--message
-             (concat
-              "[DEBUG] Auto-save ignored: `easysession-save-mode-predicate' "
-              "returned nil.")))))
-    t)
-  t)
-
-(defun easysession--mode-line-session-name-format ()
-  "Compose EasySession's mode-line."
-  (if (bound-and-true-p easysession--current-session-name)
-      (let* ((session-name (eval easysession--current-session-name)))
-        (list
-         (propertize session-name
-                     'face 'easysession-mode-line-session-name-face
-                     'help-echo (format "Current session: %s" session-name)
-                     'mouse-face 'mode-line-highlight)))
-    ""))
 
 ;;; Autoloaded functions
 
