@@ -948,13 +948,10 @@ non-nil, the current session is saved."
     (setq easysession--current-session-name new-session-name)))
 
 ;;;###autoload
-(defun easysession-delete (&optional session-name)
+(defun easysession-delete (session-name)
   "Delete a session. Prompt for SESSION-NAME if not provided."
-  (interactive)
-  (let* ((session-name (or session-name
-                           (easysession--prompt-session-name
-                            "Delete session: " session-name)))
-         (session-file (easysession--exists session-name)))
+  (interactive (list (easysession--prompt-session-name "Delete session: ")))
+  (let* ((session-file (easysession--exists session-name)))
     (if session-file
         (progn
           (let ((session-buffer (find-buffer-visiting session-file)))
@@ -1122,10 +1119,10 @@ SESSION-NAME is the name of the session."
     (run-hooks 'easysession-after-save-hook)))
 
 ;;;###autoload
-(defun easysession-save-as (&optional session-name)
-  "Save the state of all frames into a session with the given name.
-If SESSION-NAME is provided, use it; otherwise, use current session.
-If the function is called interactively, ask the user."
+(defun easysession-save-as (session-name)
+  "Save the session as SESSION-NAME and make it the current session.
+
+If the function is called interactively, prompt the user for a session name."
   (interactive
    (easysession--prompt-session-name "Save session as: "
                                      (easysession-get-session-name)))
@@ -1141,24 +1138,23 @@ If the function is called interactively, ask the user."
     t))
 
 ;;;###autoload
-(defun easysession-switch-to (&optional session-name)
-  "Save the current session and load a new one.
+(defun easysession-switch-to (session-name)
+  "Save the current session and load SESSION-NAME.
 
-This function handles saving the current session and loading a new session
-specified by SESSION-NAME. If SESSION-NAME is not provided, it will prompt the
-user for a session name if called interactively. If the session already exists,
-it will be loaded; otherwise, a new session will be created.
+This function saves the current Emacs session and loads the session specified by
+SESSION-NAME. If SESSION-NAME is not provided, it prompts the user for a session
+name when called interactively.
 
-SESSION-NAME is the name of the session to switch to. If nil, the function
-prompts the user for a session name if called interactively.
-
-Behavior:
-- If the current session is loaded and not being reloaded, the current session
-is saved.
-- Loads the specified session.
-- Sets the specified session as the current session.
+This function will:
+- Save the current session if it is loaded and not being reloaded.
+- Load the specified session.
+- Set the specified session as the current session.
 - If the session does not exist, it is saved and an empty session is
-initialized."
+  initialized.
+
+If the session is already loaded, a message is displayed to indicate it has been
+reloaded. If the session is newly created or switched to, a message is displayed
+accordingly."
   (interactive
    (list (easysession--prompt-session-name
           "Load and switch to session: "
