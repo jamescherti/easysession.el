@@ -1124,8 +1124,8 @@ SESSION-NAME is the name of the session."
 
 If the function is called interactively, prompt the user for a session name."
   (interactive
-   (easysession--prompt-session-name "Save session as: "
-                                     (easysession-get-session-name)))
+   (list (easysession--prompt-session-name "Save session as: "
+                                           (easysession-get-session-name))))
   (let* ((new-session-name (or session-name (easysession-get-session-name)))
          (previous-session-name easysession--current-session-name))
     (easysession--ensure-session-name-valid new-session-name)
