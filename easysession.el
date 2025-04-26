@@ -933,16 +933,12 @@ non-nil, the current session is saved."
 ;;;###autoload
 (defun easysession-rename (&optional new-session-name)
   "Rename the current session to NEW-SESSION-NAME."
-  (interactive)
-  (unless (and (not (called-interactively-p 'any)) (not new-session-name))
-    (error (concat "[easysession] easysession-rename: The 'new-session-name' "
-                   "argument must be specified when the function is "
-                   "called non-interactively.")))
+  (interactive (list (easysession--prompt-session-name
+                      (format "Rename session '%s' to: "
+                              (easysession-get-session-name)))))
   (unless new-session-name
-    (setq new-session-name (or new-session-name
-                               (easysession--prompt-session-name
-                                (format "Rename session '%s' to: "
-                                        (easysession-get-session-name))))))
+    (error (concat "[easysession] easysession-rename: You need to specify"
+                   "the new session name.")))
   (let* ((old-path (easysession-get-session-file-path
                     easysession--current-session-name))
          (new-path (easysession-get-session-file-path new-session-name)))
@@ -1047,9 +1043,8 @@ This function is typically used when Emacs is initially loaded. It ensures that
 session settings, including the positions and sizes (geometry) of all frames,
 are restored.
 
-For subsequent session switching, consider using `easysession-load' or
-`easysession-switch-to', which load the session without resizing or moving the
-Emacs frames."
+For subsequent session switching, consider using `easysession-switch-to', which
+load the session without resizing or moving the Emacs frames."
   (let ((easysession-frameset-restore-geometry t))
     (easysession-load session-name)))
 
@@ -1131,15 +1126,10 @@ SESSION-NAME is the name of the session."
   "Save the state of all frames into a session with the given name.
 If SESSION-NAME is provided, use it; otherwise, use current session.
 If the function is called interactively, ask the user."
-  (interactive)
-  (let* ((new-session-name (or session-name
-                               (if (called-interactively-p 'any)
-                                   (easysession--prompt-session-name
-                                    "Save session as: "
-                                    (unless session-name
-                                      (easysession-get-session-name)))
-                                 (unless session-name
-                                   (easysession-get-session-name)))))
+  (interactive
+   (easysession--prompt-session-name "Save session as: "
+                                     (easysession-get-session-name)))
+  (let* ((new-session-name (or session-name (easysession-get-session-name)))
          (previous-session-name easysession--current-session-name))
     (easysession--ensure-session-name-valid new-session-name)
     (easysession-save new-session-name)
@@ -1169,16 +1159,13 @@ is saved.
 - Sets the specified session as the current session.
 - If the session does not exist, it is saved and an empty session is
 initialized."
-  (interactive)
-  (let* ((session-name (cond (session-name session-name)
-                             ((called-interactively-p 'any)
-                              (or session-name
-                                  (easysession--prompt-session-name
-                                   "Load and switch to session: "
-                                   (unless easysession-switch-to-exclude-current
-                                     (easysession-get-session-name))
-                                   easysession-switch-to-exclude-current)))
-                             (t (easysession-get-session-name))))
+  (interactive
+   (list (easysession--prompt-session-name
+          "Load and switch to session: "
+          (unless easysession-switch-to-exclude-current
+            (easysession-get-session-name))
+          easysession-switch-to-exclude-current)))
+  (let* ((session-name (or session-name (easysession-get-session-name)))
          (session-file (easysession-get-session-file-path session-name))
          (session-reloaded (string= session-name
                                     easysession--current-session-name))
@@ -1221,10 +1208,9 @@ initialized."
       (progn
         (when (and easysession-save-interval
 	                 (null easysession--timer))
-          (setq easysession--timer
-	              (run-with-timer easysession-save-interval
-			                          easysession-save-interval
-                                #'easysession--auto-save)))
+          (setq easysession--timer (run-with-timer easysession-save-interval
+			                                             easysession-save-interval
+                                                   #'easysession--auto-save)))
         ;; `kill-emacs-query-functions' is preferable to `kill-emacs-hook' for
         ;; saving frames, as it is called before frames are closed.
         ;; In contrast, `kill-emacs-hook' is invoked after the frames are
