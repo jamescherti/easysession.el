@@ -932,7 +932,6 @@ HANDLER-FN is the function to be removed."
   (append easysession--builtin-load-handlers
           easysession--load-handlers))
 
-
 (defmacro easysession-define-load-handler (key handler-func)
   "Add a load handler for a specific session KEY.
 
@@ -951,13 +950,8 @@ found."
          (when handler-data
            (funcall ,handler-func handler-data))))
 
-     (defun ,(intern (concat "easysession--" key "-setup-load-handler")) ()
-       ,(format "Configure EasySession load handler: %s." key)
-       (easysession-add-load-handler
-        ',(intern (concat "easysession--" key "-load-handler"))))
-
-     (add-hook 'easysession-before-load-hook
-               #',(intern (concat "easysession--" key "-setup-load-handler")))))
+     (easysession-add-load-handler
+      ',(intern (concat "easysession--" key "-load-handler")))))
 
 (defmacro easysession-define-generic-save-handler (key &rest body)
   "Add a save handler to EasySession.
@@ -974,13 +968,8 @@ BODY is executed."
          t)  ;; Remove warnings
        ,@body)
 
-     (defun ,(intern (concat "easysession--" key "-setup-save-handler")) ()
-       "Configure EasySession save handler."
-       (easysession-add-save-handler
-        ',(intern (concat "easysession--" key "-save-handler"))))
-
-     (add-hook 'easysession-before-save-hook
-               #',(intern (concat "easysession--" key "-setup-save-handler")))))
+     (easysession-add-save-handler
+      ',(intern (concat "easysession--" key "-save-handler")))))
 
 (defmacro easysession-define-save-handler (key handler-func)
   "Add a save handler to EasySession.
