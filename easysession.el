@@ -932,6 +932,98 @@ HANDLER-FN is the function to be removed."
   (append easysession--builtin-load-handlers
           easysession--load-handlers))
 
+
+(defmacro easysession-define-load-handler (key handler-func)
+  "Add a load handler for a specific session KEY.
+
+KEY is the identifier used in the EasySession file. Avoid reserved keys like:
+buffers, indirect-buffers, frameset, and frameset-geo. Prefix with an
+underscore to be safe.
+
+HANDLER-FUNC is a callable that is invoked with session data when the key is
+found."
+  `(progn
+     (defun
+         ,(intern (concat "easysession--" key "-load-handler")) (session-data)
+       ,(format "Load handler for restoring %s buffers from SESSION-DATA."
+                key)
+       (let ((handler-data (assoc-default ,key session-data)))
+         (when handler-data
+           (funcall ,handler-func handler-data))))
+
+     (defun ,(intern (concat "easysession--" key "-setup-load-handler")) ()
+       ,(format "Configure EasySession load handler: %s." key)
+       (easysession-add-load-handler
+        ',(intern (concat "easysession--" key "-load-handler"))))
+
+     (add-hook 'easysession-before-load-hook
+               #',(intern (concat "easysession--" key "-setup-load-handler")))))
+
+(defmacro easysession-define-generic-save-handler (key &rest body)
+  "Add a save handler to EasySession.
+
+KEY is the identifier for this session data within EasySession. Prefix with an
+underscore to be safe. Avoid using reserved keys such as: buffers,
+indirect-buffers, frameset, and frameset-geo.
+
+BODY is executed."
+  `(progn
+     (defun ,(intern (concat "easysession--" key "-save-handler")) (buffers)
+       ,(format "Save handler for save %s." key)
+       (when buffers
+         t)  ;; Remove warnings
+       ,@body)
+
+     (defun ,(intern (concat "easysession--" key "-setup-save-handler")) ()
+       "Configure EasySession save handler."
+       (easysession-add-save-handler
+        ',(intern (concat "easysession--" key "-save-handler"))))
+
+     (add-hook 'easysession-before-save-hook
+               #',(intern (concat "easysession--" key "-setup-save-handler")))))
+
+(defmacro easysession-define-save-handler (key handler-func)
+  "Add a save handler to EasySession.
+
+KEY is the identifier for this session data within EasySession. Prefix with an
+underscore to be safe. Avoid using reserved keys such as: buffers,
+indirect-buffers, frameset, and frameset-geo.
+
+HANDLER-FUNC is a callable that processes each buffer and returns its session
+data."
+  `(easysession-define-generic-save-handler
+    ,key
+    (let ((result (funcall ,handler-func buffers)))
+      (when result
+        ;; TODO Check if buffers and remaining buffers exist
+        (push (cons 'key ,key) result)))))
+
+(defmacro easysession-define-handler (key load-handler-func save-handler-func)
+  "Register both load and save handlers for a given KEY.
+
+KEY is the session identifier. Avoid reserved keys.
+
+LOAD-HANDLER-FUNC and SAVE-HANDLER-FUNC are functions for handling session
+data."
+  `(progn
+     (easysession-define-load-handler ,key ,load-handler-func)
+     (easysession-define-save-handler ,key ,save-handler-func)))
+
+(defmacro easysession-save-handler-dolist-buffers (buffers &rest body)
+  "Iterate over BUFFERS, execute BODY inside each buffer's context.
+Classify buffers based on BODY's result."
+  `(let (saved-buffers
+         remaining-buffers)
+     (dolist (buffer ,buffers)
+       (with-current-buffer buffer
+         (let ((buffer-data (progn ,@body)))
+           (if buffer-data
+               (push buffer-data saved-buffers)
+             (push buffer remaining-buffers)))))
+     (list
+      (cons 'buffers saved-buffers)
+      (cons 'remaining-buffers remaining-buffers))))
+
 ;;; Autoloaded functions
 
 ;;;###autoload
