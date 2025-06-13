@@ -223,7 +223,7 @@ NOTE: The `easysession-new-session-hook` functions are called when the user swit
 
 ### How to create custom load and save handlers for non-file-visiting buffers
 
-EasySession is customizable. Users can implement their own handlers to manage non-file-editing buffers, enabling the creation of custom functions for restoring buffers.
+EasySession is customizable. Users can implement their own handlers to manage non-file-visiting buffers, enabling the creation of custom functions for restoring buffers.
 
 Here is a simple example to persist and restore the scratch buffer:
 ```elisp
@@ -263,7 +263,7 @@ Here is a simple example to persist and restore the scratch buffer:
 
 ### How does the author use easysession?
 
-The author uses easysession by setting up each session to represent a distinct project or a specific "view" on a particular project, including various tabs (built-in tab-bar), window splits, dired buffers, and file editing buffers. This organization allows for the creation of dedicated environments for different tasks or aspects of a project, such as development, debugging, specific issue, and documentation. The author switches between projects and views of the same projects multiple times a day, and easysession helps significantly by allowing quick transitions between them.
+The author uses easysession by setting up each session to represent a distinct project or a specific "view" on a particular project, including various tabs (built-in tab-bar), window splits, dired buffers, and file buffers. This organization allows for the creation of dedicated environments for different tasks or aspects of a project, such as development, debugging, specific issue, and documentation. The author switches between projects and views of the same projects multiple times a day, and easysession helps significantly by allowing quick transitions between them.
 
 ### What does EasySession offer that desktop.el doesn't?
 
