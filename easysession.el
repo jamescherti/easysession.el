@@ -1029,6 +1029,30 @@ Classify buffers based on BODY's result."
       (cons 'buffers saved-buffers)
       (cons 'remaining-buffers remaining-buffers))))
 
+
+
+(defmacro easysession-undefine-load-handler (key)
+  "Remove the load handler associated with KEY from EasySession."
+  `(let ((fn ',(intern (concat "easysession--" key "-load-handler"))))
+     (when (fboundp fn)
+       (unintern fn nil))
+     (setq easysession--load-handlers
+           (delq fn easysession--load-handlers))))
+
+(defmacro easysession-undefine-save-handler (key)
+  "Remove the save handler associated with KEY from EasySession."
+  `(let ((fn ',(intern (concat "easysession--" key "-save-handler"))))
+     (when (fboundp fn)
+       (unintern fn nil))
+     (setq easysession--save-handlers
+           (delq fn easysession--save-handlers))))
+
+(defmacro easysession-undefine-handler (key)
+  "Remove both load and save handlers associated with KEY from EasySession."
+  `(progn
+     (easysession-undefine-load-handler ,key)
+     (easysession-undefine-save-handler ,key)))
+
 ;;; Autoloaded functions
 
 ;;;###autoload
