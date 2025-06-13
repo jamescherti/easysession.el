@@ -259,6 +259,8 @@ Here is a simple example to persist and restore the scratch buffer:
                                                        (point-max))))))))))
 ```
 
+The code above enables EasySession to go beyond the default handlers, which support regular and indirect buffers, by also persisting and restoring the `*scratch*` buffer.
+
 ## Frequently asked questions
 
 ### How does the author use easysession?
