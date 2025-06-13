@@ -225,58 +225,39 @@ NOTE: The `easysession-new-session-hook` functions are called when the user swit
 
 EasySession is customizable. Users can implement their own handlers to manage non-file-editing buffers, enabling the creation of custom functions for restoring buffers.
 
-Here is an example:
+Here is a simple example to persist and restore the scratch buffer:
 ```elisp
-;; NOTE: You cannot use the following reserved Easy Session keys:
-;;       buffers, indirect-buffers, frameset, frameset-geo.
-(setq my-easysession-buffers-key "MY-BUFFERS")
+(easysession-define-handler
+ "scratch"
 
-(defun my-easysession-load-handler (session-data)
-  "Load handler for restoring specific buffers from SESSION-DATA."
-  (let ((data (assoc-default my-easysession-buffers-key session-data)))
-    (when data
-      (message "[MY EASYSESSION TEST] LOAD HANDLER: Loaded data: %s" data)
+ ;; Load
+ #'(lambda (session-data)
+     "Load SESSION-DATA."
+     (dolist (item session-data)
+       (let ((buffer-name (car item)))
+         (when (string= buffer-name "*scratch*")
+           (let* ((buffer (get-scratch-buffer-create))
+                  (buffer-data (cdr item))
+                  (buffer-string (when buffer-data
+                                   (assoc-default 'buffer-string buffer-data))))
+             (when (and buffer buffer-string)
+               (with-current-buffer buffer
+                 (erase-buffer)
+                 (insert buffer-string))))))))
 
-      ;; TODO: Add code to process and restore session data associated
-      ;; with `my-easysession-buffers-key'
-      )))
-
-(defun my-easysession-save-handler (buffers)
-  "Save handler for saving specific buffers from the given BUFFERS list."
-  (let ((saved-buffers '())
-        (remaining-buffers buffers))
-    (dolist (buf buffers)
-      (with-current-buffer buf
-        (let ((buffer-name (buffer-name)))
-          (message "[MY EASYSESSION TEST] SAVE HANDLER: Processing buffer %s"
-                   buffer-name)
-          ;; TODO: Replace t with a condition like: (derived-mode-p 'MY-MODE)
-          (if t
-              ;; TODO: Replace "MY-BUFFER-DATA" with your data. It does not
-              ;;       have to be a string; it can be a list, hash table, or
-              ;;       any other data structure.
-              (let ((buffer-data (cons buffer-name "MY-BUFFER-DATA")))
-                (push buffer-data saved-buffers)
-                (message "[MY EASYSESSION TEST] SAVE HANDLER: Buffer %s saved"
-                         buffer-name))
-            ;; If the buffer should not be saved, add it to remaining-buffers
-            (push buf remaining-buffers)))))
-    ;; Return an alist with the saved data and remaining buffers
-    (list
-     (cons 'key my-easysession-buffers-key)
-     (cons 'buffers saved-buffers)
-     (cons 'remaining-buffers remaining-buffers))))
-
-(defun my-easysession-setup-handlers ()
-  "Configure EasySession load and save handlers."
-  (easysession-add-load-handler 'my-easysession-load-handler)
-  (easysession-add-save-handler 'my-easysession-save-handler))
-
-(add-hook 'easysession-before-load-hook #'my-easysession-setup-handlers)
-(add-hook 'easysession-before-save-hook #'my-easysession-setup-handlers)
+ ;; Save
+ #'(lambda(buffers)
+     "Save the BUFFERS buffer."
+     (easysession-save-handler-dolist-buffers
+      buffers
+      (let ((buffer-name (buffer-name)))
+        (when (string= buffer-name "*scratch*")
+          (cons buffer-name
+                (list
+                 (cons 'buffer-string
+                       (buffer-substring-no-properties (point-min)
+                                                       (point-max))))))))))
 ```
-
-Replace `TODO` with the appropriate code and remove `[MY EASYSESSION TEST]` after debugging is complete.
 
 ## Frequently asked questions
 
