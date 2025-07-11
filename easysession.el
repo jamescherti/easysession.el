@@ -960,7 +960,7 @@ found."
   `(progn
      (defun
          ,(intern (concat "easysession--" key "-load-handler")) (session-data)
-       ,(format "Load handler for restoring %s buffers from SESSION-DATA."
+       ,(format "Load handler for restoring: %s."
                 key)
        (let ((handler-data (assoc-default ,key session-data)))
          (when handler-data
@@ -979,7 +979,7 @@ indirect-buffers, frameset, and frameset-geo.
 BODY is executed."
   `(progn
      (defun ,(intern (concat "easysession--" key "-save-handler")) (buffers)
-       ,(format "Save handler for save %s." key)
+       ,(format "Save handler for: %s." key)
        (when buffers
          t)  ;; Remove warnings
        ,@body)
