@@ -1,4 +1,4 @@
-;;; easysession.el --- Persist and restore your sessions (desktop.el alternative) -*- lexical-binding: t; -*-
+;;; easysession-scratch-buffer.el --- Persist and restore the scratch buffer -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2024-2025 James Cherti | https://www.jamescherti.com/contact/
 
