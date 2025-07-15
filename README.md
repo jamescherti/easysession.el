@@ -206,25 +206,20 @@ Here is an example:
 
 ### How to make EasySession kill all buffers before loading a session?
 
-Here is a code snippet shared by u/capuche on Reddit that closes all buffers before loading a session:
-
+Here is how to configure EasySession to kill all existing buffers before loading a session:
 ``` emacs-lisp
-(defun kill-old-session-buffers ()
-  (save-some-buffers t)
-  (mapc #'kill-buffer
-        (cl-remove-if
-         (lambda (buffer)
-           (string= (buffer-name buffer) "*Messages*"))
-         (buffer-list)))
-  (when (and (bound-and-true-p tab-bar-mode)
-               (fboundp 'tab-bar-close-other-tabs))
-      (tab-bar-close-other-tabs))
-  (delete-other-windows))
-(add-hook 'easysession-before-load-hook #'kill-old-session-buffers)
-(add-hook 'easysession-new-session-hook #'kill-old-session-buffers)
+(add-hook 'easysession-before-load-hook #'easysession-reset)
+(add-hook 'easysession-new-session-hook #'easysession-reset)
 ```
 
 NOTE: The `easysession-new-session-hook` functions are called when the user switches to a non-existent session using the `easysession-switch-to` function.
+
+Optionally, the `easysession-reset` function can be configured to automatically save all buffers without prompting the user:
+```elisp
+;; Automatically save all buffers without prompting the user
+(add-hook 'easysession-before-reset-hook #'(lambda()
+                                             (save-some-buffers t)))
+```
 
 ### How to create custom load and save handlers for non-file-visiting buffers
 
@@ -274,19 +269,13 @@ If your Emacs session tends to accumulate buffers over time, and you would like 
 
 ### How to start afresh after loading too many buffers
 
-To reset EasySession by clearing all buffers and associated session state, effectively simulating a fresh Emacs start, use the following function:
+To reset EasySession by clearing all buffers and associated session state, effectively simulating a fresh Emacs start, use `M-x easysession-reset`.
+
+Optionally, the `easysession-reset` function can be configured to automatically save all buffers without prompting the user:
 ```elisp
-(defun kill-old-session-buffers ()
-  (save-some-buffers t)
-  (mapc #'kill-buffer
-        (cl-remove-if
-         (lambda (buffer)
-           (string= (buffer-name buffer) "*Messages*"))
-         (buffer-list)))
-  (when (and (bound-and-true-p tab-bar-mode)
-               (fboundp 'tab-bar-close-other-tabs))
-      (tab-bar-close-other-tabs))
-  (delete-other-windows))
+;; Automatically save all buffers without prompting the user
+(add-hook 'easysession-before-reset-hook #'(lambda()
+                                             (save-some-buffers t)))
 ```
 
 ### How does the author use easysession?

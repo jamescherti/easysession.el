@@ -129,6 +129,18 @@ after a new one is created."
   :type 'hook
   :group 'easysession)
 
+(defcustom easysession-before-reset-hook nil
+  "Hooks to run before the `easysession-reset' function.
+Each element should be a function to be called with no arguments."
+  :type 'hook
+  :group 'easysession)
+
+(defcustom easysession-after-reset-hook nil
+  "Hooks to run after the `easysession-reset' function.
+Each element should be a function to be called with no arguments."
+  :type 'hook
+  :group 'easysession)
+
 (defcustom easysession-quiet nil
   "If non-nil, suppress all messages and only show errors and warnings.
 This includes messages such as `Session deleted:`, `Session loaded:`, `Session
@@ -1014,6 +1026,37 @@ Classify buffers based on BODY's result."
       (cons 'remaining-buffers remaining-buffers))))
 
 ;;; Autoloaded functions
+
+;;;###autoload
+
+(defun easysession-reset ()
+  "Reset the session by killing buffers and closing all tabs/windows/frames."
+  (interactive)
+  (run-hooks 'easysession-before-reset-hook)
+
+  ;; Kill all buffers
+  (mapc #'kill-buffer (cl-remove-if
+                       (lambda (buffer)
+                         (or (string= (buffer-name buffer) "*scratch*")
+                             (string= (buffer-name buffer) "*Messages*")))
+                       (buffer-list)))
+
+  ;; Save
+  (let ((switch-to-buffer-in-dedicated-window nil))
+    (switch-to-buffer "*scratch*"))
+
+  ;; Delete frames
+  (delete-other-frames)
+
+  ;; Close tabs
+  (when (and (bound-and-true-p tab-bar-mode)
+             (fboundp 'tab-bar-close-other-tabs))
+    (tab-bar-close-other-tabs))
+
+  ;; Close windows
+  (delete-other-windows)
+
+  (run-hooks 'easysession-after-reset-hook))
 
 ;;;###autoload
 (defun easysession-rename (&optional new-session-name)
