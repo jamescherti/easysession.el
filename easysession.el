@@ -1028,9 +1028,8 @@ Classify buffers based on BODY's result."
 ;;; Autoloaded functions
 
 ;;;###autoload
-
 (defun easysession-reset ()
-  "Reset the session by killing buffers and closing all tabs/windows/frames."
+  "Kill all buffers and close all frames, tabs, and windows."
   (interactive)
   ;; Hooks
   (run-hooks 'easysession-before-reset-hook)
