@@ -24,6 +24,8 @@ The **easysession** Emacs package is a session manager for Emacs that can persis
     - [How to make EasySession kill all buffers before loading a session?](#how-to-make-easysession-kill-all-buffers-before-loading-a-session)
     - [How to create custom load and save handlers for non-file-visiting buffers](#how-to-create-custom-load-and-save-handlers-for-non-file-visiting-buffers)
   - [Frequently asked questions](#frequently-asked-questions)
+    - [How to reduce the number of buffers in my session, regularly](#how-to-reduce-the-number-of-buffers-in-my-session-regularly)
+    - [How to start afresh after loading too many buffers](#how-to-start-afresh-after-loading-too-many-buffers)
     - [How does the author use easysession?](#how-does-the-author-use-easysession)
     - [What does EasySession offer that desktop.el doesn't?](#what-does-easysession-offer-that-desktopel-doesnt)
     - [Why not just improve and submit patches to desktop.el?](#why-not-just-improve-and-submit-patches-to-desktopel)
@@ -214,6 +216,9 @@ Here is a code snippet shared by u/capuche on Reddit that closes all buffers bef
          (lambda (buffer)
            (string= (buffer-name buffer) "*Messages*"))
          (buffer-list)))
+  (when (and (bound-and-true-p tab-bar-mode)
+               (fboundp 'tab-bar-close-other-tabs))
+      (tab-bar-close-other-tabs))
   (delete-other-windows))
 (add-hook 'easysession-before-load-hook #'kill-old-session-buffers)
 (add-hook 'easysession-new-session-hook #'kill-old-session-buffers)
@@ -262,6 +267,27 @@ Here is a simple example to persist and restore the scratch buffer:
 The code above enables EasySession to go beyond the default handlers, which support regular and indirect buffers, by also persisting and restoring the `*scratch*` buffer.
 
 ## Frequently asked questions
+
+### How to reduce the number of buffers in my session, regularly
+
+If your Emacs session tends to accumulate buffers over time, and you would like Emacs to automatically clean up unused and inactive ones, the author recommends trying the [buffer-terminator](https://github.com/jamescherti/buffer-terminator.el) package. This package safely and automatically kills inactive buffers, helping maintain a cleaner workspace and potentially improving Emacs performance by reducing the number of active modes, timers, and background processes associated with open buffers.
+
+### How to start afresh after loading too many buffers
+
+To reset EasySession by clearing all buffers and associated session state, effectively simulating a fresh Emacs start, use the following function:
+```elisp
+(defun kill-old-session-buffers ()
+  (save-some-buffers t)
+  (mapc #'kill-buffer
+        (cl-remove-if
+         (lambda (buffer)
+           (string= (buffer-name buffer) "*Messages*"))
+         (buffer-list)))
+  (when (and (bound-and-true-p tab-bar-mode)
+               (fboundp 'tab-bar-close-other-tabs))
+      (tab-bar-close-other-tabs))
+  (delete-other-windows))
+```
 
 ### How does the author use easysession?
 
