@@ -21,11 +21,12 @@ The **easysession** Emacs package is a session manager for Emacs that can persis
     - [How to create an empty session setup](#how-to-create-an-empty-session-setup)
     - [How to configure easysession-save-mode to automatically save only the "main" session and let me manually save others?](#how-to-configure-easysession-save-mode-to-automatically-save-only-the-main-session-and-let-me-manually-save-others)
     - [Configuring EasySession with Emacs daemon mode](#configuring-easysession-with-emacs-daemon-mode)
-    - [How to make EasySession kill all buffers before loading a session?](#how-to-make-easysession-kill-all-buffers-before-loading-a-session)
+    - [How to make EasySession kill all buffers, frames, and windows before loading a session?](#how-to-make-easysession-kill-all-buffers-frames-and-windows-before-loading-a-session)
     - [How to create custom load and save handlers for non-file-visiting buffers](#how-to-create-custom-load-and-save-handlers-for-non-file-visiting-buffers)
   - [Frequently asked questions](#frequently-asked-questions)
     - [How to reduce the number of buffers in my session, regularly](#how-to-reduce-the-number-of-buffers-in-my-session-regularly)
     - [How to start afresh after loading too many buffers](#how-to-start-afresh-after-loading-too-many-buffers)
+  - [How to persist and restore text scale?](#how-to-persist-and-restore-text-scale)
     - [How does the author use easysession?](#how-does-the-author-use-easysession)
     - [What does EasySession offer that desktop.el doesn't?](#what-does-easysession-offer-that-desktopel-doesnt)
     - [Why not just improve and submit patches to desktop.el?](#why-not-just-improve-and-submit-patches-to-desktopel)
@@ -204,9 +205,9 @@ Here is an example:
 
 ([read this discussion](https://github.com/jamescherti/easysession.el/discussions/15) for more information.)
 
-### How to make EasySession kill all buffers before loading a session?
+### How to make EasySession kill all buffers, frames, and windows before loading a session?
 
-Here is how to configure EasySession to kill all existing buffers before loading a session:
+Here is how to configure EasySession to kill all buffers, frames, and windows before loading a session:
 ``` emacs-lisp
 (add-hook 'easysession-before-load-hook #'easysession-reset)
 (add-hook 'easysession-new-session-hook #'easysession-reset)
@@ -269,7 +270,7 @@ If your Emacs session tends to accumulate buffers over time, and you would like 
 
 ### How to start afresh after loading too many buffers
 
-To reset EasySession by clearing all buffers and associated session state, effectively simulating a fresh Emacs start, use `M-x easysession-reset`.
+To reset EasySession by killing all buffers, frames, and windows, effectively simulating a fresh Emacs start, use `M-x easysession-reset`.
 
 Optionally, the `easysession-reset` function can be configured to automatically save all buffers without prompting the user:
 ```elisp
@@ -277,6 +278,10 @@ Optionally, the `easysession-reset` function can be configured to automatically 
 (add-hook 'easysession-before-reset-hook #'(lambda()
                                              (save-some-buffers t)))
 ```
+
+## How to persist and restore text scale?
+
+The [persist-text-scale.el @GitHub](https://github.com/jamescherti/persist-text-scale.el) Emacs package provides `persist-text-scale-mode`, which ensures that all adjustments made with `text-scale-increase` and `text-scale-decrease` are persisted and restored across sessions. As a result, the text size in each buffer remains consistent, even after restarting Emacs. This package also facilitates grouping buffers into categories, allowing buffers within the same category to share a consistent text scale. This ensures uniform font sizes when adjusting text scaling.
 
 ### How does the author use easysession?
 

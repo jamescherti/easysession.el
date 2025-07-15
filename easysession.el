@@ -1032,6 +1032,7 @@ Classify buffers based on BODY's result."
 (defun easysession-reset ()
   "Reset the session by killing buffers and closing all tabs/windows/frames."
   (interactive)
+  ;; Hooks
   (run-hooks 'easysession-before-reset-hook)
 
   ;; Kill all buffers
@@ -1040,10 +1041,6 @@ Classify buffers based on BODY's result."
                          (or (string= (buffer-name buffer) "*scratch*")
                              (string= (buffer-name buffer) "*Messages*")))
                        (buffer-list)))
-
-  ;; Save
-  (let ((switch-to-buffer-in-dedicated-window nil))
-    (switch-to-buffer "*scratch*"))
 
   ;; Delete frames
   (delete-other-frames)
@@ -1056,6 +1053,23 @@ Classify buffers based on BODY's result."
   ;; Close windows
   (delete-other-windows)
 
+  ;; Switch to the scratch buffer
+  (let ((switch-to-buffer-in-dedicated-window nil))
+    (switch-to-buffer
+     (if (fboundp 'get-scratch-buffer-create)
+         (funcall 'get-scratch-buffer-create)
+       (or (get-buffer "*scratch*")
+           (let ((scratch (get-buffer-create "*scratch*")))
+             (with-current-buffer scratch
+               (when initial-scratch-message
+                 (insert (substitute-command-keys initial-scratch-message))
+                 (set-buffer-modified-p nil))
+               (funcall initial-major-mode)
+               (when (eq initial-major-mode 'lisp-interaction-mode)
+                 (setq-local trusted-content :all)))
+             scratch)))))
+
+  ;; Hooks
   (run-hooks 'easysession-after-reset-hook))
 
 ;;;###autoload
