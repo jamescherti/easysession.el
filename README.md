@@ -202,9 +202,8 @@ The corresponding Elisp code to restore the session is:
                      (session-name (if (string-empty-p env-session-name)
                                        "main"
                                      env-session-name)))
-                (let ((easysession-frameset-restore-geometry t))
-                   (easysession-set-current-session-name session-name)
-                   (easysession-load-including-geometry))))
+                (easysession-set-current-session-name session-name)
+                (easysession-load-including-geometry)))
           102)
 ```
 
