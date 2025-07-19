@@ -20,6 +20,7 @@ The **easysession** Emacs package is a session manager for Emacs that can persis
     - [How to make the current session name appear in the mode-line?](#how-to-make-the-current-session-name-appear-in-the-mode-line)
     - [How to create an empty session setup](#how-to-create-an-empty-session-setup)
     - [How to configure easysession-save-mode to automatically save only the "main" session and let me manually save others?](#how-to-configure-easysession-save-mode-to-automatically-save-only-the-main-session-and-let-me-manually-save-others)
+    - [Passing the session name to Emacs via an environment variable](#passing-the-session-name-to-emacs-via-an-environment-variable)
     - [Configuring EasySession with Emacs daemon mode](#configuring-easysession-with-emacs-daemon-mode)
     - [How to make EasySession kill all buffers, frames, and windows before loading a session?](#how-to-make-easysession-kill-all-buffers-frames-and-windows-before-loading-a-session)
     - [How to create custom load and save handlers for non-file-visiting buffers](#how-to-create-custom-load-and-save-handlers-for-non-file-visiting-buffers)
@@ -185,6 +186,29 @@ To set up `easysession-save-mode` to automatically save only the "main" session 
     t))
 (setq easysession-save-mode-predicate 'my-easysession-only-main-saved)
 ```
+
+### Passing the session name to Emacs via an environment variable
+
+To pass a session name to Emacs through an environment variable, for instance:
+```shell
+EMACS_SESSION_NAME="my-session-name" emacs
+```
+
+The corresponding Elisp code to restore the session is:
+```elisp
+(add-hook 'emacs-startup-hook
+          #'(lambda ()
+              (let* ((env-session-name (getenv "EMACS_SESSION_NAME"))
+                     (session-name (if (string-empty-p env-session-name)
+                                       "main"
+                                     env-session-name)))
+                (let ((easysession-frameset-restore-geometry t))
+                   (easysession-set-current-session-name session-name)
+                   (easysession-load-including-geometry))))
+          102)
+```
+
+This Elisp code adds a function to the `emacs-startup-hook` that automatically restores a session. It retrieves the value of the `EMACS_SESSION_NAME` environment variable and falls back to `"main"` if the variable is unset or empty. Before switching sessions, it sets `easysession-frameset-restore-geometry` to `t` to ensure that the frame layout is also restored.
 
 ### Configuring EasySession with Emacs daemon mode
 

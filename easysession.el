@@ -562,12 +562,16 @@ Raise an error if the session name is invalid."
     (error "[easysession] Invalid session name: %s" session-name))
   session-name)
 
-(defun easysession--set-current-session (&optional session-name)
-  "Set the current session to SESSION-NAME.
+(defun easysession-set-current-session-name (&optional session-name)
+  "Set the current session name to SESSION-NAME.
 Return t if the session name is successfully set."
   (easysession--ensure-session-name-valid session-name)
   (setq easysession--current-session-name session-name)
   t)
+
+(defun easysession--set-current-session (&optional session-name)
+  "Backward compatibility."
+  (easysession-set-current-session-name session-name))
 
 (defun easysession--init-frame-parameters-filters (overwrite-alist)
   "Return the EasySession version of `frameset-filter-alist'.
@@ -1274,7 +1278,7 @@ If the function is called interactively, prompt the user for a session name."
          (previous-session-name easysession--current-session-name))
     (easysession--ensure-session-name-valid new-session-name)
     (easysession-save new-session-name)
-    (easysession--set-current-session new-session-name)
+    (easysession-set-current-session-name new-session-name)
     (if (string= previous-session-name easysession--current-session-name)
         (easysession--message "Saved the session: %s" new-session-name)
       (easysession--message "Saved and switched to session: %s"
@@ -1317,7 +1321,7 @@ accordingly."
       (easysession-save easysession--current-session-name)
       (setq saved t))
     (easysession-load session-name)
-    (easysession--set-current-session session-name)
+    (easysession-set-current-session-name session-name)
 
     (unless session-reloaded
       (unless (file-exists-p session-file)
