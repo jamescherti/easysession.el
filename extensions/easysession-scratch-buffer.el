@@ -34,9 +34,11 @@
   :group 'easysession-scratch-buffer
   :prefix "easysession-scratch-buffer-")
 
-(defun easysession-scratch-buffer--get-scratch-buffer-create ()
+(defun easysession-scratch-buffer--get-scratch-create ()
   "Return the *scratch* buffer, creating a new one if needed."
   (or (get-buffer "*scratch*")
+      (and (fboundp 'get-scratch-buffer-create)
+           (get-scratch-buffer-create))
       (let ((scratch (get-buffer-create "*scratch*")))
         (with-current-buffer scratch
           (when initial-scratch-message
@@ -59,19 +61,29 @@
        ;; Load
        #'(lambda (session-data)
            "Load SESSION-DATA."
-           (dolist (item session-data)
-             (let ((buffer-name (car item)))
-               (when (string= buffer-name "*scratch*")
-                 (let* ((buffer
-                         (easysession-scratch-buffer--get-scratch-buffer-create))
-                        (buffer-data (cdr item))
-                        (buffer-string
-                         (when buffer-data
-                           (assoc-default 'buffer-string buffer-data))))
-                   (when (and buffer buffer-string)
+           ;; Load the scratch buffer
+           (let (buffer-string)
+             (catch 'done
+               (dolist (item session-data)
+                 (let ((buffer-name (car item)))
+                   (when (string= buffer-name "*scratch*")
+                     (when-let* ((buffer-data (cdr item)))
+                       (setq buffer-string (assoc-default
+                                            'buffer-string buffer-data))
+                       (throw 'done t))))))
+
+             (if buffer-string
+                 ;; Modify the scratch buffer
+                 (let ((buffer (easysession-scratch-buffer--get-scratch-create)))
+                   (when (buffer-live-p buffer)
                      (with-current-buffer buffer
                        (erase-buffer)
-                       (insert buffer-string))))))))
+                       (insert buffer-string))))
+               ;; Erase the scratch buffer if it exists
+               (let ((buffer (get-buffer "*scratch*")))
+                 (when (buffer-live-p buffer)
+                   (with-current-buffer buffer
+                     (erase-buffer)))))))
 
        ;; Save
        #'(lambda(buffers)

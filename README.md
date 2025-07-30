@@ -110,17 +110,25 @@ To ensure that only visible buffers are saved and restored in your sessions, fol
 Here is the Lisp code:
 ``` emacs-lisp
 (defun my-easysession-visible-buffer-list ()
-"Return a list of all visible buffers in the current session.
-This includes buffers visible in windows or tab-bar tabs."
-(let ((visible-buffers '()))
+  "Return a list of all buffers considered visible in the current session.
+
+A buffer is included if it satisfies any of the following:
+- It is currently displayed in a visible window.
+- It is associated with a visible tab in `tab-bar-mode', if enabled.
+- It is the *scratch* buffer (included as a special case).
+
+The returned list contains live buffers only."
+  (let ((visible-buffers '()))
     (dolist (buffer (buffer-list))
-    (when (or
-            ;; Windows
-            (get-buffer-window buffer 'visible)
-            ;; Tab-bar windows
-            (and (bound-and-true-p tab-bar-mode)
-                (fboundp 'tab-bar-get-buffer-tab)
-                (tab-bar-get-buffer-tab buffer t nil)))
+      (when (and (buffer-live-p buffer)
+                 (or ;; Exception: The scratch buffer
+                  (string= (buffer-name buffer) "*scratch*")
+                  ;; Windows
+                  (get-buffer-window buffer 'visible)
+                  ;; Tab-bar windows
+                  (and (bound-and-true-p tab-bar-mode)
+                       (fboundp 'tab-bar-get-buffer-tab)
+                       (tab-bar-get-buffer-tab buffer t nil))))
         (push buffer visible-buffers)))
     visible-buffers))
 
