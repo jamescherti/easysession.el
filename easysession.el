@@ -570,7 +570,7 @@ Return t if the session name is successfully set."
   t)
 
 (defun easysession--set-current-session (&optional session-name)
-  "Backward compatibility."
+  "Backward compatibility. SESSION-NAME is the session name."
   (easysession-set-current-session-name session-name))
 
 (defun easysession--init-frame-parameters-filters (overwrite-alist)
