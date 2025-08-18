@@ -189,6 +189,11 @@ activated when `easysession-save-mode' is enabled."
                       `(easysession-mode-line-misc-info
                         easysession-mode-line-misc-info-format))))
 
+(defcustom easysession-switch-to-inhibit-save nil
+  "Non-nil means save the current session when using `easysession-switch-to'."
+  :type 'boolean
+  :group 'easysession)
+
 (defcustom easysession-switch-to-exclude-current nil
   "Non-nil to exclude the current session when switching sessions.
 
@@ -1342,7 +1347,8 @@ accordingly."
     ;; TODO: Prompt the user for confirmation before loading a new session
     ;;       if the current session has not been loaded.
     (when (and (not easysession--load-error) (not session-reloaded))
-      (easysession-save easysession--current-session-name)
+      (unless easysession-switch-to-inhibit-save
+        (easysession-save easysession--current-session-name))
       (setq saved t))
     (easysession-load session-name)
     (easysession-set-current-session-name session-name)
