@@ -186,9 +186,9 @@ NOTE: The `easysession-new-session-hook` functions are called when the user swit
 
 ### Preventing EasySession from Saving When Switching Sessions
 
-By default, `easysession-switch-to` saves the current session before switching to another session.
+By default, the `easysession-switch-to` function saves the current session before switching to another session.
 
-You can change this behavior by setting the variable `easysession-switch-to-save-session` to `nil`, which disables automatic saving before switching.
+This behavior can be modified by setting the variable `easysession-switch-to-save-session` to nil, which prevents the session from being saved automatically when switching.
 
 Here is how to disable saving before switching:
 
