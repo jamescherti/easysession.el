@@ -19,6 +19,7 @@ The **easysession** Emacs package is a session manager for Emacs that can persis
     - [How to persist and restore global variables?](#how-to-persist-and-restore-global-variables)
     - [How to make the current session name appear in the mode-line?](#how-to-make-the-current-session-name-appear-in-the-mode-line)
     - [How to create an empty session setup](#how-to-create-an-empty-session-setup)
+    - [Preventing EasySession from Saving When Switching Sessions](#preventing-easysession-from-saving-when-switching-sessions)
     - [How to configure easysession-save-mode to automatically save only the "main" session and let me manually save others?](#how-to-configure-easysession-save-mode-to-automatically-save-only-the-main-session-and-let-me-manually-save-others)
     - [Passing the session name to Emacs via an environment variable](#passing-the-session-name-to-emacs-via-an-environment-variable)
     - [Configuring EasySession with Emacs daemon mode](#configuring-easysession-with-emacs-daemon-mode)
@@ -183,6 +184,25 @@ To set up a minimal environment when easysession creates a new session, you can 
 
 NOTE: The `easysession-new-session-hook` functions are called when the user switches to a non-existent session using the `easysession-switch-to` function.
 
+### Preventing EasySession from Saving When Switching Sessions
+
+By default, `easysession-switch-to` saves the current session before switching to another session.
+
+You can change this behavior by setting the variable `easysession-switch-to-save-session` to `nil`, which disables automatic saving before switching.
+
+Here is how to disable saving before switching:
+
+```elisp
+;; Do not save the current session when switching to another session
+(setq easysession-switch-to-save-session nil)
+```
+
+Here is how to enable saving before switching (default behavior):
+
+```elisp
+;; Save the current session when switching to another session
+(setq easysession-switch-to-save-session t)
+```
 
 ### How to configure easysession-save-mode to automatically save only the "main" session and let me manually save others?
 
