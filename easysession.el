@@ -1021,18 +1021,28 @@ data."
 
 (defmacro easysession-save-handler-dolist-buffers (buffers &rest body)
   "Iterate over BUFFERS, execute BODY inside each buffer's context.
-Classify buffers based on BODY's result."
-  `(let (saved-buffers
-         remaining-buffers)
-     (dolist (buffer ,buffers)
-       (with-current-buffer buffer
-         (let ((buffer-data (progn ,@body)))
-           (if buffer-data
-               (push buffer-data saved-buffers)
-             (push buffer remaining-buffers)))))
-     (list
-      (cons 'buffers saved-buffers)
-      (cons 'remaining-buffers remaining-buffers))))
+Classify buffers based on BODY's result.
+
+Returns a list:
+  ((buffers . SAVED-BUFFERS)
+   (remaining-buffers . REMAINING-BUFFERS))"
+  (let ((saved-buffers (make-symbol "saved-buffers"))
+        (remaining-buffers (make-symbol "remaining-buffers"))
+        (buffer (make-symbol "buffer"))
+        (buffer-data (make-symbol "buffer-data")))
+    `(let ((,saved-buffers nil)
+           (,remaining-buffers nil)
+           (,buffer-data nil)
+           (,buffer nil))
+       (dolist (,buffer ,buffers)
+         (with-current-buffer ,buffer
+           (let ((,buffer-data (progn ,@body)))
+             (if ,buffer-data
+                 (push ,buffer-data ,saved-buffers)
+               (push ,buffer ,remaining-buffers)))))
+       (list
+        (cons 'buffers ,saved-buffers)
+        (cons 'remaining-buffers ,remaining-buffers)))))
 
 
 
