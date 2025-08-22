@@ -962,6 +962,7 @@ underscore to be safe.
 
 HANDLER-FUNC is a callable that is invoked with session data when the key is
 found."
+  (declare (indent 0) (debug t))
   `(progn
      (defun
          ,(intern (concat "easysession--" key "-load-handler")) (session-data)
@@ -982,6 +983,7 @@ underscore to be safe. Avoid using reserved keys such as: buffers,
 indirect-buffers, frameset, and frameset-geo.
 
 BODY is executed."
+  (declare (indent 0) (debug t))
   `(progn
      (defun ,(intern (concat "easysession--" key "-save-handler")) (buffers)
        ,(format "Save handler for: %s." key)
@@ -1001,6 +1003,7 @@ indirect-buffers, frameset, and frameset-geo.
 
 HANDLER-FUNC is a callable that processes each buffer and returns its session
 data."
+  (declare (indent 0) (debug t))
   `(easysession-define-generic-save-handler
     ,key
     (let ((result (funcall ,handler-func buffers)))
@@ -1015,6 +1018,7 @@ KEY is the session identifier. Avoid reserved keys.
 
 LOAD-HANDLER-FUNC and SAVE-HANDLER-FUNC are functions for handling session
 data."
+  (declare (indent 0) (debug t))
   `(progn
      (easysession-define-load-handler ,key ,load-handler-func)
      (easysession-define-save-handler ,key ,save-handler-func)))
@@ -1026,6 +1030,7 @@ Classify buffers based on BODY's result.
 Returns a list:
   ((buffers . SAVED-BUFFERS)
    (remaining-buffers . REMAINING-BUFFERS))"
+  (declare (indent 0) (debug t))
   (let ((saved-buffers (make-symbol "saved-buffers"))
         (remaining-buffers (make-symbol "remaining-buffers"))
         (buffer (make-symbol "buffer"))
@@ -1048,6 +1053,7 @@ Returns a list:
 
 (defmacro easysession-undefine-load-handler (key)
   "Remove the load handler associated with KEY from EasySession."
+  (declare (indent 0) (debug t))
   `(let ((fn ',(intern (concat "easysession--" key "-load-handler"))))
      (when (fboundp fn)
        (unintern fn nil))
@@ -1056,6 +1062,7 @@ Returns a list:
 
 (defmacro easysession-undefine-save-handler (key)
   "Remove the save handler associated with KEY from EasySession."
+  (declare (indent 0) (debug t))
   `(let ((fn ',(intern (concat "easysession--" key "-save-handler"))))
      (when (fboundp fn)
        (unintern fn nil))
@@ -1064,6 +1071,7 @@ Returns a list:
 
 (defmacro easysession-undefine-handler (key)
   "Remove both load and save handlers associated with KEY from EasySession."
+  (declare (indent 0) (debug t))
   `(progn
      (easysession-undefine-load-handler ,key)
      (easysession-undefine-save-handler ,key)))
