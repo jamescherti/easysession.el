@@ -86,7 +86,7 @@
 ;;; Variables
 
 (defgroup easysession nil
-  "Persist and restore your sessions."
+  "Customization options for EasySession."
   :group 'easysession
   :prefix "easysession-")
 
@@ -1005,11 +1005,11 @@ HANDLER-FUNC is a callable that processes each buffer and returns its session
 data."
   (declare (indent 0) (debug t))
   `(easysession-define-generic-save-handler
-    ,key
-    (let ((result (funcall ,handler-func buffers)))
-      (when result
-        ;; TODO Check if buffers and remaining buffers exist
-        (push (cons 'key ,key) result)))))
+     ,key
+     (let ((result (funcall ,handler-func buffers)))
+       (when result
+         ;; TODO Check if buffers and remaining buffers exist
+         (push (cons 'key ,key) result)))))
 
 (defmacro easysession-define-handler (key load-handler-func save-handler-func)
   "Register both load and save handlers for a given KEY.

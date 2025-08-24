@@ -24,13 +24,19 @@
 
 ;;; Commentary:
 ;; Make EasySession Persist and restore the scratch buffer.
+;;
+;; To enable `easysession-scratch-mode', add the following to your
+;; configuration:
+;;   (require 'easysession-scratch)
+;;   (with-eval-after-load 'easysession
+;;     (easysession-scratch-mode 1))
 
 ;;; Code:
 
 (require 'easysession)
 
 (defgroup easysession-scratch nil
-  "Non-nil if `easysession-scratch-mode' is enabled."
+  "Customization options for persisting the Emacs scratch buffer."
   :group 'easysession-scratch
   :prefix "easysession-scratch-")
 
@@ -56,47 +62,48 @@
   :group 'easysession-scratch
   (if easysession-scratch-mode
       (easysession-define-handler
-       "scratch"
+        "scratch"
 
-       ;; Load
-       #'(lambda (session-data)
-           "Load SESSION-DATA."
-           ;; Load the scratch buffer
-           (let (buffer-string)
-             (catch 'done
-               (dolist (item session-data)
-                 (let ((buffer-name (car item)))
-                   (when (string= buffer-name "*scratch*")
-                     (when-let* ((buffer-data (cdr item)))
-                       (setq buffer-string (assoc-default
-                                            'buffer-string buffer-data))
-                       (throw 'done t))))))
+        ;; Load
+        #'(lambda (session-data)
+            "Load SESSION-DATA."
+            ;; Load the scratch buffer
+            (let (buffer-string)
+              (catch 'done
+                (dolist (item session-data)
+                  (when (and item (string= (car item) "*scratch*"))
+                    (let ((buffer-data (cdr item)))
+                      (when buffer-data
+                        (setq buffer-string (assoc-default
+                                             'buffer-string buffer-data))
+                        (throw 'done t))))))
 
-             (if buffer-string
-                 ;; Modify the scratch buffer
-                 (let ((buffer (easysession-scratch--get-scratch-create)))
-                   (when (buffer-live-p buffer)
-                     (with-current-buffer buffer
-                       (erase-buffer)
-                       (insert buffer-string))))
-               ;; Erase the scratch buffer if it exists
-               (let ((buffer (get-buffer "*scratch*")))
-                 (when (buffer-live-p buffer)
-                   (with-current-buffer buffer
-                     (erase-buffer)))))))
+              (if buffer-string
+                  ;; Modify the scratch buffer
+                  (let ((buffer (easysession-scratch--get-scratch-create)))
+                    (when (buffer-live-p buffer)
+                      (with-current-buffer buffer
+                        (save-excursion
+                          (erase-buffer)
+                          (insert buffer-string)))))
+                ;; Erase the scratch buffer if it exists
+                (let ((buffer (get-buffer "*scratch*")))
+                  (when (buffer-live-p buffer)
+                    (with-current-buffer buffer
+                      (erase-buffer)))))))
 
-       ;; Save
-       #'(lambda(buffers)
-           "Save the BUFFERS buffer."
-           (easysession-save-handler-dolist-buffers
-            buffers
-            (let ((buffer-name (buffer-name)))
-              (when (string= buffer-name "*scratch*")
-                (cons buffer-name
-                      (list
-                       (cons 'buffer-string
-                             (buffer-substring-no-properties (point-min)
-                                                             (point-max))))))))))
+        ;; Save
+        #'(lambda(buffers)
+            "Save the BUFFERS buffer."
+            (easysession-save-handler-dolist-buffers
+              buffers
+              (let ((buffer-name (buffer-name)))
+                (when (string= buffer-name "*scratch*")
+                  (cons buffer-name
+                        (list
+                         (cons 'buffer-string
+                               (buffer-substring-no-properties (point-min)
+                                                               (point-max))))))))))
     (easysession-undefine-handler "scratch")))
 
 (provide 'easysession-scratch)
