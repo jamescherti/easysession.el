@@ -40,21 +40,6 @@
   :group 'easysession-scratch
   :prefix "easysession-scratch-")
 
-(defun easysession-scratch--get-scratch-create ()
-  "Return the *scratch* buffer, creating a new one if needed."
-  (or (get-buffer "*scratch*")
-      (and (fboundp 'get-scratch-buffer-create)
-           (get-scratch-buffer-create))
-      (let ((scratch (get-buffer-create "*scratch*")))
-        (with-current-buffer scratch
-          (when initial-scratch-message
-            (insert (substitute-command-keys initial-scratch-message))
-            (set-buffer-modified-p nil))
-          (funcall initial-major-mode)
-          (when (eq initial-major-mode 'lisp-interaction-mode)
-            (setq-local trusted-content :all)))
-        scratch)))
-
 ;;;###autoload
 (define-minor-mode easysession-scratch-mode
   "Persist and restore the scratch buffer."
@@ -80,7 +65,7 @@
 
               (if buffer-string
                   ;; Modify the scratch buffer
-                  (let ((buffer (easysession-scratch--get-scratch-create)))
+                  (let ((buffer (easysession--get-scratch-buffer-create)))
                     (when (buffer-live-p buffer)
                       (with-current-buffer buffer
                         (save-excursion

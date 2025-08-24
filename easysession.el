@@ -802,6 +802,22 @@ non-nil, the current session is saved."
                      'mouse-face 'mode-line-highlight)))
     ""))
 
+(defun easysession--get-scratch-buffer-create ()
+  "Return the *scratch* buffer, creating a new one if needed."
+  (if (fboundp 'get-scratch-buffer-create)
+      (funcall 'get-scratch-buffer-create)
+    (or (get-buffer "*scratch*")
+        (let ((scratch (get-buffer-create "*scratch*")))
+          (with-current-buffer scratch
+            (when initial-scratch-message
+              (insert (substitute-command-keys initial-scratch-message))
+              (set-buffer-modified-p nil))
+            (funcall initial-major-mode)
+            (when (eq initial-major-mode 'lisp-interaction-mode)
+              (with-no-warnings
+                (setq-local trusted-content :all))))
+          scratch))))
+
 ;;; Internal functions: handlers
 
 (defun easysession--handler-load-file-editing-buffers (session-data)
@@ -1104,20 +1120,7 @@ Returns a list:
   (delete-other-windows)
 
   ;; Switch to the scratch buffer
-  (let ((switch-to-buffer-in-dedicated-window nil))
-    (switch-to-buffer
-     (if (fboundp 'get-scratch-buffer-create)
-         (funcall 'get-scratch-buffer-create)
-       (or (get-buffer "*scratch*")
-           (let ((scratch (get-buffer-create "*scratch*")))
-             (with-current-buffer scratch
-               (when initial-scratch-message
-                 (insert (substitute-command-keys initial-scratch-message))
-                 (set-buffer-modified-p nil))
-               (funcall initial-major-mode)
-               (when (eq initial-major-mode 'lisp-interaction-mode)
-                 (setq-local trusted-content :all)))
-             scratch)))))
+  (switch-to-buffer (easysession--get-scratch-buffer-create) nil t)
 
   ;; Hooks
   (run-hooks 'easysession-after-reset-hook))
