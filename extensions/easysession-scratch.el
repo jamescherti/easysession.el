@@ -1,4 +1,4 @@
-;;; easysession-scratch-buffer.el --- Persist and restore the scratch buffer -*- lexical-binding: t; -*-
+;;; easysession-scratch.el --- Persist and restore the scratch buffer -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2024-2025 James Cherti | https://www.jamescherti.com/contact/
 
@@ -29,12 +29,12 @@
 
 (require 'easysession)
 
-(defgroup easysession-scratch-buffer nil
-  "Non-nil if `easysession-scratch-buffer-mode' is enabled."
-  :group 'easysession-scratch-buffer
-  :prefix "easysession-scratch-buffer-")
+(defgroup easysession-scratch nil
+  "Non-nil if `easysession-scratch-mode' is enabled."
+  :group 'easysession-scratch
+  :prefix "easysession-scratch-")
 
-(defun easysession-scratch-buffer--get-scratch-create ()
+(defun easysession-scratch--get-scratch-create ()
   "Return the *scratch* buffer, creating a new one if needed."
   (or (get-buffer "*scratch*")
       (and (fboundp 'get-scratch-buffer-create)
@@ -50,11 +50,11 @@
         scratch)))
 
 ;;;###autoload
-(define-minor-mode easysession-scratch-buffer-mode
+(define-minor-mode easysession-scratch-mode
   "Persist and restore the scratch buffer."
   :global t
-  :group 'easysession-scratch-buffer
-  (if easysession-scratch-buffer-mode
+  :group 'easysession-scratch
+  (if easysession-scratch-mode
       (easysession-define-handler
        "scratch"
 
@@ -74,7 +74,7 @@
 
              (if buffer-string
                  ;; Modify the scratch buffer
-                 (let ((buffer (easysession-scratch-buffer--get-scratch-create)))
+                 (let ((buffer (easysession-scratch--get-scratch-create)))
                    (when (buffer-live-p buffer)
                      (with-current-buffer buffer
                        (erase-buffer)
@@ -99,5 +99,5 @@
                                                              (point-max))))))))))
     (easysession-undefine-handler "scratch")))
 
-(provide 'easysession-scratch-buffer)
-;;; easysession-scratch-buffer.el ends here
+(provide 'easysession-scratch)
+;;; easysession-scratch.el ends here
