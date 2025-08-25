@@ -1065,7 +1065,7 @@ Returns a list:
         (cons 'buffers ,saved-buffers)
         (cons 'remaining-buffers ,remaining-buffers)))))
 
-
+
 
 (defmacro easysession-undefine-load-handler (key)
   "Remove the load handler associated with KEY from EasySession."
