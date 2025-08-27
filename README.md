@@ -13,6 +13,8 @@ With **easysession**, your Emacs setup is restored automatically when you restar
 <img src="https://jamescherti.com/misc/easysession-m.png" width="40%" />
 </p>
 
+If this package enhances your productivity, please show your support by ⭐ starring easysession on GitHub to help more users discover its benefits.
+
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
 ## Table of Contents
 
