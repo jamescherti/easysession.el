@@ -72,10 +72,6 @@ To install **easysession** from MELPA:
 ``` emacs-lisp
 (use-package easysession
   :ensure t
-  :commands (easysession-switch-to
-             easysession-save-as
-             easysession-save-mode
-             easysession-load-including-geometry)
 
   :custom
   (easysession-mode-line-misc-info t)  ; Display the session in the modeline
