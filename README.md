@@ -387,7 +387,7 @@ Easysession can persist and restore file editing buffers, indirect buffers/clone
 - [UnitaryInverse on Reddit](https://www.reddit.com/r/emacs/comments/1jah0e4/comment/mho5kqj/): "I have started using easysession more and more on my Spacemacs setup and it great! I can have a “lab notes” setup, a coding/simulation setup (I’m a physicist), a course planning setup for the courses I teach, and a personal setup all in one. Each one with custom windows setup so I spend SO MUCH less time splitting and moving windows. What a great package."
 - [Hungariantoast on Reddit](https://www.reddit.com/r/emacs/comments/1i93ly5/comment/m980q04/): "I have a single raylib-experiments repository that I have been writing a bunch of separate, miniature gamedev projects in. This package has made the process of creating, managing, and restoring each of those little coding sessions such a breeze. Thanks for writing it."
 - [ghoseb on GitHub](https://github.com/jamescherti/easysession.el/issues/21): "Thanks a lot for your amazing packages! Easysession works great 🎉"
-- Mijail (Email): Thanks a lot for easysession.el, it is definitely more useful than other desktop*.el packages.
+- Mijail G. (Email): "Thanks a lot for easysession.el, it is definitely more useful than other desktop*.el packages. The workflow I now have with Emacs has drastically improved with easysession."
 
 ## License
 
