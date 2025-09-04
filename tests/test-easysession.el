@@ -307,6 +307,8 @@ storing them in respective variables for later use."
 
 (defun test-easysession--init ()
   "Init tests."
+  (easysession--set-current-session "main")
+
   ;; Init
   (test-easysession--add-hooks)
   (test-easysession--switch-session)

@@ -204,18 +204,21 @@ sessions."
   :group 'easysession)
 
 ;; Lighter
-(defvar easysession-save-mode-lighter " EasySeSave"
+(defvar easysession-save-mode-lighter " EasySessionSv"
   "Default lighter string for `easysession-save-mode'.")
 
 (defvar easysession-save-mode-lighter-show-session-name nil
   "If non-nil, display the session name in the lighter.")
 
 (defvar easysession-save-mode-lighter-session-name-spec
-  `((:eval (format "%s[" easysession-save-mode-lighter))
-    (:propertize (:eval easysession--current-session-name)
-                 face easysession-mode-line-session-name-face)
-    "]")
-  "Lighter spec for showing the current session.")
+  '((:eval (if easysession--current-session-name
+               (list (format "%s[" easysession-save-mode-lighter)
+                     (propertize easysession--current-session-name
+                                 'face 'easysession-mode-line-session-name-face)
+                     "]")
+             easysession-save-mode-lighter)))
+  "Mode line lighter specification for displaying the current session name.
+This is only displayed when a session is active.")
 (put 'easysession-save-mode-lighter-session-name-spec 'risky-local-variable t)
 
 ;; Other
@@ -488,7 +491,7 @@ from `easysession--overwrite-frameset-filter-alist`."
 (defvar easysession-file-version 3
   "Version number of easysession file format.")
 
-(defvar easysession--current-session-name "main"
+(defvar easysession--current-session-name nil
   "Current session.")
 
 (defvar easysession--load-error nil
@@ -564,7 +567,7 @@ Raise an error if the session name is invalid."
                   (string-match-p "/" session-name)))
             (string= session-name "..")
             (string= session-name "."))
-    (error "[easysession] Invalid session name: %s" session-name))
+    (user-error "[easysession] Invalid session name: %S" session-name))
   session-name)
 
 (defun easysession-set-current-session-name (&optional session-name)
@@ -596,8 +599,9 @@ If EXCLUDE-CURRENT is non-nil, exclude the current session name from the list."
                     (not (or (string-equal session-name ".")
                              (string-equal session-name "..")
                              (and exclude-current
-                                  (string-equal session-name
-                                                (easysession-get-session-name))))))
+                                  easysession--current-session-name
+                                  (string= session-name
+                                           easysession--current-session-name)))))
                   (directory-files easysession-directory nil nil t))
     '()))
 
@@ -662,7 +666,8 @@ determined."
                 (base-buffer-name . ,base-buffer-name)))))))))
 
 (defun easysession-get-session-name ()
-  "Return the name of the current session."
+  "Return the name of the current session.
+Return nil when no session has been loaded before."
   easysession--current-session-name)
 
 (defalias 'easysession-get-current-session-name
@@ -678,7 +683,9 @@ determined."
 If SESSION-NAME is nil, use the currently loaded session.
 Return nil if no session is loaded."
   (unless session-name
-    (setq session-name (easysession-get-session-name)))
+    (setq session-name easysession--current-session-name))
+  (unless session-name
+    (user-error "No session is active. Load a session with `easysession-switch-to'"))
   (when session-name
     (easysession--ensure-session-name-valid session-name)
     (expand-file-name session-name easysession-directory)))
@@ -776,20 +783,27 @@ Returns the session file if the session file exists, nil otherwise."
 (defun easysession--auto-save ()
   "Save the session automatically based on the auto-save predicate.
 This function is usually called by `easysession-save-mode'. It evaluates the
-`easysession-save-mode-predicate' function, and if the predicate returns
-non-nil, the current session is saved."
+`easysession-save-mode-predicate' function."
+  ;; Auto save when there is at least one frame and a session has been loaded
   (unwind-protect
-      ;; Auto save when there is at least one frame
-      (when (frame-list)
-        (if (funcall easysession-save-mode-predicate)
-            (easysession-save)
-          (when easysession--debug
-            (easysession--message
-             (concat
-              "[DEBUG] Auto-save ignored: `easysession-save-mode-predicate' "
-              "returned nil.")))))
-    t)
-  t)
+      (progn
+        (when (and (frame-list)
+                   easysession--current-session-name)
+          (if (funcall easysession-save-mode-predicate)
+              (easysession-save)
+            (when easysession--debug
+              (easysession--message
+               (concat
+                "[DEBUG] Auto-save ignored: `easysession-save-mode-predicate' "
+                "returned nil.")))))
+        ;; Always return t, since this `easysession--auto-save' is part of
+        ;; `kill-emacs-query-functions'. Returning nil would prevent Emacs from
+        ;; exiting.
+        t)
+    ;; Always return t, since this `easysession--auto-save' is part of
+    ;; `kill-emacs-query-functions'. Returning nil would prevent Emacs from
+    ;; exiting.
+    t))
 
 (defun easysession--mode-line-session-name-format ()
   "Compose EasySession's mode-line."
@@ -1128,15 +1142,24 @@ Returns a list:
 ;;;###autoload
 (defun easysession-rename (&optional new-session-name)
   "Rename the current session to NEW-SESSION-NAME."
-  (interactive (list (easysession--prompt-session-name
-                      (format "Rename session '%s' to: "
-                              (easysession-get-session-name))
-                      nil
-                      nil
-                      (easysession-get-session-name))))
+  (interactive
+   (list
+    (progn
+      (unless easysession--current-session-name
+        (error
+         "No session is active. Load a session with `easysession-switch-to'"))
+
+      (easysession--prompt-session-name
+       (format "Rename session '%s' to: "
+               easysession--current-session-name)
+       nil
+       nil
+       easysession--current-session-name))))
+  (unless easysession--current-session-name
+    (user-error "No session is active. Load a session with `easysession-switch-to'"))
   (unless new-session-name
-    (error (concat "[easysession] easysession-rename: You need to specify"
-                   "the new session name.")))
+    (user-error (concat "[easysession] easysession-rename: You need to specify"
+                        "the new session name.")))
   (let* ((old-path (easysession-get-session-file-path
                     easysession--current-session-name))
          (new-path (easysession-get-session-file-path new-session-name)))
@@ -1170,6 +1193,12 @@ Returns a list:
   (interactive)
   (setq easysession-load-in-progress nil)
   (setq easysession--load-error t)
+
+  ;; The default session loaded when none is specified is 'main'.
+  (when (and (not session-name)
+             (not easysession--current-session-name))
+    (easysession--set-current-session "main"))
+
   (let* ((original-file-name-handler-alist file-name-handler-alist)
          (file-name-handler-alist nil)
          (session-name (if session-name
@@ -1248,12 +1277,16 @@ load the session without resizing or moving the Emacs frames."
   "Save the current session.
 SESSION-NAME is the name of the session."
   (interactive)
+  (when (and (not session-name)
+             (not easysession--current-session-name))
+    (user-error "No session is active. Load a session with `easysession-switch-to'"))
+
   (run-hooks 'easysession-before-save-hook)
   (let* ((original-file-name-handler-alist file-name-handler-alist)
          (file-name-handler-alist nil)
          (session-name (if session-name
                            session-name
-                         (easysession-get-session-name)))
+                         easysession--current-session-name))
          (session-file (easysession-get-session-file-path session-name))
          (data-frameset (easysession--save-frameset session-name))
          (data-frameset-geometry (easysession--save-frameset
@@ -1323,8 +1356,14 @@ SESSION-NAME is the name of the session."
 If the function is called interactively, prompt the user for a session name."
   (interactive
    (list (easysession--prompt-session-name "Save session as: "
-                                           (easysession-get-session-name))))
-  (let* ((new-session-name (or session-name (easysession-get-session-name)))
+                                           (or easysession--current-session-name
+                                               ""))))
+  (when (or (not session-name)
+            (string= session-name ""))
+    (user-error "Please provide a valid session name"))
+
+  (let* ((new-session-name (or session-name
+                               easysession--current-session-name))
          (previous-session-name easysession--current-session-name))
     (easysession--ensure-session-name-valid new-session-name)
     (easysession-save new-session-name)
@@ -1357,47 +1396,54 @@ accordingly."
    (list (easysession--prompt-session-name
           "Load and switch to session: "
           (unless easysession-switch-to-exclude-current
-            (easysession-get-session-name))
+            (or easysession--current-session-name
+                ""))
           easysession-switch-to-exclude-current)))
-  (let* ((session-name (or session-name (easysession-get-session-name)))
-         (session-file (easysession-get-session-file-path session-name))
-         (session-reloaded (string= session-name
-                                    easysession--current-session-name))
-         (saved nil)
-         (new-session nil))
-    ;; TODO: Prompt the user for confirmation before loading a new session
-    ;;       if the current session has not been loaded.
-    (when (and (not easysession--load-error) (not session-reloaded))
-      (when easysession-switch-to-save-session
-        (easysession-save easysession--current-session-name))
-      (setq saved t))
-    (easysession-load session-name)
-    (easysession-set-current-session-name session-name)
+  (let ((session-name (or session-name
+                          easysession--current-session-name)))
+    (unless session-name
+      (user-error "A session name must be provided to `easysession-switch-to'"))
 
-    (unless session-reloaded
-      (unless (file-exists-p session-file)
-        (run-hooks 'easysession-new-session-hook)
-        (easysession-save)
-        (setq new-session t)))
+    (let* ((session-file (easysession-get-session-file-path session-name))
+           (session-reloaded (and easysession--current-session-name
+                                  (string= session-name
+                                           easysession--current-session-name)))
+           (saved nil)
+           (new-session nil))
+      ;; TODO: Prompt the user for confirmation before loading a new session
+      ;;       if the current session has not been loaded.
+      (when (and (not easysession--load-error) (not session-reloaded))
+        ;; TODO ask the user to save the current session
+        (when (and easysession--current-session-name
+                   easysession-switch-to-save-session)
+          (easysession-save easysession--current-session-name)
+          (setq saved t)))
 
-    (cond (session-reloaded
-           (easysession--message "Reloaded session: %s" session-name))
-          (saved
-           (easysession--message "Saved and switched to %ssession: %s"
-                                 (if new-session "new " "") session-name))
-          (t (easysession--message "Switched to %ssession: %s"
-                                   (if new-session "new " "") session-name)))))
+      (easysession-load session-name)
+      (easysession-set-current-session-name session-name)
+
+      (unless session-reloaded
+        (unless (file-exists-p session-file)
+          (run-hooks 'easysession-new-session-hook)
+          (easysession-save)
+          (setq new-session t)))
+
+      (cond (session-reloaded
+             (easysession--message "Reloaded session: %s" session-name))
+            (saved
+             (easysession--message "Saved and switched to %ssession: %s"
+                                   (if new-session "new " "") session-name))
+            (t (easysession--message "Switched to %ssession: %s"
+                                     (if new-session "new " "") session-name))))))
 
 ;;;###autoload
 (define-minor-mode easysession-save-mode
   "Toggle `easysession-save-mode'."
   :global t
-  :lighter
-  (lambda()
-    (:eval
-     (if easysession-save-mode-lighter-show-session-name
-         easysession-save-mode-lighter-session-name-spec
-       easysession-save-mode-lighter)))
+  :lighter (:eval
+            (if easysession-save-mode-lighter-show-session-name
+                easysession-save-mode-lighter-session-name-spec
+              easysession-save-mode-lighter))
   :group 'easysession
   (if easysession-save-mode
       (progn
