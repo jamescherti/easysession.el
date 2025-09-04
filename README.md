@@ -19,32 +19,32 @@ If this package enhances your productivity, please show your support by **⭐ st
 ## Table of Contents
 
 - [easysession.el - Easily persist and restore your Emacs editing sessions](#easysessionel---easily-persist-and-restore-your-emacs-editing-sessions)
-  - [Features](#features)
-  - [Installation](#installation)
-  - [Usage](#usage)
-  - [Customization](#customization)
-    - [How to only persist and restore visible buffers](#how-to-only-persist-and-restore-visible-buffers)
-    - [How to persist and restore global variables?](#how-to-persist-and-restore-global-variables)
-    - [How to make the current session name appear in the mode-line?](#how-to-make-the-current-session-name-appear-in-the-mode-line)
-    - [How to create an empty session setup](#how-to-create-an-empty-session-setup)
-    - [Preventing EasySession from Saving When Switching Sessions](#preventing-easysession-from-saving-when-switching-sessions)
-    - [How to configure easysession-save-mode to automatically save only the "main" session and let me manually save others?](#how-to-configure-easysession-save-mode-to-automatically-save-only-the-main-session-and-let-me-manually-save-others)
-    - [Passing the session name to Emacs via an environment variable](#passing-the-session-name-to-emacs-via-an-environment-variable)
-    - [Configuring EasySession with Emacs daemon mode](#configuring-easysession-with-emacs-daemon-mode)
-    - [How to make EasySession kill all buffers, frames, and windows before loading a session?](#how-to-make-easysession-kill-all-buffers-frames-and-windows-before-loading-a-session)
-    - [How to create custom load and save handlers for non-file-visiting buffers](#how-to-create-custom-load-and-save-handlers-for-non-file-visiting-buffers)
-  - [Frequently asked questions](#frequently-asked-questions)
-    - [How to reduce the number of buffers in my session, regularly](#how-to-reduce-the-number-of-buffers-in-my-session-regularly)
-    - [How to start afresh after loading too many buffers](#how-to-start-afresh-after-loading-too-many-buffers)
-  - [How to persist and restore text scale?](#how-to-persist-and-restore-text-scale)
-    - [How does the author use easysession?](#how-does-the-author-use-easysession)
-    - [What does EasySession offer that desktop.el doesn't?](#what-does-easysession-offer-that-desktopel-doesnt)
-    - [Why not just improve and submit patches to desktop.el?](#why-not-just-improve-and-submit-patches-to-desktopel)
-    - [How does it compare to activities.el?](#how-does-it-compare-to-activitiesel)
-    - [Why not use one of the other third-party session packages?](#why-not-use-one-of-the-other-third-party-session-packages)
-    - [Testimonials from users](#testimonials-from-users)
-  - [License](#license)
-  - [Links](#links)
+    - [Features](#features)
+    - [Installation](#installation)
+    - [Usage](#usage)
+    - [Customization](#customization)
+        - [How to only persist and restore visible buffers](#how-to-only-persist-and-restore-visible-buffers)
+        - [How to persist and restore global variables?](#how-to-persist-and-restore-global-variables)
+        - [How to make the current session name appear in the mode-line?](#how-to-make-the-current-session-name-appear-in-the-mode-line)
+        - [How to create an empty session setup](#how-to-create-an-empty-session-setup)
+        - [Preventing EasySession from Saving When Switching Sessions](#preventing-easysession-from-saving-when-switching-sessions)
+        - [How to configure easysession-save-mode to automatically save only the "main" session and let me manually save others?](#how-to-configure-easysession-save-mode-to-automatically-save-only-the-main-session-and-let-me-manually-save-others)
+        - [Passing the session name to Emacs via an environment variable](#passing-the-session-name-to-emacs-via-an-environment-variable)
+        - [Configuring EasySession with Emacs daemon mode](#configuring-easysession-with-emacs-daemon-mode)
+        - [How to make EasySession kill all buffers, frames, and windows before loading a session?](#how-to-make-easysession-kill-all-buffers-frames-and-windows-before-loading-a-session)
+        - [How to create custom load and save handlers for non-file-visiting buffers](#how-to-create-custom-load-and-save-handlers-for-non-file-visiting-buffers)
+    - [Frequently asked questions](#frequently-asked-questions)
+        - [How to reduce the number of buffers in my session, regularly](#how-to-reduce-the-number-of-buffers-in-my-session-regularly)
+        - [How to start afresh after loading too many buffers](#how-to-start-afresh-after-loading-too-many-buffers)
+    - [How to persist and restore text scale?](#how-to-persist-and-restore-text-scale)
+        - [How does the author use easysession?](#how-does-the-author-use-easysession)
+        - [What does EasySession offer that desktop.el doesn't?](#what-does-easysession-offer-that-desktopel-doesnt)
+        - [Why not just improve and submit patches to desktop.el?](#why-not-just-improve-and-submit-patches-to-desktopel)
+        - [How does it compare to activities.el?](#how-does-it-compare-to-activitiesel)
+        - [Why not use one of the other third-party session packages?](#why-not-use-one-of-the-other-third-party-session-packages)
+        - [Testimonials from users](#testimonials-from-users)
+    - [License](#license)
+    - [Links](#links)
 
 <!-- markdown-toc end -->
 
@@ -387,7 +387,7 @@ Easysession can persist and restore file editing buffers, indirect buffers/clone
 - [UnitaryInverse on Reddit](https://www.reddit.com/r/emacs/comments/1jah0e4/comment/mho5kqj/): "I have started using easysession more and more on my Spacemacs setup and it great! I can have a “lab notes” setup, a coding/simulation setup (I’m a physicist), a course planning setup for the courses I teach, and a personal setup all in one. Each one with custom windows setup so I spend SO MUCH less time splitting and moving windows. What a great package."
 - [Hungariantoast on Reddit](https://www.reddit.com/r/emacs/comments/1i93ly5/comment/m980q04/): "I have a single raylib-experiments repository that I have been writing a bunch of separate, miniature gamedev projects in. This package has made the process of creating, managing, and restoring each of those little coding sessions such a breeze. Thanks for writing it."
 - [ghoseb on GitHub](https://github.com/jamescherti/easysession.el/issues/21): "Thanks a lot for your amazing packages! Easysession works great 🎉"
-- Mijail G. (Email): "Thanks a lot for easysession.el, it is definitely more useful than other desktop*.el packages. The workflow I now have with Emacs has drastically improved with easysession."
+- Mijail Guillemard (Email): "Thanks a lot for easysession.el, it is definitely more useful than other desktop*.el packages. The workflow I now have with Emacs has drastically improved with easysession."
 
 ## License
 
