@@ -1277,6 +1277,19 @@ load the session without resizing or moving the Emacs frames."
     (easysession-load session-name)))
 
 ;;;###autoload
+(defun easysession-switch-to-and-restore-geometry (session-name)
+  "Save and load SESSION-NAME, and restore the position and size of frames."
+  (interactive
+   (list (easysession--prompt-session-name
+          "Load and switch to session: "
+          (unless easysession-switch-to-exclude-current
+            (or easysession--current-session-name
+                ""))
+          easysession-switch-to-exclude-current)))
+  (let ((easysession-frameset-restore-geometry t))
+    (easysession-switch-to session-name)))
+
+;;;###autoload
 (defun easysession-save (&optional session-name)
   "Save the current session.
 SESSION-NAME is the name of the session."
