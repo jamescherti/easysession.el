@@ -1142,7 +1142,7 @@ Returns a list:
   (run-hooks 'easysession-after-reset-hook))
 
 ;;;###autoload
-(defun easysession-rename (&optional new-session-name)
+(defun easysession-rename (new-session-name)
   "Rename the current session to NEW-SESSION-NAME."
   (interactive
    (list
