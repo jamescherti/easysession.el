@@ -162,8 +162,7 @@ activated when `easysession-save-mode' is enabled."
   "Face used in the mode-line to indicate the current session.")
 
 (defcustom easysession-mode-line-misc-info-format
-  '(" [EasySession:"
-    easysession-mode-line-session-name "] ")
+  '(:eval (easysession--mode-line-session-name-format))
   "Mode-line format used to display the session name."
   :type 'sexp
   :group 'easysession
@@ -188,6 +187,12 @@ activated when `easysession-save-mode' is enabled."
          (add-to-list 'mode-line-misc-info
                       `(easysession-mode-line-misc-info
                         easysession-mode-line-misc-info-format))))
+
+(defvar easysession-mode-line-misc-info-prefix " [EasySession:"
+  "Prefix string displayed before the session name in the mode line.")
+
+(defvar easysession-mode-line-misc-info-suffix "] "
+  "Suffix string displayed after the session name in the mode line.")
 
 (defcustom easysession-switch-to-save-session t
   "Non-nil means save the current session when using `easysession-switch-to'."
@@ -500,13 +505,6 @@ from `easysession--overwrite-frameset-filter-alist`."
 This variable is non-nil if an error occurred while attempting to load
 the current session, otherwise it remains nil.")
 
-(defvar easysession-mode-line-session-name
-  '(:eval (easysession--mode-line-session-name-format))
-  "Mode line specification for displaying the current session name.
-The value is evaluated to generate a formatted string that shows the current
-session name in the mode line.")
-(put 'easysession-mode-line-session-name 'risky-local-variable t)
-
 (defvar easysession--load-handlers '()
   "A list of functions used to load session data.
 Each function in this list is responsible for loading a specific type of
@@ -685,7 +683,9 @@ Return nil if no session is loaded."
   (unless session-name
     (setq session-name easysession--current-session-name))
   (unless session-name
-    (user-error "No session is active. Load a session with `easysession-switch-to'"))
+    (user-error "%s%s"
+                "[easysession] No session is active. "
+                "Load a session with `easysession-switch-to'"))
   (when session-name
     (easysession--ensure-session-name-valid session-name)
     (expand-file-name session-name easysession-directory)))
@@ -806,15 +806,17 @@ This function is usually called by `easysession-save-mode'. It evaluates the
     t))
 
 (defun easysession--mode-line-session-name-format ()
-  "Compose EasySession's mode-line."
+  "Return the mode-line representation of the current EasySession.
+The current session is displayed only when a session is actively loaded."
   (if (bound-and-true-p easysession--current-session-name)
       (let* ((session-name (eval easysession--current-session-name)))
         (list
+         easysession-mode-line-misc-info-prefix
          (propertize session-name
                      'face 'easysession-mode-line-session-name-face
                      'help-echo (format "Current session: %s" session-name)
-                     'mouse-face 'mode-line-highlight)))
-    ""))
+                     'mouse-face 'mode-line-highlight)
+         easysession-mode-line-misc-info-suffix))))
 
 (defun easysession--get-scratch-buffer-create ()
   "Return the *scratch* buffer, creating a new one if needed."
@@ -937,7 +939,7 @@ symbol representing an existing function. HANDLER-FN is the function to load
 session data."
   (unless (and (symbolp handler-fn)
                (fboundp handler-fn))
-    (error "HANDLER-FN must be a symbol representing an existing function"))
+    (error "[easysession] HANDLER-FN must be a symbol representing a function"))
   (unless (memq handler-fn easysession--load-handlers)
     (setq easysession--load-handlers
           (append easysession--load-handlers (list handler-fn)))))
@@ -948,7 +950,7 @@ HANDLER-FN is the function to save session data.
 The HANDLER-FN handler is only added if it's not already present."
   (unless (and (symbolp handler-fn)
                (fboundp handler-fn))
-    (error "HANDLER-FN must be a symbol representing an existing function"))
+    (error "[easysession] HANDLER-FN must be a symbol representing a function"))
   (unless (memq handler-fn easysession--save-handlers)
     ;; (push handler-fn easysession--save-handlers)
     (setq easysession--save-handlers
@@ -960,7 +962,7 @@ HANDLER-FN is the function to load session data.
 The HANDLER-FN handler is only added if it's not already present."
   (unless (and (symbolp handler-fn)
                (fboundp handler-fn))
-    (error "HANDLER-FN must be a symbol representing an existing function"))
+    (error "[easysession] HANDLER-FN must be a symbol representing a function"))
   (setq easysession--load-handlers
         (delq handler-fn easysession--load-handlers)))
 
@@ -969,7 +971,7 @@ The HANDLER-FN handler is only added if it's not already present."
 HANDLER-FN is the function to be removed."
   (unless (and (symbolp handler-fn)
                (fboundp handler-fn))
-    (error "HANDLER-FN must be a symbol representing an existing function"))
+    (error "[easysession] HANDLER-FN must be a symbol representing a function"))
   (setq easysession--save-handlers (delete handler-fn
                                            easysession--save-handlers)))
 
@@ -1156,7 +1158,9 @@ Returns a list:
        nil
        easysession--current-session-name))))
   (unless easysession--current-session-name
-    (user-error "No session is active. Load a session with `easysession-switch-to'"))
+    (user-error "%s%s"
+                "[easysession] No session is active. "
+                "Load a session with `easysession-switch-to'"))
   (unless new-session-name
     (user-error (concat "[easysession] easysession-rename: You need to specify"
                         "the new session name.")))
@@ -1279,7 +1283,9 @@ SESSION-NAME is the name of the session."
   (interactive)
   (when (and (not session-name)
              (not easysession--current-session-name))
-    (user-error "No session is active. Load a session with `easysession-switch-to'"))
+    (user-error "%s%s"
+                "[easysession] No session is active. "
+                "Load a session with `easysession-switch-to'"))
 
   (run-hooks 'easysession-before-save-hook)
   (let* ((original-file-name-handler-alist file-name-handler-alist)
@@ -1360,7 +1366,7 @@ If the function is called interactively, prompt the user for a session name."
                                                ""))))
   (when (or (not session-name)
             (string= session-name ""))
-    (user-error "Please provide a valid session name"))
+    (user-error "[easysession] Please provide a valid session name"))
 
   (let* ((new-session-name (or session-name
                                easysession--current-session-name))
@@ -1402,7 +1408,9 @@ accordingly."
   (let ((session-name (or session-name
                           easysession--current-session-name)))
     (unless session-name
-      (user-error "A session name must be provided to `easysession-switch-to'"))
+      (user-error "%s%s"
+                  "[easysession] A session name must be provided "
+                  "to `easysession-switch-to'"))
 
     (let* ((session-file (easysession-get-session-file-path session-name))
            (session-reloaded (and easysession--current-session-name
