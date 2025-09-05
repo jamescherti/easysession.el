@@ -378,7 +378,21 @@ triggered in this context."
 ;; Overrides `frameset-filter-alist' while preserving its keys,
 ;; but replaces their values with the ones specified in the following alist:
 (defvar easysession--overwrite-frameset-filter-alist
-  '((GUI:bottom . :never)
+  '(; Same as `frameset-persistent-filter-alist'
+    (background-color . :never)
+    (bottom . :never)
+    (buffer-list . :never)
+    (buffer-predicate . :never)
+    (buried-buffer-list . :never)
+    (client . :never)
+    (delete-before . :never)
+    (font . :never)
+    (font-backend . :never)
+    (foreground-color . :never)
+    (frameset--text-pixel-height . :never)
+    (frameset--text-pixel-width . :never)
+    (fullscreen . :never)
+    (GUI:bottom . :never)
     (GUI:font . :never)
     (GUI:fullscreen . :never)
     (GUI:height . :never)
@@ -386,84 +400,103 @@ triggered in this context."
     (GUI:right . :never)
     (GUI:top . :never)
     (GUI:width . :never)
-    (alpha . :never)
-    (alpha-background . :never)
-    (auto-lower . :never)
-    (auto-raise . :never)
-    (background-color . :never)
-    (background-mode . :never)
-    (border-color . :never)
-    (border-width . :never)
-    (bottom . :never)
-    (bottom-divider-width . :never)
-    (buffer-list . :never)
-    (buffer-predicate . :never)
-    (buried-buffer-list . :never)
-    (child-frame-border-width . :never)
-    (client . :never)
-    (cursor-color . :never)
-    (cursor-type . :never)
-    (delete-before . :never)
-    (display-type . :never)
-    (environment . :never)
-    (font . :never)
-    (font-backend . :never)
-    (font-parameter . :never)
-    (foreground-color . :never)
-    (frameset--text-pixel-height . :never)
-    (frameset--text-pixel-width . :never)
-    (fullscreen . :never)
     (height . :never)
-    (horizontal-scroll-bars . :never)
-    (icon-type . :never)
-    (inhibit-double-buffering . :never)
-    (internal-border-width . :never)
     (left . :never)
-    (left-fringe . :never)
-    (line-spacing . :never)
-    (menu-bar-lines . :never)
-    (minibuffer . :never)
-    (mouse-color . :never)
-    (mouse-wheel-frame . :never)
-    (name . :never)
-    (no-accept-focus . :never)
-    (no-focus-on-map . :never)
-    (no-special-glyphs . :never)
-    (ns-appearance . :never)
-    (outer-window-id . :never)
-    (override-redirect . :never)
     (parent-frame . :never)
-    (parent-id . :never)
+    (mouse-wheel-frame . :never)
     (right . :never)
-    (right-divider-width . :never)
-    (right-fringe . :never)
-    (screen-gamma . :never)
-    (scroll-bar-background . :never)
-    (scroll-bar-foreground . :never)
-    (scroll-bar-height . :never)
-    (scroll-bar-width . :never)
-    (shaded . :never)
-    (skip-taskbar . :never)
-    (sticky . :never)
-    (tab-bar-lines . :never)
-    (title . :never)
-    (tool-bar-lines . :never)
-    (tool-bar-position . :never)
     (top . :never)
     ;; (tty . :never)
     ;; (tty-type . :never)
-    (undecorated . :never)
-    (use-frame-synchronization . :never)
-    (vertical-scroll-bars . :never)
-    ;; (visibility . :never) ; Commenting this fixes: #24
-    (wait-for-wm . :never)
     (width . :never)
-    (window-id . :never)
     (window-system . :never)
-    (lsp-ui-doc-buffer . :never)  ; Third party package (Fixes #22)
-    (dv-preview-last . :never)  ; Third party package (Fixes #32)
-    (z-group . :never))
-  "Alist of frame parameters and filtering functions.")
+
+    ;; Affect the geometry, but let the user configure them
+    (internal-border-width . :never)
+    (child-frame-border-width . :never)
+    (left-fringe . :never)
+    (right-fringe . :never)
+    (bottom-divider-width . :never)
+    (right-divider-width . :never)
+
+    ;; Let the user configure the scroll bars, tool-bar, and menu-bar
+    (vertical-scroll-bars . :never)
+    (horizontal-scroll-bars . :never)
+    (scroll-bar-width . :never)
+    (scroll-bar-height . :never)
+    (menu-bar-lines . :never)
+    (tool-bar-lines . :never)
+    (tool-bar-position . :never)
+    (line-spacing . :never)
+    (no-special-glyphs . :never)
+
+    (scroll-bar-background . :never)
+    (scroll-bar-foreground . :never)
+
+    ;; Can be changed by the window manager
+    (skip-taskbar . :never)
+    (sticky . :never)
+    (shaded . :never)
+    (undecorated . :never)
+    (border-width . :never)
+
+    ;; Allow restoring alpha and tab-bar-lines
+    ;; (alpha . :never)  ; transparency
+    ;; (alpha-background . :never)  ; transparency
+    ;; Never exclude: tab-bar-lines
+
+    ;; Other exclusions
+    (override-redirect . :never)
+    (auto-lower . :never)  ; control focus behavior
+    (auto-raise . :never)  ; control focus behavior
+    (background-mode . :never)  ; Affects theme/light/dark mode
+    (border-color . :never)
+    (child-frame-border-width . :never)
+    (cursor-color . :never)
+    (cursor-type . :never)
+    (display-type . :never)
+    (environment . :never)
+    (font-parameter . :never)
+    (icon-type . :never)
+    (inhibit-double-buffering . :never)
+    (minibuffer . :never)
+    (mouse-color . :never)
+    (name . :never)
+    (no-accept-focus . :never)
+    (no-focus-on-map . :never)
+    (ns-appearance . :never)
+    (outer-window-id . :never)
+    (parent-id . :never)
+    (screen-gamma . :never)
+    (use-frame-synchronization . :never)
+    (window-id . :never)
+
+    ;; Ensures frames are positioned only after the window manager maps them,
+    ;; helping avoid small shifts in geometry.
+    ;; Let the user configure this with:
+    ;;   (add-to-list 'default-frame-alist '(wait-for-wm . t))
+
+    ;; Do not restore wait-for-wm. Let the user configure it.
+    (wait-for-wm . :never)
+
+    ;; Restore the frame title
+    ;; (title . :never)
+
+    ;; Restore z-group parameter, which controls stacking or z-order
+    ;; grouping of frames in Emacs, which affects how frames are layered
+    ;; relative to each other on the screen.
+    ;; (z-group . :never)
+
+    ;; Fixes #24: Restoring a saved session does not restore all frames It was
+    ;;            caused by: (visibility . :never).
+    ;; (visibility . :never)
+
+    ;; Third party package (Fixes #22)
+    (lsp-ui-doc-buffer . :never)
+
+    ;; Third party package (Fixes #32)
+    (dv-preview-last . :never))
+  "Alist of frame parameters to keep.")
 
 (defun easysession--filter-out-frameset-filters (list-keys)
   "Remove geometry.
@@ -474,26 +507,82 @@ from `easysession--overwrite-frameset-filter-alist`."
               easysession--overwrite-frameset-filter-alist))
 
 (defvar easysession--overwrite-frameset-filter-include-geometry-alist
-  (append
-   '((frameset--text-pixel-width . :save)
-     (frameset--text-pixel-height . :save))
-   (easysession--filter-out-frameset-filters
-    '(GUI:bottom
-      GUI:fullscreen
-      GUI:height
-      GUI:left
-      GUI:right
-      GUI:top
-      GUI:width
-      bottom
-      fullscreen
-      height
-      left
-      right
-      top
-      ;; visibility  ;; TODO: Should this be restored?
-      width)))
-  "Alist of frame parameters and filtering functions.")
+  (easysession--filter-out-frameset-filters
+   '(; Same as `frameset-persistent-filter-alist'
+     bottom
+     fullscreen
+     GUI:bottom
+     GUI:fullscreen
+     GUI:height
+     GUI:left
+     GUI:right
+     GUI:top
+     GUI:width
+     height
+     left
+     right
+     top
+     width
+
+     ;; TODO experimental
+     ;; vertical-scroll-bars
+     ;; horizontal-scroll-bars
+     ;; scroll-bar-width
+     ;; scroll-bar-height
+     ;; menu-bar-lines
+     ;; tool-bar-lines
+     ;; tool-bar-position
+     ;; line-spacing
+     ;; no-special-glyphs
+
+     ;; https://www.gnu.org/software/emacs/manual/html_node/elisp/Layout-Parameters.html
+
+     ;; The frame is hidden from the taskbar or panel.
+     skip-taskbar
+
+     ;; The frame is pinned to all virtual desktops/workspaces.
+     sticky
+
+     ;; The frame is rolled up, usually showing only the title bar.
+     shaded
+
+     ;; Decoration effect the total frame height
+     undecorated
+
+     ;; border-width controls the thickness of the frame’s outer border (on all
+     ;; sides) in pixels.
+     border-width
+
+     ;; Internal border width is the padding between the text area and the outer
+     ;; frame edge.
+     internal-border-width
+
+     ;; The width in pixels of the frame’s internal border (see Frame Geometry)
+     ;; if the given frame is a child frame (see Child Frames). If this is nil,
+     ;; the value specified by the internal-border-width parameter is used
+     ;; instead.
+     child-frame-border-width
+
+     ;; Define the width (in pixels) of the left and right fringes, the narrow
+     ;; areas next to the text area where indicators like git-gutter or
+     ;; display-line-numbers appear. Restoring them ensures the text area width
+     ;; and overall frame width remain consistent. Changes to these values can
+     ;; shift text horizontally and slightly alter total frame width.
+     left-fringe
+     right-fringe
+
+     ;; Specify the thickness of dividers separating the text area from the
+     ;; bottom or right edges (or between window splits). Restoring them
+     ;; preserves the exact pixel size of the text area and prevents small
+     ;; offsets in frame height or width. Ignoring these can cause frames to
+     ;; appear slightly larger or smaller than when saved.
+     bottom-divider-width
+     right-divider-width
+
+     ;; Pixel perfect width and height
+     frameset--text-pixel-height
+     frameset--text-pixel-width))
+  "Alist of frame parameters to keep.")
 
 (defvar easysession-file-version 3
   "Version number of easysession file format.")
