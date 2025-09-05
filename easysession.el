@@ -585,8 +585,8 @@ OVERWRITE-ALIST is an alist similar to
 `easysession--overwrite-frameset-filter-alist'."
   (let ((result (copy-tree frameset-filter-alist)))
     (dolist (pair overwrite-alist)
-      (setf (alist-get (car pair) result)
-            (cdr pair)))
+      (setq result (assq-delete-all (car pair) result))
+      (push pair result))
     result))
 
 (defun easysession--get-all-names (&optional exclude-current)
@@ -1215,6 +1215,7 @@ SESSION-NAME is the session name."
          (file-contents nil)
          (session-file (easysession--exists session-name)))
     (when session-file
+      ;; Load session
       (setq file-contents (let ((coding-system-for-read 'utf-8-emacs)
                                 (file-coding-system-alist nil))
                             (with-temp-buffer
@@ -1227,40 +1228,43 @@ SESSION-NAME is the session name."
                session-name session-file))
 
       ;; Evaluate file
-      (setq session-data (ignore-errors (read file-contents)))
-      (when (not session-data)
-        (error
-         "[easysession] %s: Failed to evaluate session information from %s"
-         session-name session-file))
+      (progn
+        (setq session-data (ignore-errors (read file-contents)))
 
-      ;; Load buffers first because the cursor, window-start, or hscroll might
-      ;; be altered by packages such as saveplace. This will allow the frameset
-      ;; to modify the cursor later on.
-      (let ((file-name-handler-alist original-file-name-handler-alist))
-        (run-hooks 'easysession-before-load-hook)
+        (when (not session-data)
+          (error
+           "[easysession] %s: Failed to evaluate session information from %s"
+           session-name session-file))
 
-        (dolist (handler (easysession-get-load-handlers))
-          (when handler
-            (cond
-             ((and (symbolp handler)
-                   (fboundp handler))
-              (funcall handler session-data))
+        ;; Load buffers first because the cursor, window-start, or hscroll
+        ;; might be altered by packages such as saveplace. This will allow
+        ;; the frameset to modify the cursor later on.
+        (let ((file-name-handler-alist original-file-name-handler-alist))
+          (run-hooks 'easysession-before-load-hook)
 
-             (t
-              (easysession--warning
-               "The following load handler is not a defined function: %s"
-               handler))))))
+          (dolist (handler (easysession-get-load-handlers))
+            (when handler
+              (cond
+               ((and (symbolp handler)
+                     (fboundp handler))
+                (funcall handler session-data))
 
-      ;; Load the frame set
-      (easysession--load-frameset
-       session-data (bound-and-true-p easysession-frameset-restore-geometry))
+               (t
+                (easysession--warning
+                 "The following load handler is not a defined function: %s"
+                 handler))))))
 
-      (setq easysession--load-error nil)
-      (when (called-interactively-p 'any)
-        (easysession--message "Session loaded: %s" session-name))
+        ;; Load the frame set
+        (easysession--load-frameset session-data
+                                    (bound-and-true-p
+                                     easysession-frameset-restore-geometry))
 
-      (let ((file-name-handler-alist original-file-name-handler-alist))
-        (run-hooks 'easysession-after-load-hook))))
+        (setq easysession--load-error nil)
+        (when (called-interactively-p 'any)
+          (easysession--message "Session loaded: %s" session-name))
+
+        (let ((file-name-handler-alist original-file-name-handler-alist))
+          (run-hooks 'easysession-after-load-hook)))))
   ;; Return easysession--load-error
   (not easysession--load-error))
 
@@ -1299,7 +1303,7 @@ reloaded. If the session is newly created or switched to, a message is displayed
 accordingly."
   (interactive
    (list (easysession--prompt-session-name
-          "Load and switch to session: "
+          "Switch to session and restore geometry: "
           (unless easysession-switch-to-exclude-current
             (or easysession--current-session-name
                 ""))
@@ -1431,7 +1435,7 @@ reloaded. If the session is newly created or switched to, a message is displayed
 accordingly."
   (interactive
    (list (easysession--prompt-session-name
-          "Load and switch to session: "
+          "Switch to session: "
           (unless easysession-switch-to-exclude-current
             (or easysession--current-session-name
                 ""))
