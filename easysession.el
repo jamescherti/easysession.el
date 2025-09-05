@@ -450,8 +450,8 @@ triggered in this context."
     (tool-bar-lines . :never)
     (tool-bar-position . :never)
     (top . :never)
-    (tty . :never)
-    (tty-type . :never)
+    ;; (tty . :never)
+    ;; (tty-type . :never)
     (undecorated . :never)
     (use-frame-synchronization . :never)
     (vertical-scroll-bars . :never)
@@ -474,23 +474,25 @@ from `easysession--overwrite-frameset-filter-alist`."
               easysession--overwrite-frameset-filter-alist))
 
 (defvar easysession--overwrite-frameset-filter-include-geometry-alist
-  (easysession--filter-out-frameset-filters '(GUI:bottom
-                                              GUI:fullscreen
-                                              GUI:height
-                                              GUI:left
-                                              GUI:right
-                                              GUI:top
-                                              GUI:width
-                                              bottom
-                                              frameset--text-pixel-height
-                                              frameset--text-pixel-width
-                                              fullscreen
-                                              height
-                                              left
-                                              right
-                                              top
-                                              visibility
-                                              width))
+  (append
+   '((frameset--text-pixel-width . :save)
+     (frameset--text-pixel-height . :save))
+   (easysession--filter-out-frameset-filters
+    '(GUI:bottom
+      GUI:fullscreen
+      GUI:height
+      GUI:left
+      GUI:right
+      GUI:top
+      GUI:width
+      bottom
+      fullscreen
+      height
+      left
+      right
+      top
+      ;; visibility  ;; TODO: Should this be restored?
+      width)))
   "Alist of frame parameters and filtering functions.")
 
 (defvar easysession-file-version 3
