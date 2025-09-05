@@ -1405,7 +1405,7 @@ If the function is called interactively, prompt the user for a session name."
     (easysession-save new-session-name)
 
     (easysession--message
-     "Session saved as: '%s'. Use 'easysession-switch-to' to switch to it."
+     "Session saved as: '%s'. Use 'M-x easysession-switch-to' to switch to it."
      new-session-name)
     t))
 

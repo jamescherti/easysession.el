@@ -98,11 +98,15 @@ It is recommended to use the following functions:
 
 To facilitate session management, consider using the following key mappings:
 ``` emacs-lisp
-(global-set-key (kbd "C-c ss") 'easysession-save-as)
-(global-set-key (kbd "C-c sl") 'easysession-switch-to)
+;; Main keybindings
+(global-set-key (kbd "C-c sl") 'easysession-switch-to)  ; Load
+(global-set-key (kbd "C-c ss") 'easysession-save-as)  ; Save
+
+;; Other keybindings
+(global-set-key (kbd "C-c sL") 'easysession-switch-to-and-restore-geometry)
+(global-set-key (kbd "C-c sd") 'easysession-delete)
 (global-set-key (kbd "C-c sr") 'easysession-rename)
-(global-set-key (kbd "C-c sL") 'easysession-load)
-(global-set-key (kbd "C-c sw") 'easysession-save)
+(global-set-key (kbd "C-c sR") 'easysession-reset)
 ```
 
 ## Customization
