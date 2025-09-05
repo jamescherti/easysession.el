@@ -1143,7 +1143,8 @@ Returns a list:
 
 ;;;###autoload
 (defun easysession-rename (new-session-name)
-  "Rename the current session to NEW-SESSION-NAME."
+  "Rename the current session.
+NEW-SESSION-NAME is the session name."
   (interactive
    (list
     (progn
@@ -1174,7 +1175,8 @@ Returns a list:
 
 ;;;###autoload
 (defun easysession-delete (session-name)
-  "Delete a session. Prompt for SESSION-NAME if not provided."
+  "Delete a session.
+SESSION-NAME is the session name."
   (interactive (list (easysession--prompt-session-name "Delete session: ")))
   (let* ((session-file (easysession--exists session-name)))
     (if session-file
@@ -1278,7 +1280,23 @@ load the session without resizing or moving the Emacs frames."
 
 ;;;###autoload
 (defun easysession-switch-to-and-restore-geometry (session-name)
-  "Save and load SESSION-NAME, and restore the position and size of frames."
+  "Load a session and restore the position and size of frames.
+SESSION-NAME is the session name.
+When `easysession-switch-to-save-session' is non nil, it saves the current
+session before loading the session that is specified.
+
+This interactive function prompts the user for a session name when called
+interactively.
+
+This function will:
+- Save the current session if it is loaded and not being reloaded.
+  (When `easysession-switch-to-save-session' is non nil.)
+- Load the specified session.
+- Set the specified session as the current session.
+
+If the session is already loaded, a message is displayed to indicate it has been
+reloaded. If the session is newly created or switched to, a message is displayed
+accordingly."
   (interactive
    (list (easysession--prompt-session-name
           "Load and switch to session: "
@@ -1370,8 +1388,8 @@ SESSION-NAME is the name of the session."
 
 ;;;###autoload
 (defun easysession-save-as (session-name)
-  "Save the session as SESSION-NAME and make it the current session.
-
+  "Save the session as SESSION-NAME.
+SESSION-NAME is the session to save to and switch to.
 If the function is called interactively, prompt the user for a session name."
   (interactive
    (list (easysession--prompt-session-name "Save session as: "
@@ -1382,31 +1400,31 @@ If the function is called interactively, prompt the user for a session name."
     (user-error "[easysession] Please provide a valid session name"))
 
   (let* ((new-session-name (or session-name
-                               easysession--current-session-name))
-         (previous-session-name easysession--current-session-name))
+                               easysession--current-session-name)))
     (easysession--ensure-session-name-valid new-session-name)
     (easysession-save new-session-name)
-    (easysession-set-current-session-name new-session-name)
-    (if (string= previous-session-name easysession--current-session-name)
-        (easysession--message "Saved the session: %s" new-session-name)
-      (easysession--message "Saved and switched to session: %s"
-                            new-session-name))
+
+    (easysession--message
+     "Session saved as: '%s'. Use 'easysession-switch-to' to switch to it."
+     new-session-name)
     t))
 
 ;;;###autoload
 (defun easysession-switch-to (session-name)
-  "Save the current session and load SESSION-NAME.
+  "Load a session without altering the frame's size or position.
+SESSION-NAME is the session name.
 
-This function saves the current Emacs session and loads the session specified by
-SESSION-NAME. If SESSION-NAME is not provided, it prompts the user for a session
-name when called interactively.
+When `easysession-switch-to-save-session' is non nil, it saves the current
+session before loading the session that is specified.
+
+This interactive function prompts the user for a session name when called
+interactively.
 
 This function will:
 - Save the current session if it is loaded and not being reloaded.
+  (When `easysession-switch-to-save-session' is non nil.)
 - Load the specified session.
 - Set the specified session as the current session.
-- If the session does not exist, it is saved and an empty session is
-  initialized.
 
 If the session is already loaded, a message is displayed to indicate it has been
 reloaded. If the session is newly created or switched to, a message is displayed
