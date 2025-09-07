@@ -74,8 +74,11 @@ To install **easysession** from MELPA:
   :ensure t
 
   :custom
-  (easysession-mode-line-misc-info t)  ; Display the session in the modeline
   (easysession-save-interval (* 10 60))  ; Save every 10 minutes
+
+  ;; Display the session name in the lighter.
+  ;; Alternative: (setq easysession-mode-line-misc-info t)
+  (easysession-save-mode-lighter-show-session-name t)
 
   :init
   ;; Automatically load the session at startup and restore frame size and
