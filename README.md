@@ -80,7 +80,7 @@ To install **easysession** from MELPA:
   (easysession-save-mode-lighter-show-session-name t)
 
   ;; Optionally, the session name can be shown in the modeline info area:
-  ;; (setq easysession-mode-line-misc-info t)
+  ;; (easysession-mode-line-misc-info t)
 
   :init
   ;; Automatically load the session at startup and restore frame size and
