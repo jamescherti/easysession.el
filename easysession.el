@@ -1582,9 +1582,9 @@ accordingly."
   (if easysession-save-mode
       (progn
         (when (and easysession-save-interval
-	                 (null easysession--timer))
+                   (null easysession--timer))
           (setq easysession--timer (run-with-timer easysession-save-interval
-			                                             easysession-save-interval
+                                                   easysession-save-interval
                                                    #'easysession--auto-save)))
         ;; `kill-emacs-query-functions' is preferable to `kill-emacs-hook' for
         ;; saving frames, as it is called before frames are closed.
