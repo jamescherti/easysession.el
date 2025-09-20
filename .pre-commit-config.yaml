@@ -9,8 +9,8 @@ repos:
       - id: trailing-whitespace
 
   - repo: https://github.com/jamescherti/pre-commit-elisp
-    rev: v1.0.2
+    rev: v1.0.3
     hooks:
       - id: elisp-check-parens
-      - id: elisp-byte-compile
+      - id: elisp-check-byte-compile
       # - id: elisp-indent
