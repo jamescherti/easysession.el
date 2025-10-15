@@ -1291,16 +1291,15 @@ SESSION-NAME is the session name."
   (setq easysession-load-in-progress nil)
   (setq easysession--load-error t)
 
-  ;; The default session loaded when none is specified is 'main'.
-  (when (and (not session-name)
-             (not easysession--current-session-name))
-    (easysession--set-current-session "main"))
-
   (let* ((original-file-name-handler-alist file-name-handler-alist)
          (file-name-handler-alist nil)
          (session-name (if session-name
                            session-name
-                         easysession--current-session-name))
+                         (if easysession--current-session-name
+                             easysession--current-session-name
+                           ;; The default session loaded when none is
+                           ;; specified is 'main'.
+                           "main")))
          (easysession-load-in-progress session-name)
          (session-data nil)
          (file-contents nil)
@@ -1353,6 +1352,8 @@ SESSION-NAME is the session name."
         (setq easysession--load-error nil)
         (when (called-interactively-p 'any)
           (easysession--message "Session loaded: %s" session-name))
+
+        (easysession-set-current-session-name session-name)
 
         (let ((file-name-handler-alist original-file-name-handler-alist))
           (run-hooks 'easysession-after-load-hook)))))
