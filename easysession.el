@@ -1304,7 +1304,8 @@ SESSION-NAME is the session name."
          (session-data nil)
          (file-contents nil)
          (session-file (easysession--exists session-name)))
-    (when session-file
+    (if (not session-file)
+        (easysession-set-current-session-name session-name)
       ;; Load session
       (setq file-contents (let ((coding-system-for-read 'utf-8-emacs)
                                 (file-coding-system-alist nil))
