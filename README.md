@@ -379,8 +379,7 @@ It is preferable for EasySession to remain a third-party plugin, as this provide
 - EasySession is designed for loading, saving, and switching entire sessions, while Activities focuses on managing "activities" and allows for multiple activities within a single session.
 - EasySession supports restoring indirect buffers, whereas Activities does not.
 - EasySession allows you to choose whether to restore the geometry (position, width, and height) of your frames.
-- EasySession relies on built-in Emacs functions for saving and loading frames and tab-bar tabs, ensuring compatibility and support from Emacs developers. In contrast, Activities uses custom functions, such as those for restoring the tab-bar.
-- EasySession is customizable. Users can implement their own handlers to manage non-file-backed buffers, enabling the creation of custom functions for restoring such buffers.
+- EasySession relies on Emacs built-in functions for saving and restoring frames and tab-bar tabs (the built-in `frameset` package). Activities uses the built-in bookmark system to save and restore buffers and tabs.
 
 ### Why not use one of the other third-party session packages?
 
