@@ -377,7 +377,7 @@ It is preferable for EasySession to remain a third-party plugin, as this provide
 ### How does it compare to activities.el?
 
 - EasySession is designed for loading, saving, and switching entire sessions, while Activities focuses on managing "activities" and allows for multiple activities within a single session.
-- EasySession supports restoring indirect buffers, whereas Activities does not.
+- EasySession supports restoring indirect buffers that were created with `M-x clone-indirect-buffer-other-window`, whereas Activities does not. However, since Activities relies on Emacs bookmarks to save and restore buffers, the behavior depends entirely on the buffer's major mode bookmark handler. For example, when used with `org-bookmark-heading`, Org-mode indirect buffers are properly saved and restored.
 - EasySession allows you to choose whether to restore the geometry (position, width, and height) of your frames.
 - EasySession relies on Emacs built-in functions for saving and restoring frames and tab-bar tabs (the built-in `frameset` package). Activities uses the built-in bookmark system to save and restore buffers and tabs.
 - Both EasySession and Activities are customizable. In EasySession, users can define custom handlers to manage non-file-backed buffers, allowing the creation of specialized functions for restoring them. In Activities, bookmarks can be used to achieve similar customizations.
