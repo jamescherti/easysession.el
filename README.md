@@ -36,8 +36,9 @@ If this package enhances your workflow, please show your support by **⭐ starri
     - [Frequently asked questions](#frequently-asked-questions)
         - [How to reduce the number of buffers in my session, regularly](#how-to-reduce-the-number-of-buffers-in-my-session-regularly)
         - [How to start afresh after loading too many buffers](#how-to-start-afresh-after-loading-too-many-buffers)
-    - [How to persist and restore text scale?](#how-to-persist-and-restore-text-scale)
+        - [How to persist and restore text scale?](#how-to-persist-and-restore-text-scale)
         - [How does the author use easysession?](#how-does-the-author-use-easysession)
+        - [What does 'EasySession supports restoring indirect buffers' mean?](#what-does-easysession-supports-restoring-indirect-buffers-mean)
         - [What does EasySession offer that desktop.el doesn't?](#what-does-easysession-offer-that-desktopel-doesnt)
         - [Why not just improve and submit patches to desktop.el?](#why-not-just-improve-and-submit-patches-to-desktopel)
         - [How does it compare to activities.el?](#how-does-it-compare-to-activitiesel)
@@ -348,13 +349,23 @@ Optionally, the `easysession-reset` function can be configured to automatically 
                                              (save-some-buffers t)))
 ```
 
-## How to persist and restore text scale?
+### How to persist and restore text scale?
 
 The [persist-text-scale.el @GitHub](https://github.com/jamescherti/persist-text-scale.el) Emacs package provides `persist-text-scale-mode`, which ensures that all adjustments made with `text-scale-increase` and `text-scale-decrease` are persisted and restored across sessions. As a result, the text size in each buffer remains consistent, even after restarting Emacs. This package also facilitates grouping buffers into categories, allowing buffers within the same category to share a consistent text scale. This ensures uniform font sizes when adjusting text scaling.
 
 ### How does the author use easysession?
 
 The author uses easysession by setting up each session to represent a distinct project or a specific "view" on a particular project, including various tabs (built-in tab-bar), window splits, dired buffers, and file buffers. This organization allows for the creation of dedicated environments for different tasks or aspects of a project, such as development, debugging, specific issue, and documentation. The author switches between projects and views of the same projects multiple times a day, and easysession helps significantly by allowing quick transitions between them.
+
+### What does 'EasySession supports restoring indirect buffers' mean?
+
+Try the following:
+1. Open a file,
+2. Open an indirect buffer in another window with `M-x clone-indirect-buffer-other-window`,
+3. Creating a new tab using `M-x tab-new`,
+4. Open a second indirect buffer in the new tab with `M-x clone-indirect-buffer-other-window`.
+
+EasySession can persist and restore all original and indirect buffers exactly as they were, maintaining their buffer names and their status as either original or indirect, including buffers located in different tabs.
 
 ### What does EasySession offer that desktop.el doesn't?
 
@@ -381,6 +392,7 @@ It is preferable for EasySession to remain a third-party plugin, as this provide
 - EasySession allows you to choose whether to restore the geometry (position, width, and height) of your frames.
 - EasySession relies on Emacs built-in functions for saving and restoring frames and tab-bar tabs (the built-in `frameset` package). Activities uses the built-in bookmark system to save and restore buffers and tabs.
 - Both EasySession and Activities are customizable. In EasySession, users can define custom handlers to manage non-file-backed buffers, allowing the creation of specialized functions for restoring them. In Activities, bookmarks can be used to achieve similar customizations.
+- EasySession persists and restores all frames and tabs. Activities, on the other hand, behaves differently: Its scope is limited to a single frame (without referencing tabs) or to a single tab when `tab-bar-mode` is active; it does not span multiple frames or tabs. Each buffer is managed through its major mode's bookmark handler, which handles details such as indirect buffers and narrowing.
 
 ### Why not use one of the other third-party session packages?
 
