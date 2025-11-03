@@ -1574,7 +1574,7 @@ accordingly."
 
 ;;;###autoload
 (define-minor-mode easysession-save-mode
-  "Toggle `easysession-save-mode'."
+  "Persist and restore your sessions."
   :global t
   :lighter (:eval
             (if easysession-save-mode-lighter-show-session-name
