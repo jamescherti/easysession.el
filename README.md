@@ -392,7 +392,7 @@ It is preferable for EasySession to remain a third-party plugin, as this provide
 - EasySession allows you to choose whether to restore the geometry (position, width, and height) of your frames.
 - EasySession relies on Emacs built-in functions for saving and restoring frames and tab-bar tabs (the built-in `frameset` package). Activities uses the built-in bookmark system to save and restore buffers and tabs.
 - Both EasySession and Activities are customizable. In EasySession, users can define custom handlers to manage non-file-backed buffers, allowing the creation of specialized functions for restoring them. In Activities, bookmarks can be used to achieve similar customizations.
-- EasySession persists and restores all frames and tabs. Activities, on the other hand, behaves differently: Its scope is limited to a single frame (without referencing tabs) or to a single tab when `tab-bar-mode` is active; it does not span multiple frames or tabs. Each buffer is managed through its major mode's bookmark handler, which handles details such as indirect buffers and narrowing.
+- EasySession persists and restores all frames and tabs. Activities, by design, operates differently: Its scope is limited to a single frame (without referencing tabs) or to a single tab when `tab-bar-mode` is active; it does not span multiple frames or tabs. Each buffer is managed through its major mode's bookmark handler, which handles details such as indirect buffers and narrowing.
 
 ### Why not use one of the other third-party session packages?
 
