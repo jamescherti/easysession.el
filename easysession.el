@@ -866,10 +866,9 @@ Also checks if `easysession-dont-save' is set to t."
 (defun easysession--exists (session-name)
   "Check if a session with the given SESSION-NAME exists.
 Returns the session file if the session file exists, nil otherwise."
-  (let ((file-name-handler-alist nil))
-    (let ((file-name (easysession-get-session-file-path session-name)))
-      (when (file-exists-p file-name)
-        file-name))))
+  (let ((file-name (easysession-get-session-file-path session-name)))
+    (when (file-exists-p file-name)
+      file-name)))
 
 (defun easysession--auto-save ()
   "Save the session automatically based on the auto-save predicate.
@@ -1291,9 +1290,7 @@ SESSION-NAME is the session name."
   (setq easysession-load-in-progress nil)
   (setq easysession--load-error t)
 
-  (let* ((original-file-name-handler-alist file-name-handler-alist)
-         (file-name-handler-alist nil)
-         (session-name (if session-name
+  (let* ((session-name (if session-name
                            session-name
                          (if easysession--current-session-name
                              easysession--current-session-name
@@ -1330,20 +1327,19 @@ SESSION-NAME is the session name."
         ;; Load buffers first because the cursor, window-start, or hscroll
         ;; might be altered by packages such as saveplace. This will allow
         ;; the frameset to modify the cursor later on.
-        (let ((file-name-handler-alist original-file-name-handler-alist))
-          (run-hooks 'easysession-before-load-hook)
+        (run-hooks 'easysession-before-load-hook)
 
-          (dolist (handler (easysession-get-load-handlers))
-            (when handler
-              (cond
-               ((and (symbolp handler)
-                     (fboundp handler))
-                (funcall handler session-data))
+        (dolist (handler (easysession-get-load-handlers))
+          (when handler
+            (cond
+             ((and (symbolp handler)
+                   (fboundp handler))
+              (funcall handler session-data))
 
-               (t
-                (easysession--warning
-                 "The following load handler is not a defined function: %s"
-                 handler))))))
+             (t
+              (easysession--warning
+               "The following load handler is not a defined function: %s"
+               handler)))))
 
         ;; Load the frame set
         (easysession--load-frameset session-data
@@ -1356,8 +1352,7 @@ SESSION-NAME is the session name."
 
         (easysession-set-current-session-name session-name)
 
-        (let ((file-name-handler-alist original-file-name-handler-alist))
-          (run-hooks 'easysession-after-load-hook)))))
+        (run-hooks 'easysession-after-load-hook))))
   ;; Return easysession--load-error
   (not easysession--load-error))
 
@@ -1416,9 +1411,7 @@ SESSION-NAME is the name of the session."
                 "Load a session with `easysession-switch-to'"))
 
   (run-hooks 'easysession-before-save-hook)
-  (let* ((original-file-name-handler-alist file-name-handler-alist)
-         (file-name-handler-alist nil)
-         (session-name (if session-name
+  (let* ((session-name (if session-name
                            session-name
                          easysession--current-session-name))
          (session-file (easysession-get-session-file-path session-name))
@@ -1432,8 +1425,7 @@ SESSION-NAME is the name of the session."
     (push (cons "frameset-geo" data-frameset-geometry) session-data)
 
     ;; Buffers and file buffers
-    (let* ((file-name-handler-alist original-file-name-handler-alist)
-           (buffers (funcall easysession-buffer-list-function)))
+    (let* ((buffers (funcall easysession-buffer-list-function)))
       (dolist (handler (easysession-get-save-handlers))
         (if (not (and handler
                       (symbolp handler)
@@ -1468,8 +1460,7 @@ SESSION-NAME is the name of the session."
     (unless (file-directory-p session-dir)
       (make-directory session-dir :parents))
 
-    (let* ((file-name-handler-alist nil)
-           (serialized-data (prin1-to-string session-data)))
+    (let* ((serialized-data (prin1-to-string session-data)))
       (with-temp-buffer
         (insert serialized-data)
         (let ((coding-system-for-write 'utf-8-emacs)
