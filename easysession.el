@@ -82,6 +82,7 @@
 ;;; Code:
 
 (require 'frameset)
+(require 'cl-lib)
 
 ;;; Variables
 
@@ -612,13 +613,18 @@ the session, which can later be restored by the corresponding load handlers.")
 
 (defvar easysession--builtin-load-handlers
   '(easysession--handler-load-file-editing-buffers
-    easysession--handler-load-indirect-buffers)
+    easysession--handler-load-indirect-buffers
+    easysession--handler-load-registered-modes)
   "Internal variable.")
 
 (defvar easysession--builtin-save-handlers
   '(easysession--handler-save-file-editing-buffers
-    easysession--handler-save-indirect-buffers)
+    easysession--handler-save-indirect-buffers
+    easysession--handler-save-registered-modes)
   "Internal variable.")
+
+(defvar easysession--mode-registry nil
+  "Alist of (MODE . PROPS) for registered modes.")
 
 (defvar easysession-load-in-progress nil
   "Session name (string) if a session is currently being loaded.
@@ -753,6 +759,27 @@ determined."
             (when (and base-buffer-name indirect-buffer-name)
               `((indirect-buffer-name . ,indirect-buffer-name)
                 (base-buffer-name . ,base-buffer-name)))))))))
+
+(defun easysession--get-registered-mode-buffer-info (buffer)
+  "Get information about the registered mode buffer BUFFER.
+Return nil if the buffer's mode is not in the registry.
+Return an alist with `buffer-name', `major-mode', `default-directory',
+and any custom data nested under `data'."
+  (when (and buffer (buffer-live-p buffer))
+    (with-current-buffer buffer
+      (let ((config (cl-find-if (lambda (entry)
+                                  (derived-mode-p (car entry)))
+                                easysession--mode-registry)))
+        (when config
+          (let ((state `((buffer-name . ,(buffer-name))
+                         (major-mode . ,(car config))
+                         (default-directory . ,default-directory)))
+                (save-fn (plist-get (cdr config) :save)))
+            (when save-fn
+              (let ((data (ignore-errors (funcall save-fn))))
+                (when data
+                  (nconc state (list (cons 'data data))))))
+            state))))))
 
 (defun easysession-get-session-name ()
   "Return the name of the current session.
@@ -1022,6 +1049,43 @@ buffers and separates them from other buffers."
       (value . ,indirect-buffers)
       (remaining-buffers . ,remaining-buffers))))
 
+(defun easysession--handler-load-registered-modes (session-data)
+  "Load registered mode buffers from the SESSION-DATA variable."
+  (let ((registered-mode-buffers (assoc-default "registered-modes"
+                                                session-data)))
+    (when registered-mode-buffers
+      (dolist (item registered-mode-buffers)
+        (let ((buffer-name (alist-get 'buffer-name item))
+              (mode (alist-get 'major-mode item)))
+          (when (and buffer-name mode)
+            (let ((props (cdr (assq mode easysession--mode-registry))))
+              (when (and props (not (get-buffer buffer-name)))
+                (let ((restore-fn (plist-get props :restore))
+                      (validate-fn (plist-get props :validate)))
+                  (when (and restore-fn
+                             (or (null validate-fn) (funcall validate-fn item)))
+                    (let ((default-directory (or (alist-get 'default-directory item)
+                                                 default-directory)))
+                      (unless (ignore-errors (funcall restore-fn item))
+                        (easysession--warning "Failed to restore the %s buffer '%s'"
+                                              mode buffer-name)))))))))))))
+
+(defun easysession--handler-save-registered-modes (buffers)
+  "Collect and categorize registered mode buffers from the provided list.
+BUFFERS is the list of buffers to process. This function identifies buffers
+with registered modes and separates them from other buffers."
+  (let ((registered-mode-buffers '())
+        (remaining-buffers '()))
+    (dolist (buf buffers)
+      (let ((registered-mode-buffer-info
+             (easysession--get-registered-mode-buffer-info buf)))
+        (if registered-mode-buffer-info
+            (push registered-mode-buffer-info registered-mode-buffers)
+          (push buf remaining-buffers))))
+    `((key . "registered-modes")
+      (value . ,registered-mode-buffers)
+      (remaining-buffers . ,remaining-buffers))))
+
 (defun easysession-add-load-handler (handler-fn)
   "Add a load handler.
 The handler is only added if it's not already present and if HANDLER-FN is a
@@ -1074,6 +1138,28 @@ HANDLER-FN is the function to be removed."
   "Return a list of all built-in and user-defined load handlers."
   (append easysession--builtin-load-handlers
           easysession--load-handlers))
+
+(defun easysession-register-mode (mode &rest props)
+  "Register MODE for session save/restore.
+PROPS is a plist with keys :restore (required), :save, and :validate.
+The :restore function receives a state alist with `buffer-name', `major-mode',
+and `default-directory' keys automatically included, plus any data returned
+by :save nested under the `data' key."
+  (unless (and (symbolp mode) mode)
+    (error "[easysession] MODE must be a non-nil symbol"))
+  (unless (plist-get props :restore)
+    (error "[easysession] :restore function is required"))
+  (setq easysession--mode-registry
+        (assq-delete-all mode easysession--mode-registry))
+  (push (cons mode props) easysession--mode-registry))
+
+(defun easysession-unregister-mode (mode)
+  "Unregister MODE from session save/restore.
+MODE is the major mode symbol to be removed from the registry."
+  (unless (and (symbolp mode) mode)
+    (error "[easysession] MODE must be a non-nil symbol"))
+  (setq easysession--mode-registry
+        (assq-delete-all mode easysession--mode-registry)))
 
 (defmacro easysession-define-load-handler (key handler-func)
   "Add a load handler for a specific session KEY.
