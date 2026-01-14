@@ -5,7 +5,10 @@ Author: [James Cherti](https://www.jamescherti.com/)
 
 ### WIP
 
-* Contribution by Emre Yolcu (@emreyolcu on GitHub): Added Magit integration via the `easysession-magit` extension (`extensions/easysession-magit.el`). This introduces `easysession-magit-mode`, enabling Magit status, log, and diff buffers to be persisted and restored across sessions. Log and diff buffers preserve their arguments, including selected revisions and ranges, ensuring continuity when working with Git repositories.
+* Contributions by Emre Yolcu (@emreyolcu on GitHub):
+
+  * Added Magit integration through the `easysession-magit` extension (`extensions/easysession-magit.el`). This introduces `easysession-magit-mode`, allowing Magit status, log, and diff buffers to be persisted and restored across sessions. Log and diff buffers retain their arguments, including selected revisions and ranges, ensuring continuity when working with Git repositories.
+  * Introduced a mode registration system for persisting and restoring custom major modes across EasySession sessions. Users can register and unregister modes using `easysession-register-mode` and `easysession-unregister-mode`.
 
 ### 1.1.7
 
