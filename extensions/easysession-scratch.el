@@ -23,12 +23,12 @@
 ;; along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
-;; Make EasySession Persist and restore the scratch buffer.
+;; This extension makes EasySession Persist and restore the scratch buffer.
 ;;
 ;; To enable `easysession-scratch-mode', add the following to your
 ;; configuration:
-;;   (require 'easysession-scratch)
 ;;   (with-eval-after-load 'easysession
+;;     (require 'easysession-scratch)
 ;;     (easysession-scratch-mode 1))
 
 ;;; Code:

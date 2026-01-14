@@ -21,6 +21,9 @@ If this package enhances your workflow, please show your support by **⭐ starri
 - [easysession.el - Easily persist and restore your Emacs editing sessions](#easysessionel---easily-persist-and-restore-your-emacs-editing-sessions)
   - [Features](#features)
   - [Installation](#installation)
+  - [Extensions](#extensions)
+    - [Extension: easysession-scratch (Persist and restore the scratch buffer)](#extension-easysession-scratch-persist-and-restore-the-scratch-buffer)
+    - [Extension: easysession-magit (Persist and restore Magit buffers)](#extension-easysession-magit-persist-and-restore-magit-buffers)
   - [Usage](#usage)
   - [Customization](#customization)
     - [How to only persist and restore visible buffers](#how-to-only-persist-and-restore-visible-buffers)
@@ -97,6 +100,32 @@ Note that:
 - The `easysession-load-including-geometry` function is only needed at startup. During an Emacs session, use `M-x easysession-switch-to` or `M-x easysession-switch-to-and-restore-geometry` to switch sessions or reload the current session without changing frame size or position.
 - The author added 102 and 103 to `add-hook` in the code snippet above to ensure that the session is loaded after all other packages. (Using the depth 102 and 103 is useful for those using [minimal-emacs.d](https://github.com/jamescherti/minimal-emacs.d), where some optimizations restore `file-name-handler-alist` at depth 101 during `emacs-startup-hook`.)
 - When using Emacs in daemon mode (`emacs --daemon`), if using the `after-init-hook` results in issues on startup, an alternative approach is to use `server-after-make-frame-hook`. This hook ensures that the session is loaded once the client frame is created.
+
+## Extensions
+
+### Extension: easysession-scratch (Persist and restore the scratch buffer)
+
+This extension makes EasySession persist and restore the scratch buffer.
+
+To enable `easysession-scratch-mode`, add the following to your configuration:
+
+```elisp
+(with-eval-after-load 'easysession
+  (require 'easysession-scratch)
+  (easysession-scratch-mode 1))
+```
+
+### Extension: easysession-magit (Persist and restore Magit buffers)
+
+This extension enables EasySession to persist and restore Magit buffers.
+
+To activate `easysession-magit-mode`, add the following to your Emacs configuration:
+
+```elisp
+(with-eval-after-load 'easysession
+  (require 'easysession-magit)
+  (easysession-magit-mode 1))
+```
 
 ## Usage
 
@@ -293,6 +322,8 @@ Optionally, the `easysession-reset` function can be configured to automatically 
 ```
 
 ### How to create custom load and save handlers for non-file-visiting buffers
+
+**Note:** The code below is provided for illustrative purposes to show how to create a custom EasySession extension. To persist and restore the scratch buffer, use the `easysession-scratch` extension (`extensions/easysession-scratch.el`) instead of the example below.
 
 EasySession is customizable. Users can implement their own handlers to manage non-file-visiting buffers, enabling the creation of custom functions for restoring buffers.
 

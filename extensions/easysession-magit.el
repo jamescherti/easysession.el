@@ -23,12 +23,11 @@
 ;; along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
-;; Make EasySession persist and restore Magit buffers.
+;; This extension makes EasySession persist and restore Magit buffers.
 ;;
-;; To enable `easysession-magit-mode', add the following to your
-;; configuration:
-;;   (require 'easysession-magit)
+;; To enable `easysession-magit-mode', add the following to your configuration:
 ;;   (with-eval-after-load 'easysession
+;;     (require 'easysession-magit)
 ;;     (easysession-magit-mode 1))
 
 ;;; Code:
@@ -85,22 +84,22 @@
                (save-vars (plist-get props :save-vars))
                (restore-args (plist-get props :restore-args)))
           (easysession-register-mode (car config)
-            :save (when save-vars
-                    (lambda ()
-                      (mapcar (lambda (entry)
-                                (let ((key (car entry))
-                                      (var (cdr entry)))
-                                  (cons key (and (boundp var) (symbol-value var)))))
-                              save-vars)))
-            :restore (lambda (state)
-                       (require 'magit nil t)
-                       (let ((magit-display-buffer-noselect t)
-                             (data (alist-get 'data state)))
-                         (apply (plist-get props :restore-fn)
-                                (mapcar (lambda (arg)
-                                          (when arg (alist-get arg data)))
-                                        restore-args))))
-            :validate #'easysession-magit--git-repo-p)))
+                                     :save (when save-vars
+                                             (lambda ()
+                                               (mapcar (lambda (entry)
+                                                         (let ((key (car entry))
+                                                               (var (cdr entry)))
+                                                           (cons key (and (boundp var) (symbol-value var)))))
+                                                       save-vars)))
+                                     :restore (lambda (state)
+                                                (require 'magit nil t)
+                                                (let ((magit-display-buffer-noselect t)
+                                                      (data (alist-get 'data state)))
+                                                  (apply (plist-get props :restore-fn)
+                                                         (mapcar (lambda (arg)
+                                                                   (when arg (alist-get arg data)))
+                                                                 restore-args))))
+                                     :validate #'easysession-magit--git-repo-p)))
     (dolist (config easysession-magit--mode-configs)
       (easysession-unregister-mode (car config)))))
 
