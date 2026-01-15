@@ -712,34 +712,30 @@ completion candidates."
                    nil nil initial-input nil session-name))
 
 (defun easysession--get-buffer-narrow-info (buffer)
+  "Return narrowing boundaries of BUFFER if it is narrowed.
+If BUFFER is narrowed, return a cons cell (POINT-MIN . POINT-MAX) representing
+the active narrowing region. If BUFFER is not narrowed, return nil."
   (with-current-buffer buffer
-    (cond
-     ((buffer-narrowed-p) (cons (point-min) (point-max)))
-     (t
-      ;; i.e. (not (buffer-narrowed-p))
-      nil))))
+    (when (buffer-narrowed-p)
+      (cons (point-min) (point-max)))))
 
 (defun easysession--get-base-buffer-info (buffer)
-  "Get the name and path of the buffer BUFFER.
-Return nil When the buffer is not a base buffer.
-Return an alist
-((buffer-name . ,(buffer-name))
-              (buffer-path . ,path)
-              (narrow . ,(easysession--get-buffer-narrow-info buffer)))"
-  (when (and buffer (buffer-live-p buffer))
-    (with-current-buffer buffer
-      (let* ((path (cond ((derived-mode-p 'dired-mode)
-                          default-directory)
-                         (t (buffer-file-name)))))
-        (if path
-            ;; File visiting buffer and base buffers (not carbon copies)
-            ;; (cons (buffer-name) path)
-            `((buffer-name . ,(buffer-name))
-              (buffer-path . ,path)
-              (narrow . ,(easysession--get-buffer-narrow-info buffer)))
-          ;; This buffer is not visiting a file or it is a carbon copy
-          nil)))))
+  "Return base buffer metadata for BUFFER.
 
+If BUFFER is a live base buffer associated with a path, return an alist with the
+buffer name, buffer path, and narrowing information.
+
+If BUFFER is not a base buffer or has no associated path, return nil."
+  (when (buffer-live-p buffer)
+    (with-current-buffer buffer
+      (let ((path (if (derived-mode-p 'dired-mode)
+                      default-directory
+                    (buffer-file-name))))
+        (when path
+          ;; File visiting buffer and base buffers (not carbon copies)
+          `((buffer-name . ,(buffer-name))
+            (buffer-path . ,path)
+            (narrow . ,(easysession--get-buffer-narrow-info buffer))))))))
 
 (defun easysession--get-indirect-buffer-info (indirect-buffer)
   "Get information about the indirect buffer INDIRECT-BUFFER.
@@ -774,7 +770,8 @@ determined."
             (when (and base-buffer-name indirect-buffer-name)
               `((indirect-buffer-name . ,indirect-buffer-name)
                 (base-buffer-name . ,base-buffer-name)
-                (narrow . ,(easysession--get-buffer-narrow-info indirect-buffer))))))))))
+                (narrow . ,(easysession--get-buffer-narrow-info
+                            indirect-buffer))))))))))
 
 (defun easysession--get-registered-mode-buffer-info (buffer)
   "Get information about the registered mode buffer BUFFER.
@@ -971,23 +968,17 @@ The current session is displayed only when a session is actively loaded."
 
 (defun easysession--handler-load-file-editing-buffers (session-data)
   "Load base buffers from the SESSION-DATA variable."
-  (let ((buffer-infos (assoc-default "buffers" session-data)))
-    (when buffer-infos
-      (dolist (buffer-info buffer-infos)
-        (let (buffer-name buffer-path buffer-narrow)
-          (cond
-           ((listp (car buffer-info))
-            ;; alist representation
-            (setf buffer-name (alist-get 'buffer-name buffer-info))
-            (setf buffer-path (alist-get 'buffer-path buffer-info))
-            (setf buffer-narrow (alist-get 'buffer-narrow buffer-info)))
-           (t
-            ;; legacy (buffer-name . buffer-path) rep
+  (let ((buffer-info-list (assoc-default "buffers" session-data)))
+    (when buffer-info-list
+      (dolist (buffer-info buffer-info-list)
+        (let ((buffer-name (alist-get 'buffer-name buffer-info))
+              (buffer-path (alist-get 'buffer-path buffer-info))
+              (buffer-narrow (alist-get 'narrow buffer-info)))
+          (unless (and buffer-name buffer-path)
+            ;; Legacy: (buffer-name . buffer-path) rep
             (setf buffer-name (car buffer-info))
             (setf buffer-path (cdr buffer-info))
-            (setf buffer-narrow nil)
-            )
-           )
+            (setf buffer-narrow nil))
           (let* ((buffer (get-file-buffer buffer-path)))
             (unless buffer
               (setq buffer
@@ -1018,11 +1009,14 @@ The current session is displayed only when a session is actively loaded."
 
                     (when buffer
                       (easysession--ensure-buffer-name buffer buffer-name))
-                    ;; restore narrow if specified
-                    (when buffer-narrow
-                      (with-current-buffer buffer
-                        (narrow-to-region (car buffer-narrow)
-                                          (cdr buffer-narrow))))))
+
+                    ;; Restore narrow if specified
+                    (let* ((narrow-enabled (consp buffer-narrow))
+                           (start (and narrow-enabled (car buffer-narrow)))
+                           (end (and narrow-enabled (cdr buffer-narrow))))
+                      (when (and start end (numberp start) (numberp end))
+                        (with-current-buffer buffer
+                          (narrow-to-region start end))))))
               (easysession--warning "Failed to restore the buffer '%s': %s"
                                     buffer-name buffer-path))))))))
 
