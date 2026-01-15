@@ -1010,11 +1010,14 @@ The current session is displayed only when a session is actively loaded."
                     (when buffer
                       (easysession--ensure-buffer-name buffer buffer-name))
 
-                    ;; Restore narrow if specified
+                    ;; Restore buffer narrowing if present
                     (let* ((narrow-enabled (consp buffer-narrow))
-                           (start (and narrow-enabled (car buffer-narrow)))
-                           (end (and narrow-enabled (cdr buffer-narrow))))
-                      (when (and start end (numberp start) (numberp end))
+                           (start (and narrow-enabled
+                                       (car buffer-narrow)))
+                           (end (and narrow-enabled
+                                     (cdr buffer-narrow))))
+                      (when (and (numberp start)
+                                 (numberp end))
                         (with-current-buffer buffer
                           (narrow-to-region start end))))))
               (easysession--warning "Failed to restore the buffer '%s': %s"
@@ -1056,11 +1059,20 @@ not. It returns an alist with the following structure."
                          (ignore-errors (clone-indirect-buffer
                                          indirect-buffer-name nil))))
                     (if indirect-buffer
-                        (progn (easysession--ensure-buffer-name indirect-buffer
-                                                                indirect-buffer-name)
-                               (when narrow
-                                 (with-current-buffer indirect-buffer
-                                   (narrow-to-region (car narrow) (cdr narrow)))))
+                        (progn
+                          (easysession--ensure-buffer-name indirect-buffer
+                                                           indirect-buffer-name)
+
+                          ;; Restore buffer narrowing if present
+                          (let* ((narrow-enabled (consp narrow))
+                                 (start (and narrow-enabled
+                                             (car narrow)))
+                                 (end (and narrow-enabled
+                                           (cdr narrow))))
+                            (when (and (numberp start)
+                                       (numberp end))
+                              (with-current-buffer indirect-buffer
+                                (narrow-to-region start end)))))
                       (easysession--warning
                        (concat "Failed to restore the indirect "
                                "buffer (clone): %s")
