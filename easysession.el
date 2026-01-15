@@ -1114,11 +1114,13 @@ buffers and separates them from other buffers."
                       (validate-fn (plist-get props :validate)))
                   (when (and restore-fn
                              (or (null validate-fn) (funcall validate-fn item)))
-                    (let ((default-directory (or (alist-get 'default-directory item)
-                                                 default-directory)))
+                    (let ((default-directory
+                           (or (alist-get 'default-directory item)
+                               default-directory)))
                       (unless (ignore-errors (funcall restore-fn item))
-                        (easysession--warning "Failed to restore the %s buffer '%s'"
-                                              mode buffer-name)))))))))))))
+                        (easysession--warning
+                         "Failed to restore the %s buffer '%s'"
+                         mode buffer-name)))))))))))))
 
 (defun easysession--handler-save-registered-modes (buffers)
   "Collect and categorize registered mode buffers from the provided list.
@@ -1702,13 +1704,14 @@ accordingly."
           (easysession-save)
           (setq new-session t))
 
-        (cond (session-reloaded
-               (easysession--message "Reloaded session: %s" session-name))
-              (saved
-               (easysession--message "Saved and switched to %ssession: %s"
-                                     (if new-session "new " "") session-name))
-              (t (easysession--message "Switched to %ssession: %s"
-                                       (if new-session "new " "") session-name)))))))
+        (cond
+         (session-reloaded
+          (easysession--message "Reloaded session: %s" session-name))
+         (saved
+          (easysession--message "Saved and switched to %ssession: %s"
+                                (if new-session "new " "") session-name))
+         (t (easysession--message "Switched to %ssession: %s"
+                                  (if new-session "new " "") session-name)))))))
 
 ;;;###autoload
 (define-minor-mode easysession-save-mode
