@@ -66,7 +66,7 @@ Key features include:
 - Predicate that determines if the session is saved automatically.
 - Persist and restore the scratch buffer (Extension: easysession-scratch): Ensures that the contents of the Emacs `*scratch*` buffer are saved as part of the session and restored when the session is reloaded, preserving any temporary notes, code snippets, or evaluation history.
 - Persist and restore Magit buffers (Extension: easysession-magit): Saves the state of Magit buffers.
-- Persist and restore narrowing: Preserves any narrowed regions, ensuring that the visible portion of the buffer is restored on session reload.
+- Persist and restore narrowing: Ensures that any narrowed regions in both base and indirect buffers are preserved, so the visible portion of each buffer is restored exactly as it was when the session was saved.
 
 ## Installation
 
