@@ -5,6 +5,11 @@ Author: [James Cherti](https://www.jamescherti.com/)
 
 ### WIP
 
+* Add two interactive confirmations to `easysession-switch-to`:
+
+  * Prompt the user before creating a new session, requiring explicit approval to switch to a session that does not yet exist.
+  * When reloading the current session, prompt the user to confirm saving it before reloading it.
+
 * Contributions by Emre Yolcu (@emreyolcu on GitHub):
 
   * Added Magit integration through the `easysession-magit` extension (`extensions/easysession-magit.el`). This introduces `easysession-magit-mode`, allowing Magit status, log, and diff buffers to be persisted and restored across sessions. Log and diff buffers retain their arguments, including selected revisions and ranges, ensuring continuity when working with Git repositories.

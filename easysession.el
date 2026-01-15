@@ -1667,37 +1667,48 @@ accordingly."
                   "[easysession] A session name must be provided "
                   "to `easysession-switch-to'"))
 
-    (let* ((session-file (easysession-get-session-file-path session-name))
+    (let* ((new-session-file (easysession-get-session-file-path session-name))
+           (new-session-exists (file-exists-p new-session-file))
            (session-reloaded (and easysession--current-session-name
                                   (string= session-name
                                            easysession--current-session-name)))
-           (saved nil)
-           (new-session nil))
-      ;; TODO: Prompt the user for confirmation before loading a new session
-      ;;       if the current session has not been loaded.
-      (when (and (not easysession--load-error) (not session-reloaded))
-        ;; TODO ask the user to save the current session
-        (when (and easysession--current-session-name
-                   easysession-switch-to-save-session)
+           saved
+           new-session)
+      (when (or new-session-exists
+                (yes-or-no-p
+                 (format
+                  "[easysession] Session '%s' does not exist. Would you like to create it? "
+                  session-name)))
+        (when (and (not easysession--load-error)
+                   easysession--current-session-name
+                   easysession-switch-to-save-session
+                   (or (not session-reloaded)
+                       (yes-or-no-p
+                        (format "[easysession] Do you want to save the current session '%s' before reloading it?"
+                                easysession--current-session-name))))
           (easysession-save easysession--current-session-name)
-          (setq saved t)))
+          (setq saved t))
 
-      (easysession-load session-name)
-      (easysession-set-current-session-name session-name)
+        (condition-case err
+            (easysession-load session-name)
+          (error
+           (user-error "[easysession] Failed to load session '%s': %s"
+                       session-name (error-message-string err))))
+        (easysession-set-current-session-name session-name)
 
-      (unless session-reloaded
-        (unless (file-exists-p session-file)
+        (when (and (not session-reloaded)
+                   (not (file-exists-p new-session-file)))
           (run-hooks 'easysession-new-session-hook)
           (easysession-save)
-          (setq new-session t)))
+          (setq new-session t))
 
-      (cond (session-reloaded
-             (easysession--message "Reloaded session: %s" session-name))
-            (saved
-             (easysession--message "Saved and switched to %ssession: %s"
-                                   (if new-session "new " "") session-name))
-            (t (easysession--message "Switched to %ssession: %s"
-                                     (if new-session "new " "") session-name))))))
+        (cond (session-reloaded
+               (easysession--message "Reloaded session: %s" session-name))
+              (saved
+               (easysession--message "Saved and switched to %ssession: %s"
+                                     (if new-session "new " "") session-name))
+              (t (easysession--message "Switched to %ssession: %s"
+                                       (if new-session "new " "") session-name)))))))
 
 ;;;###autoload
 (define-minor-mode easysession-save-mode
