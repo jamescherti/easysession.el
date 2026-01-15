@@ -968,60 +968,66 @@ The current session is displayed only when a session is actively loaded."
 
 (defun easysession--handler-load-file-editing-buffers (session-data)
   "Load base buffers from the SESSION-DATA variable."
-  (let ((buffer-info-list (assoc-default "buffers" session-data)))
+  (let ((buffer-info-list (assoc-default "buffers" session-data))
+        buffer-name
+        buffer-path
+        buffer-narrow)
     (when buffer-info-list
       (dolist (buffer-info buffer-info-list)
-        (let ((buffer-name (alist-get 'buffer-name buffer-info))
-              (buffer-path (alist-get 'buffer-path buffer-info))
-              (buffer-narrow (alist-get 'narrow buffer-info)))
-          (unless (and buffer-name buffer-path)
-            ;; Legacy: (buffer-name . buffer-path) rep
-            (setf buffer-name (car buffer-info))
-            (setf buffer-path (cdr buffer-info))
-            (setf buffer-narrow nil))
-          (let* ((buffer (get-file-buffer buffer-path)))
-            (unless buffer
-              (setq buffer
-                    (ignore-errors
-                      (let ((find-file-hook
-                             (seq-difference find-file-hook
-                                             easysession-exclude-from-find-file-hook)))
-                        (find-file-noselect buffer-path :nowarn)))))
-            (if (and buffer (buffer-live-p buffer))
-                (progn
-                  ;; We are going to be using buffer-base-buffer to make sure
-                  ;; that the buffer that was returned by find-file-noselect is
-                  ;; a base buffer and not a clone
-                  (let* ((base-buffer (buffer-base-buffer buffer))
-                         (buffer (if base-buffer
-                                     base-buffer
-                                   buffer)))
-                    ;; Fixes the issue preventing font-lock-mode from fontifying
-                    ;; restored buffers, causing the text to remain unfontified
-                    ;; until the user presses a key.
-                    (when (and
-                           (bound-and-true-p font-lock-mode)
-                           (bound-and-true-p
-                            redisplay-skip-fontification-on-input)
-                           (fboundp 'jit-lock-fontify-now))
+        (if (and (consp buffer-info)
+                 (consp (car buffer-info)))
+            ;; New format
+            (progn
+              (setq buffer-name (alist-get 'buffer-name buffer-info))
+              (setq buffer-path (alist-get 'buffer-path buffer-info))
+              (setq buffer-narrow (alist-get 'narrow buffer-info)))
+          ;; Legacy: (buffer-name . buffer-path) rep
+          (setq buffer-name (car buffer-info))
+          (setq buffer-path (cdr buffer-info))
+          (setq buffer-narrow nil))
+        (let* ((buffer (get-file-buffer buffer-path)))
+          (unless buffer
+            (setq buffer
+                  (ignore-errors
+                    (let ((find-file-hook
+                           (seq-difference find-file-hook
+                                           easysession-exclude-from-find-file-hook)))
+                      (find-file-noselect buffer-path :nowarn)))))
+          (if (and buffer (buffer-live-p buffer))
+              (progn
+                ;; We are going to be using buffer-base-buffer to make sure
+                ;; that the buffer that was returned by find-file-noselect is
+                ;; a base buffer and not a clone
+                (let* ((base-buffer (buffer-base-buffer buffer))
+                       (buffer (if base-buffer
+                                   base-buffer
+                                 buffer)))
+                  ;; Fixes the issue preventing font-lock-mode from fontifying
+                  ;; restored buffers, causing the text to remain unfontified
+                  ;; until the user presses a key.
+                  (when (and
+                         (bound-and-true-p font-lock-mode)
+                         (bound-and-true-p
+                          redisplay-skip-fontification-on-input)
+                         (fboundp 'jit-lock-fontify-now))
+                    (with-current-buffer buffer
+                      (ignore-errors (jit-lock-fontify-now))))
+
+                  (when buffer
+                    (easysession--ensure-buffer-name buffer buffer-name))
+
+                  ;; Restore buffer narrowing if present
+                  (let* ((narrow-enabled (consp buffer-narrow))
+                         (start (and narrow-enabled
+                                     (car buffer-narrow)))
+                         (end (and narrow-enabled
+                                   (cdr buffer-narrow))))
+                    (when (and (numberp start)
+                               (numberp end))
                       (with-current-buffer buffer
-                        (ignore-errors (jit-lock-fontify-now))))
-
-                    (when buffer
-                      (easysession--ensure-buffer-name buffer buffer-name))
-
-                    ;; Restore buffer narrowing if present
-                    (let* ((narrow-enabled (consp buffer-narrow))
-                           (start (and narrow-enabled
-                                       (car buffer-narrow)))
-                           (end (and narrow-enabled
-                                     (cdr buffer-narrow))))
-                      (when (and (numberp start)
-                                 (numberp end))
-                        (with-current-buffer buffer
-                          (narrow-to-region start end))))))
-              (easysession--warning "Failed to restore the buffer '%s': %s"
-                                    buffer-name buffer-path))))))))
+                        (narrow-to-region start end))))))
+            (easysession--warning "Failed to restore the buffer '%s': %s"
+                                  buffer-name buffer-path)))))))
 
 (defun easysession--handler-save-file-editing-buffers (buffers)
   "Collect and categorize file editing buffers from the provided list.
