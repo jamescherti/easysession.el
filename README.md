@@ -5,7 +5,7 @@
 ![License](https://img.shields.io/github/license/jamescherti/easysession.el)
 ![](https://jamescherti.com/misc/made-for-gnu-emacs.svg)
 
-The **easysession** package provides a comprehensive session management for Emacs. It is capable of persisting and restoring file-visiting buffers, indirect buffers (clones), Dired buffers, window configurations, the built-in tab-bar (including tabs, their buffers, and associated windows), as well as entire Emacs frames.
+The **easysession** package provides a comprehensive session management for Emacs. It is capable of persisting and restoring file-visiting buffers, indirect buffers (clones), buffer narrowing, Dired buffers, window configurations, the built-in tab-bar (including tabs, their buffers, and associated windows), as well as entire Emacs frames.
 
 With **easysession**, your Emacs setup is restored automatically when you restart. All files, Dired buffers, and window layouts come back as they were, so you can continue working right where you left off. While editing, you can also switch to another session, switch back, rename sessions, or delete them, giving you full control over multiple work environments.
 
@@ -405,13 +405,14 @@ EasySession can persist and restore all original and indirect buffers exactly as
 
 While `desktop.el` is a foundational session management tool for Emacs, it has several limitations:
 - It primarily saves Emacs' state on exit and restores it on startup, making it difficult to switch between different session files during an editing session.
+- `desktop.el` does not restores buffer narrowing, which is the restriction of a buffer to display and edit only a specific portion of its contents.
 - The `desktop.el` package does not allow the user to easily choose whether to load sessions with or without modifying the Emacs frame geometry. This last feature is important in easysession because it allows switching between sessions without the annoyance of changing the window position or size.
 - The `desktop.el` package saves and restores major modes and important global variables, which can prevent some packages from initializing correctly. For example, the `vdiff` package may stop working after comparing two files and reloading Emacs and the `desktop.el` session. This issue has also occurred with a few other packages.
 - The `desktop.el` package can be bulky and slow in operation.
 - The `desktop.el` package lacks support for saving and restoring indirect buffers (clones). Indirect buffers are secondary buffers that share the same content as an existing buffer but can have different point positions, narrowing, folds, and other buffer-local settings. This allows users to view and edit the same file or text content in multiple ways simultaneously without duplicating the actual data. There are third-party packages, such as desktop+, that extend desktop.el to restore indirect buffers. However, packages like desktop+ are still based on desktop.el and can cause the issues described above.
 
 In contrast, easysession offers enhanced functionality:
-- It supports saving and loading various buffer types, including indirect buffers (clones).
+- It supports saving and loading various buffer types, including indirect buffers (clones), and buffer narrowing.
 - It allows users to load or save different sessions while actively editing, without the need to restart Emacs.
 - It excels in speed and efficiency, enabling seamless session management within Emacs.
 
@@ -432,11 +433,12 @@ It is preferable for EasySession to remain a third-party plugin, as this provide
 
 There are some existing packages, such as minimal-session-saver, save-visited-files, sesman, and psession. However, these packages have the following limitations:
 - None of them can restore indirect buffers (clones). Indirect buffers, which can be created using `clone-indirect-buffer`, are secondary buffers that share the same content as an existing buffer but can have different point positions, narrowing, folds, and other buffer-local settings. This allows users to view and edit the same file or text content in multiple ways simultaneously without duplicating the actual data.
+- Neither restores buffer narrowing, which is the restriction of a buffer to display and edit only a specific portion of its contents.
 - The minimal-session-saver and save-visited-files packages are no longer maintained and cannot restore the frameset and the tab-bar.
 - Sesman is designed to implement some IDE features in Emacs.
 - Psession cannot switch between sessions quickly, with or without modifying the the Emacs frame geometry. This last feature is important in easysession because it allows switching between sessions without the annoyance of changing the window position or size.
 
-Easysession can persist and restore file editing buffers, indirect buffers/clones, Dired buffers, the tab-bar, and the Emacs frames (with or without the Emacs frames geometry). It is similar to Vim or Neovim sessions because it loads and restores your editing environment, including buffers, windows, tabs, and other settings, allowing you to resume work exactly where you left off.
+Easysession can persist and restore file editing buffers, indirect buffers/clones, Dired buffers, buffer narrowing, the tab-bar, and the Emacs frames (with or without the Emacs frames geometry). It is similar to Vim or Neovim sessions because it loads and restores your editing environment, including buffers, windows, tabs, and other settings, allowing you to resume work exactly where you left off.
 
 ### Testimonials from users
 
