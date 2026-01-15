@@ -1,6 +1,6 @@
 ;;; test-easysession.el --- Easysession tests -*- lexical-binding: t -*-
 
-;; Copyright (C) 2024-2025 James Cherti | https://www.jamescherti.com/contact/
+;; Copyright (C) 2024-2026 James Cherti | https://www.jamescherti.com/contact/
 
 ;; Author: James Cherti
 ;; URL: https://github.com/jamescherti/easysession.el

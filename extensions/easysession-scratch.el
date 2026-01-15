@@ -1,6 +1,6 @@
 ;;; easysession-scratch.el --- Persist and restore the scratch buffer -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2024-2025 James Cherti | https://www.jamescherti.com/contact/
+;; Copyright (C) 2024-2026 James Cherti | https://www.jamescherti.com/contact/
 
 ;; Author: James Cherti
 ;; Version: 1.1.7
@@ -23,12 +23,12 @@
 ;; along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
-;; Make EasySession Persist and restore the scratch buffer.
+;; This extension makes EasySession Persist and restore the scratch buffer.
 ;;
 ;; To enable `easysession-scratch-mode', add the following to your
 ;; configuration:
-;;   (require 'easysession-scratch)
 ;;   (with-eval-after-load 'easysession
+;;     (require 'easysession-scratch)
 ;;     (easysession-scratch-mode 1))
 
 ;;; Code:

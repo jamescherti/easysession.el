@@ -19,33 +19,36 @@ If this package enhances your workflow, please show your support by **⭐ starri
 ## Table of Contents
 
 - [easysession.el - Easily persist and restore your Emacs editing sessions](#easysessionel---easily-persist-and-restore-your-emacs-editing-sessions)
-    - [Features](#features)
-    - [Installation](#installation)
-    - [Usage](#usage)
-    - [Customization](#customization)
-        - [How to only persist and restore visible buffers](#how-to-only-persist-and-restore-visible-buffers)
-        - [How to persist and restore global variables?](#how-to-persist-and-restore-global-variables)
-        - [How to make the current session name appear in the mode-line?](#how-to-make-the-current-session-name-appear-in-the-mode-line)
-        - [How to create an empty session setup](#how-to-create-an-empty-session-setup)
-        - [Preventing EasySession from Saving When Switching Sessions](#preventing-easysession-from-saving-when-switching-sessions)
-        - [How to configure easysession-save-mode to automatically save only the "main" session and let me manually save others?](#how-to-configure-easysession-save-mode-to-automatically-save-only-the-main-session-and-let-me-manually-save-others)
-        - [Passing the session name to Emacs via an environment variable](#passing-the-session-name-to-emacs-via-an-environment-variable)
-        - [Configuring EasySession with Emacs daemon mode](#configuring-easysession-with-emacs-daemon-mode)
-        - [How to make EasySession kill all buffers, frames, and windows before loading a session?](#how-to-make-easysession-kill-all-buffers-frames-and-windows-before-loading-a-session)
-        - [How to create custom load and save handlers for non-file-visiting buffers](#how-to-create-custom-load-and-save-handlers-for-non-file-visiting-buffers)
-    - [Frequently asked questions](#frequently-asked-questions)
-        - [How to reduce the number of buffers in my session, regularly](#how-to-reduce-the-number-of-buffers-in-my-session-regularly)
-        - [How to start afresh after loading too many buffers](#how-to-start-afresh-after-loading-too-many-buffers)
-        - [How to persist and restore text scale?](#how-to-persist-and-restore-text-scale)
-        - [How does the author use easysession?](#how-does-the-author-use-easysession)
-        - [What does 'EasySession supports restoring indirect buffers' mean?](#what-does-easysession-supports-restoring-indirect-buffers-mean)
-        - [What does EasySession offer that desktop.el doesn't?](#what-does-easysession-offer-that-desktopel-doesnt)
-        - [Why not just improve and submit patches to desktop.el?](#why-not-just-improve-and-submit-patches-to-desktopel)
-        - [How does it compare to activities.el?](#how-does-it-compare-to-activitiesel)
-        - [Why not use one of the other third-party session packages?](#why-not-use-one-of-the-other-third-party-session-packages)
-        - [Testimonials from users](#testimonials-from-users)
-    - [License](#license)
-    - [Links](#links)
+  - [Features](#features)
+  - [Installation](#installation)
+  - [Extensions](#extensions)
+    - [Extension: easysession-scratch (Persist and restore the scratch buffer)](#extension-easysession-scratch-persist-and-restore-the-scratch-buffer)
+    - [Extension: easysession-magit (Persist and restore Magit buffers)](#extension-easysession-magit-persist-and-restore-magit-buffers)
+  - [Usage](#usage)
+  - [Customization](#customization)
+    - [How to only persist and restore visible buffers](#how-to-only-persist-and-restore-visible-buffers)
+    - [How to persist and restore global variables?](#how-to-persist-and-restore-global-variables)
+    - [How to make the current session name appear in the mode-line?](#how-to-make-the-current-session-name-appear-in-the-mode-line)
+    - [How to create an empty session setup](#how-to-create-an-empty-session-setup)
+    - [Preventing EasySession from Saving When Switching Sessions](#preventing-easysession-from-saving-when-switching-sessions)
+    - [How to configure easysession-save-mode to automatically save only the "main" session and let me manually save others?](#how-to-configure-easysession-save-mode-to-automatically-save-only-the-main-session-and-let-me-manually-save-others)
+    - [Passing the session name to Emacs via an environment variable](#passing-the-session-name-to-emacs-via-an-environment-variable)
+    - [Configuring EasySession with Emacs daemon mode](#configuring-easysession-with-emacs-daemon-mode)
+    - [How to make EasySession kill all buffers, frames, and windows before loading a session?](#how-to-make-easysession-kill-all-buffers-frames-and-windows-before-loading-a-session)
+    - [How to create custom load and save handlers for non-file-visiting buffers](#how-to-create-custom-load-and-save-handlers-for-non-file-visiting-buffers)
+  - [Frequently asked questions](#frequently-asked-questions)
+    - [How to reduce the number of buffers in my session, regularly](#how-to-reduce-the-number-of-buffers-in-my-session-regularly)
+    - [How to start afresh after loading too many buffers](#how-to-start-afresh-after-loading-too-many-buffers)
+    - [How to persist and restore text scale?](#how-to-persist-and-restore-text-scale)
+    - [How does the author use easysession?](#how-does-the-author-use-easysession)
+    - [What does 'EasySession supports restoring indirect buffers' mean?](#what-does-easysession-supports-restoring-indirect-buffers-mean)
+    - [What does EasySession offer that desktop.el doesn't?](#what-does-easysession-offer-that-desktopel-doesnt)
+    - [Why not just improve and submit patches to desktop.el?](#why-not-just-improve-and-submit-patches-to-desktopel)
+    - [How does it compare to activities.el?](#how-does-it-compare-to-activitiesel)
+    - [Why not use one of the other third-party session packages?](#why-not-use-one-of-the-other-third-party-session-packages)
+    - [Testimonials from users](#testimonials-from-users)
+  - [License](#license)
+  - [Links](#links)
 
 <!-- markdown-toc end -->
 
@@ -97,6 +100,32 @@ Note that:
 - The `easysession-load-including-geometry` function is only needed at startup. During an Emacs session, use `M-x easysession-switch-to` or `M-x easysession-switch-to-and-restore-geometry` to switch sessions or reload the current session without changing frame size or position.
 - The author added 102 and 103 to `add-hook` in the code snippet above to ensure that the session is loaded after all other packages. (Using the depth 102 and 103 is useful for those using [minimal-emacs.d](https://github.com/jamescherti/minimal-emacs.d), where some optimizations restore `file-name-handler-alist` at depth 101 during `emacs-startup-hook`.)
 - When using Emacs in daemon mode (`emacs --daemon`), if using the `after-init-hook` results in issues on startup, an alternative approach is to use `server-after-make-frame-hook`. This hook ensures that the session is loaded once the client frame is created.
+
+## Extensions
+
+### Extension: easysession-scratch (Persist and restore the scratch buffer)
+
+This extension makes EasySession persist and restore the scratch buffer.
+
+To enable `easysession-scratch-mode`, add the following to your configuration:
+
+```elisp
+(with-eval-after-load 'easysession
+  (require 'easysession-scratch)
+  (easysession-scratch-mode 1))
+```
+
+### Extension: easysession-magit (Persist and restore Magit buffers)
+
+This extension enables EasySession to persist and restore Magit buffers.
+
+To activate `easysession-magit-mode`, add the following to your Emacs configuration:
+
+```elisp
+(with-eval-after-load 'easysession
+  (require 'easysession-magit)
+  (easysession-magit-mode 1))
+```
 
 ## Usage
 
@@ -294,6 +323,8 @@ Optionally, the `easysession-reset` function can be configured to automatically 
 
 ### How to create custom load and save handlers for non-file-visiting buffers
 
+**Note:** The code below is provided for illustrative purposes to show how to create a custom EasySession extension. To persist and restore the scratch buffer, use the `easysession-scratch` extension (`extensions/easysession-scratch.el`) instead of the example below.
+
 EasySession is customizable. Users can implement their own handlers to manage non-file-visiting buffers, enabling the creation of custom functions for restoring buffers.
 
 Here is a simple example to persist and restore the scratch buffer:
@@ -406,6 +437,7 @@ Easysession can persist and restore file editing buffers, indirect buffers/clone
 
 ### Testimonials from users
 
+- [emreyolcu on GitHub](https://github.com/jamescherti/easysession.el/pull/50#issuecomment-3752409317): "Thanks for developing EasySession! I've looked for a long time for a session management package that did everything I wanted, and EasySession is close to perfect for me."
 - [tdavey on Reddit](https://www.reddit.com/r/emacs/comments/1lalerg/comment/mxxv7xc/): "Let me simply say that I love this package. It was easy to learn; the docs are very good. It is actively maintained. The author is indefatigable. Easysession works superbly with tab-bar-mode and tab-line-mode, both of which are essential to my workflow. The fact that it can restore indirect buffer clones is huge."
 - [UnitaryInverse on Reddit](https://www.reddit.com/r/emacs/comments/1jah0e4/comment/mho5kqj/): "I have started using easysession more and more on my Spacemacs setup and it great! I can have a “lab notes” setup, a coding/simulation setup (I’m a physicist), a course planning setup for the courses I teach, and a personal setup all in one. Each one with custom windows setup so I spend SO MUCH less time splitting and moving windows. What a great package."
 - [Hungariantoast on Reddit](https://www.reddit.com/r/emacs/comments/1i93ly5/comment/m980q04/): "I have a single raylib-experiments repository that I have been writing a bunch of separate, miniature gamedev projects in. This package has made the process of creating, managing, and restoring each of those little coding sessions such a breeze. Thanks for writing it."
@@ -416,7 +448,7 @@ Easysession can persist and restore file editing buffers, indirect buffers/clone
 
 The easysession Emacs package has been written by [James Cherti](https://www.jamescherti.com/) and is distributed under terms of the GNU General Public License version 3, or, at your choice, any later version.
 
-Copyright (C) 2024-2025 [James Cherti](https://www.jamescherti.com)
+Copyright (C) 2024-2026 [James Cherti](https://www.jamescherti.com)
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 

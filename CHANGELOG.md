@@ -3,37 +3,44 @@
 URL: https://github.com/jamescherti/easysession.el
 Author: [James Cherti](https://www.jamescherti.com/)
 
+### WIP
+
+* Contributions by Emre Yolcu (@emreyolcu on GitHub):
+
+  * Added Magit integration through the `easysession-magit` extension (`extensions/easysession-magit.el`). This introduces `easysession-magit-mode`, allowing Magit status, log, and diff buffers to be persisted and restored across sessions. Log and diff buffers retain their arguments, including selected revisions and ranges, ensuring continuity when working with Git repositories.
+  * Introduced a mode registration system for persisting and restoring custom major modes across EasySession sessions. Users can register and unregister modes using `easysession-register-mode` and `easysession-unregister-mode`.
+
 ### 1.1.7
 
 * Fix #48: Prevent clearing `file-name-handler-alist` during execution
 
 ### 1.1.6
 
-- Update the `easysession-load` function to set the session name when the session file is absent
-- Revise docstrings and refresh `README.md` for improved clarity and completeness
+* Update the `easysession-load` function to set the session name when the session file is absent
+* Revise docstrings and refresh `README.md` for improved clarity and completeness
 
 ### 1.1.5
 
-- Add the `easysession-scratch` extension to enable persisting and restoring the scratch buffer in session files
-- Ensure the session name is set only after the session has been successfully loaded
-- Improve geometry restoration
-- Enable restoring TTY sessions to GUI
-- Refine mode line and enhance error message clarity
-- Close #39: Add a command to switch sessions and restore window geometry
-- Fix #45: Update modeline and current session only if a session is loaded
-- Resolve warning: Assignment to the free variable `trusted-content`
-- Update handler functions to improve reliability
-- Add pre-commit hooks for Emacs Lisp to enforce code quality
-- Improve `easysession-save-handler-dolist-buffers` macro for buffer handling
-- Add macro declarations: `(declare (indent 0) (debug t))`
-- Rename `defcustom` to `easysession-switch-to-save-session`
-- Introduce `defcustom`: `easysession-switch-to-inhibit-save`
-- Introduce new functions: `easysession-set-current-session-name` and `easysession-reset`
-- Revise docstrings and update `README.md` for clarity and completeness
-- Remove the `.images/` directory to clean up unused files
-- Ensure `easysession-frameset-restore-geometry` resets automatically after `easysession-load`
-- Modify `easysession-save-as` to save a session without switching to it
-- Remove `&optional` from `easysession-rename` for clarity
+* Add the `easysession-scratch` extension to enable persisting and restoring the scratch buffer in session files
+* Ensure the session name is set only after the session has been successfully loaded
+* Improve geometry restoration
+* Enable restoring TTY sessions to GUI
+* Refine mode line and enhance error message clarity
+* Close #39: Add a command to switch sessions and restore window geometry
+* Fix #45: Update modeline and current session only if a session is loaded
+* Resolve warning: Assignment to the free variable `trusted-content`
+* Update handler functions to improve reliability
+* Add pre-commit hooks for Emacs Lisp to enforce code quality
+* Improve `easysession-save-handler-dolist-buffers` macro for buffer handling
+* Add macro declarations: `(declare (indent 0) (debug t))`
+* Rename `defcustom` to `easysession-switch-to-save-session`
+* Introduce `defcustom`: `easysession-switch-to-inhibit-save`
+* Introduce new functions: `easysession-set-current-session-name` and `easysession-reset`
+* Revise docstrings and update `README.md` for clarity and completeness
+* Remove the `.images/` directory to clean up unused files
+* Ensure `easysession-frameset-restore-geometry` resets automatically after `easysession-load`
+* Modify `easysession-save-as` to save a session without switching to it
+* Remove `&optional` from `easysession-rename` for clarity
 
 ## 1.1.4
 
