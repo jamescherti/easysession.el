@@ -5,7 +5,7 @@
 ![License](https://img.shields.io/github/license/jamescherti/easysession.el)
 ![](https://jamescherti.com/misc/made-for-gnu-emacs.svg)
 
-The **easysession** package provides a comprehensive session management for Emacs. It is capable of persisting and restoring file-visiting buffers, indirect buffers (clones), Dired buffers, window configurations, the built-in tab-bar (including tabs, their buffers, and associated windows), as well as entire Emacs frames. By building on Emacs’ native mechanisms for state preservation, it delivers reliable and consistent session recovery.
+The **easysession** package provides a comprehensive session management for Emacs. It is capable of persisting and restoring file-visiting buffers, indirect buffers (clones), Dired buffers, window configurations, the built-in tab-bar (including tabs, their buffers, and associated windows), as well as entire Emacs frames.
 
 With **easysession**, your Emacs setup is restored automatically when you restart. All files, Dired buffers, and window layouts come back as they were, so you can continue working right where you left off. While editing, you can also switch to another session, switch back, rename sessions, or delete them, giving you full control over multiple work environments.
 
@@ -64,6 +64,9 @@ Key features include:
 - The ability to exclude specific functions from being executed in `find-file-hook` when Easysession restores a file.
 - Display the currently loaded session in the modeline or as a lighter.
 - Predicate that determines if the session is saved automatically.
+- Persist and restore the scratch buffer (Extension: easysession-scratch): Ensures that the contents of the Emacs `*scratch*` buffer are saved as part of the session and restored when the session is reloaded, preserving any temporary notes, code snippets, or evaluation history.
+- Persist and restore Magit buffers (Extension: easysession-magit): Saves the state of Magit buffers.
+- Persist and restore narrowing: Preserves any narrowed regions, ensuring that the visible portion of the buffer is restored on session reload.
 
 ## Installation
 
