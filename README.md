@@ -44,7 +44,6 @@ If this package enhances your workflow, please show your support by **⭐ starri
     - [What does 'EasySession supports restoring indirect buffers' mean?](#what-does-easysession-supports-restoring-indirect-buffers-mean)
     - [What does EasySession offer that desktop.el doesn't?](#what-does-easysession-offer-that-desktopel-doesnt)
     - [Why not just improve and submit patches to desktop.el?](#why-not-just-improve-and-submit-patches-to-desktopel)
-    - [How does it compare to activities.el?](#how-does-it-compare-to-activitiesel)
     - [Why not use one of the other third-party session packages?](#why-not-use-one-of-the-other-third-party-session-packages)
     - [Testimonials from users](#testimonials-from-users)
   - [License](#license)
@@ -420,15 +419,6 @@ In contrast, easysession offers enhanced functionality:
 
 It is preferable for EasySession to remain a third-party plugin, as this provides more flexibility for implementing new features. EasySession relies on the same built-in functions as desktop.el (e.g., frameset) but includes additional features that enhance the experience of persisting and restoring sessions. EasySession is also customizable, allowing users to implement their own handlers to persist and restore new types of non-file-visiting buffers.
 
-### How does it compare to activities.el?
-
-- EasySession is designed for loading, saving, and switching entire sessions, while Activities focuses on managing "activities" and allows for multiple activities within a single session.
-- EasySession supports restoring indirect buffers that were created with `M-x clone-indirect-buffer-other-window`, whereas Activities does not. However, since Activities relies on Emacs bookmarks to save and restore buffers, the behavior depends entirely on the buffer's major mode bookmark handler. For example, when used with `org-bookmark-heading`, Org-mode indirect buffers are properly saved and restored.
-- EasySession allows you to choose whether to restore the geometry (position, width, and height) of your frames.
-- EasySession relies on Emacs built-in functions for saving and restoring frames and tab-bar tabs (the built-in `frameset` package). Activities uses the built-in bookmark system to save and restore buffers and tabs.
-- Both EasySession and Activities are customizable. In EasySession, users can define custom handlers to manage non-file-backed buffers, allowing the creation of specialized functions for restoring them. In Activities, bookmarks can be used to achieve similar customizations.
-- EasySession persists and restores all frames and tabs. Activities, by design, operates differently: Its scope is limited to a single frame (without referencing tabs) or to a single tab when `tab-bar-mode` is active; it does not span multiple frames or tabs. Each buffer is managed through its major mode's bookmark handler, which handles details such as indirect buffers and narrowing.
-
 ### Why not use one of the other third-party session packages?
 
 There are some existing packages, such as minimal-session-saver, save-visited-files, sesman, and psession. However, these packages have the following limitations:
@@ -437,6 +427,15 @@ There are some existing packages, such as minimal-session-saver, save-visited-fi
 - The minimal-session-saver and save-visited-files packages are no longer maintained and cannot restore the frameset and the tab-bar.
 - Sesman is designed to implement some IDE features in Emacs.
 - Psession cannot switch between sessions quickly, with or without modifying the the Emacs frame geometry. This last feature is important in easysession because it allows switching between sessions without the annoyance of changing the window position or size.
+
+Here is the comparison with activities.el:
+- EasySession is designed for loading, saving, and switching entire sessions, while Activities focuses on managing "activities" and allows for multiple activities within a single session.
+- EasySession supports restoring indirect buffers that were created with `M-x clone-indirect-buffer-other-window`, whereas Activities does not. However, since Activities relies on Emacs bookmarks to save and restore buffers, the behavior depends entirely on the buffer's major mode bookmark handler. For example, when used with `org-bookmark-heading`, Org-mode indirect buffers are properly saved and restored.
+- EasySession allows you to choose whether to restore the geometry (position, width, and height) of your frames.
+- EasySession relies on Emacs built-in functions for saving and restoring frames and tab-bar tabs (the built-in `frameset` package). Activities uses the built-in bookmark system to save and restore buffers and tabs.
+- Both EasySession and Activities are customizable. In EasySession, users can define custom handlers to manage non-file-backed buffers, allowing the creation of specialized functions for restoring them. In Activities, bookmarks can be used to achieve similar customizations.
+- EasySession persists and restores all frames and tabs. Activities, by design, operates differently: Its scope is limited to a single frame (without referencing tabs) or to a single tab when `tab-bar-mode` is active; it does not span multiple frames or tabs. Each buffer is managed through its major mode's bookmark handler, which handles details such as indirect buffers and narrowing.
+
 
 Easysession can persist and restore file editing buffers, indirect buffers/clones, Dired buffers, buffer narrowing, the tab-bar, and the Emacs frames (with or without the Emacs frames geometry). It is similar to Vim or Neovim sessions because it loads and restores your editing environment, including buffers, windows, tabs, and other settings, allowing you to resume work exactly where you left off.
 
