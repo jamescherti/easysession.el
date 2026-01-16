@@ -1184,7 +1184,7 @@ HANDLER-FN is the function to be removed."
   (append easysession--builtin-load-handlers
           easysession--load-handlers))
 
-(defun easysession-register-mode (mode &rest props)
+(defun easysession-register-major-mode (mode &rest props)
   "Register a MAJOR-MODE for session persistence.
 
 MODE must be a non-nil symbol representing a major mode.
@@ -1212,7 +1212,7 @@ registration."
         (cons (cons mode props)
               (assq-delete-all mode easysession--mode-registry))))
 
-(defun easysession-unregister-mode (mode)
+(defun easysession-unregister-major-mode (mode)
   "Remove MODE from the session save/restore registry.
 
 MODE is the major mode symbol to be purged from the registry. If MODE is not
