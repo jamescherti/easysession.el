@@ -623,7 +623,7 @@ the session, which can later be restored by the corresponding load handlers.")
     easysession--handler-save-managed-major-modes)
   "Internal variable.")
 
-(defvar easysession--mode-registry nil
+(defvar easysession--managed-major-modes nil
   "Alist of (MODE . PROPS) for managed major modes.")
 
 (defvar easysession-load-in-progress nil
@@ -772,18 +772,17 @@ determined."
   "Retrieve the persistent state for BUFFER if the major mode is managed.
 
 Returns an alist containing `buffer-name', `major-mode', and `default-directory'
-if the buffer's major mode derives from a key in `easysession--mode-registry'.
+if the buffer's major mode derives from a key in `easysession--managed-major-modes'.
 
-If the registry configuration includes a `:save' function, it is invoked safely
-to obtain custom state data, which is appended to the result under the `data'
-key.
+If the configuration includes a `:save' function, it is invoked safely to obtain
+custom state data, which is appended to the result under the `data' key.
 
-Returns nil if BUFFER is not live or if no matching registry entry exists."
+Returns nil if BUFFER is not live or if no matching entry exists."
   (when (buffer-live-p buffer)
     (with-current-buffer buffer
       (let ((entry (cl-find-if (lambda (entry)
                                  (derived-mode-p (car entry)))
-                               easysession--mode-registry)))
+                               easysession--managed-major-modes)))
         (when entry
           (let* ((state `((buffer-name . ,(buffer-name))
                           (major-mode . ,(car entry))
@@ -1101,7 +1100,7 @@ buffers and separates them from other buffers."
         (let ((buffer-name (alist-get 'buffer-name item))
               (mode (alist-get 'major-mode item)))
           (when (and buffer-name mode)
-            (let ((props (cdr (assq mode easysession--mode-registry))))
+            (let ((props (cdr (assq mode easysession--managed-major-modes))))
               (when (and props (not (get-buffer buffer-name)))
                 (let ((restore-fn (plist-get props :restore))
                       (validate-fn (plist-get props :validate)))
@@ -1208,20 +1207,25 @@ registration."
   (unless (plist-get props :restore)
     (error "[easysession] :restore function is required for mode %S" mode))
 
-  (setq easysession--mode-registry
+  (setq easysession--managed-major-modes
         (cons (cons mode props)
-              (assq-delete-all mode easysession--mode-registry))))
+              (assq-delete-all mode easysession--managed-major-modes))))
 
 (defun easysession-remove-managed-major-mode (mode)
-  "Remove MODE from the session save/restore registry.
+  "Unregister MODE from the collection of managed major modes.
 
-MODE is the major mode symbol to be purged from the registry. If MODE is not
-present in the registry, this function does nothing."
+MODE must be a symbol representing a valid major mode previously registered via
+`easysession-add-managed-major-mode'. Upon execution, the associated restoration
+logic is purged from the internal registry, returning the specified major mode
+to an unmanaged state.
+
+If MODE is not present in the registry, the operation terminates silently
+without altering the current configuration."
   (unless (and (symbolp mode) mode)
     (error "[easysession] MODE must be a non-nil symbol"))
 
-  (setq easysession--mode-registry
-        (assq-delete-all mode easysession--mode-registry)))
+  (setq easysession--managed-major-modes
+        (assq-delete-all mode easysession--managed-major-modes)))
 
 (defmacro easysession-define-load-handler (key handler-func)
   "Add a load handler for a specific session KEY.
