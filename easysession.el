@@ -970,69 +970,55 @@ The current session is displayed only when a session is actively loaded."
 
 (defun easysession--handler-load-file-editing-buffers (session-data)
   "Load base buffers from the SESSION-DATA variable."
-  (let ((buffer-info-list (assoc-default "buffers" session-data))
-        buffer-name
-        buffer-path
-        narrowing-bounds)
-    (when buffer-info-list
-      (dolist (buffer-info buffer-info-list)
-        (if (and (consp buffer-info)
-                 (consp (car buffer-info)))
-            ;; New format
-            (progn
-              (setq buffer-name (alist-get 'buffer-name buffer-info))
-              (setq buffer-path (alist-get 'buffer-path buffer-info))
-              (setq narrowing-bounds (alist-get 'narrowing-bounds buffer-info)))
-          ;; Legacy: (buffer-name . buffer-path) rep
-          (setq buffer-name (car buffer-info))
-          (setq buffer-path (cdr buffer-info))
-          (setq narrowing-bounds nil))
+  (dolist (buffer-info (assoc-default "buffers" session-data))
+    (let* ((new-format-p (and (consp buffer-info)
+                              (consp (car buffer-info))))
+           (buffer-name (if new-format-p
+                            (alist-get 'buffer-name buffer-info)
+                          (car buffer-info)))
+           (buffer-path (if new-format-p
+                            (alist-get 'buffer-path buffer-info)
+                          (cdr buffer-info)))
+           (narrowing-bounds (when new-format-p
+                               (alist-get 'narrowing-bounds buffer-info))))
+      (when buffer-path
+        (let ((buffer (get-file-buffer buffer-path)))
+          (unless (buffer-live-p buffer)
+            (setq buffer
+                  (ignore-errors
+                    (let ((find-file-hook
+                           (seq-difference
+                            find-file-hook
+                            easysession-exclude-from-find-file-hook)))
+                      (find-file-noselect buffer-path t)))))
 
-        (when buffer-path
-          (let* ((buffer (get-file-buffer buffer-path)))
-            (unless buffer
-              (setq buffer
-                    (ignore-errors
-                      (let ((find-file-hook
-                             (seq-difference
-                              find-file-hook
-                              easysession-exclude-from-find-file-hook)))
-                        (find-file-noselect buffer-path :nowarn)))))
-            (if (buffer-live-p buffer)
-                (progn
-                  ;; We are going to be using buffer-base-buffer to make sure
-                  ;; that the buffer that was returned by find-file-noselect is
-                  ;; a base buffer and not a clone
-                  (let* ((base-buffer (buffer-base-buffer buffer))
-                         (buffer (if base-buffer
-                                     base-buffer
-                                   buffer)))
-                    ;; Fixes the issue preventing font-lock-mode from fontifying
-                    ;; restored buffers, causing the text to remain unfontified
-                    ;; until the user presses a key.
-                    (when (and
-                           (bound-and-true-p font-lock-mode)
+          (if (not (buffer-live-p buffer))
+              (easysession--warning "Failed to restore the buffer '%s': %s"
+                                    buffer-name buffer-path)
+            ;; We are going to be using the base buffer to make sure that
+            ;; the buffer that was returned by `find-file-noselect' is a
+            ;; base buffer and not a clone
+            (let ((target-buffer (or (buffer-base-buffer buffer) buffer)))
+              (with-current-buffer target-buffer
+                (easysession--ensure-buffer-name target-buffer buffer-name)
+
+                ;; Fixes the issue preventing font-lock-mode from fontifying
+                ;; restored buffers, causing the text to remain unfontified
+                ;; until the user presses a key.
+                (when (and (bound-and-true-p font-lock-mode)
                            (bound-and-true-p
                             redisplay-skip-fontification-on-input)
                            (fboundp 'jit-lock-fontify-now))
-                      (with-current-buffer buffer
-                        (ignore-errors (jit-lock-fontify-now))))
+                  (ignore-errors
+                    (jit-lock-fontify-now)))
 
-                    (when buffer
-                      (easysession--ensure-buffer-name buffer buffer-name))
-
-                    ;; Restore buffer narrowing if present
-                    (let* ((narrowing-enabled (consp narrowing-bounds))
-                           (start (and narrowing-enabled
-                                       (car narrowing-bounds)))
-                           (end (and narrowing-enabled
-                                     (cdr narrowing-bounds))))
-                      (when (and (numberp start)
-                                 (numberp end))
-                        (with-current-buffer buffer
-                          (narrow-to-region start end))))))
-              (easysession--warning "Failed to restore the buffer '%s': %s"
-                                    buffer-name buffer-path))))))))
+                ;; Restore buffer narrowing if present
+                (let* ((narrowing (consp narrowing-bounds))
+                       (start (and narrowing (car narrowing-bounds)))
+                       (end (and narrowing (cdr narrowing-bounds))))
+                  (when (and (numberp start)
+                             (numberp end))
+                    (narrow-to-region start end)))))))))))
 
 (defun easysession--handler-save-file-editing-buffers (buffers)
   "Collect and categorize file editing buffers from the provided list.
