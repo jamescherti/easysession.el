@@ -614,17 +614,17 @@ the session, which can later be restored by the corresponding load handlers.")
 (defvar easysession--builtin-load-handlers
   '(easysession--handler-load-file-editing-buffers
     easysession--handler-load-indirect-buffers
-    easysession--handler-load-registered-modes)
+    easysession--handler-load-managed-major-modes)
   "Internal variable.")
 
 (defvar easysession--builtin-save-handlers
   '(easysession--handler-save-file-editing-buffers
     easysession--handler-save-indirect-buffers
-    easysession--handler-save-registered-modes)
+    easysession--handler-save-managed-major-modes)
   "Internal variable.")
 
 (defvar easysession--mode-registry nil
-  "Alist of (MODE . PROPS) for registered modes.")
+  "Alist of (MODE . PROPS) for managed major modes.")
 
 (defvar easysession-load-in-progress nil
   "Session name (string) if a session is currently being loaded.
@@ -768,8 +768,8 @@ determined."
               (narrowing-bounds . ,(easysession--buffer-narrowing-bounds
                                     indirect-buffer)))))))))
 
-(defun easysession--get-registered-mode-buffer-info (buffer)
-  "Retrieve persistent state for BUFFER if registered in the mode registry.
+(defun easysession--get-managed-major-mode-buffer-info (buffer)
+  "Retrieve the persistent state for BUFFER if the major mode is managed.
 
 Returns an alist containing `buffer-name', `major-mode', and `default-directory'
 if the buffer's major mode derives from a key in `easysession--mode-registry'.
@@ -1092,12 +1092,12 @@ buffers and separates them from other buffers."
       (value . ,indirect-buffers)
       (remaining-buffers . ,remaining-buffers))))
 
-(defun easysession--handler-load-registered-modes (session-data)
-  "Load registered mode buffers from the SESSION-DATA variable."
-  (let ((registered-mode-buffers (assoc-default "registered-modes"
-                                                session-data)))
-    (when registered-mode-buffers
-      (dolist (item registered-mode-buffers)
+(defun easysession--handler-load-managed-major-modes (session-data)
+  "Load managed major mode buffers from the SESSION-DATA variable."
+  (let ((managed-mode-buffers (assoc-default "managed-major-modes"
+                                             session-data)))
+    (when managed-mode-buffers
+      (dolist (item managed-mode-buffers)
         (let ((buffer-name (alist-get 'buffer-name item))
               (mode (alist-get 'major-mode item)))
           (when (and buffer-name mode)
@@ -1115,20 +1115,20 @@ buffers and separates them from other buffers."
                          "Failed to restore the %s buffer '%s'"
                          mode buffer-name)))))))))))))
 
-(defun easysession--handler-save-registered-modes (buffers)
-  "Collect and categorize registered mode buffers from the provided list.
+(defun easysession--handler-save-managed-major-modes (buffers)
+  "Collect and categorize managed mode buffers from the provided list.
 BUFFERS is the list of buffers to process. This function identifies buffers
-with registered modes and separates them from other buffers."
-  (let ((registered-mode-buffers '())
+with managed modes and separates them from other buffers."
+  (let ((managed-mode-buffers '())
         (remaining-buffers '()))
     (dolist (buf buffers)
-      (let ((registered-mode-buffer-info
-             (easysession--get-registered-mode-buffer-info buf)))
-        (if registered-mode-buffer-info
-            (push registered-mode-buffer-info registered-mode-buffers)
+      (let ((managed-mode-buffer-info
+             (easysession--get-managed-major-mode-buffer-info buf)))
+        (if managed-mode-buffer-info
+            (push managed-mode-buffer-info managed-mode-buffers)
           (push buf remaining-buffers))))
-    `((key . "registered-modes")
-      (value . ,registered-mode-buffers)
+    `((key . "managed-major-modes")
+      (value . ,managed-mode-buffers)
       (remaining-buffers . ,remaining-buffers))))
 
 (defun easysession-add-load-handler (handler-fn)
@@ -1184,8 +1184,8 @@ HANDLER-FN is the function to be removed."
   (append easysession--builtin-load-handlers
           easysession--load-handlers))
 
-(defun easysession-register-major-mode (mode &rest props)
-  "Register a MAJOR-MODE for session persistence.
+(defun easysession-add-managed-major-mode (mode &rest props)
+  "Add a managed major mode.
 
 MODE must be a non-nil symbol representing a major mode.
 
@@ -1200,7 +1200,7 @@ PROPS is a keyword-value property list. Supported keys are:
 :validate (Optional) A function used to verify the integrity of
           restored data.
 
-If MODE is already registered, the new properties replace the existing
+If MODE is already managed, the new properties replace the existing
 registration."
   (unless (and (symbolp mode) mode)
     (error "[easysession] MODE must be a non-nil symbol"))
@@ -1212,7 +1212,7 @@ registration."
         (cons (cons mode props)
               (assq-delete-all mode easysession--mode-registry))))
 
-(defun easysession-unregister-major-mode (mode)
+(defun easysession-remove-managed-major-mode (mode)
   "Remove MODE from the session save/restore registry.
 
 MODE is the major mode symbol to be purged from the registry. If MODE is not
@@ -1282,7 +1282,7 @@ data."
          (push (cons 'key ,key) result)))))
 
 (defmacro easysession-define-handler (key load-handler-func save-handler-func)
-  "Register both load and save handlers for a given KEY.
+  "Add both load and save handlers for a given KEY.
 
 KEY is the session identifier. Avoid reserved keys.
 

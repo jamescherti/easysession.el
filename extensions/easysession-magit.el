@@ -88,7 +88,7 @@
         (let* ((props (cdr config))
                (save-vars (plist-get props :save-vars))
                (restore-args (plist-get props :restore-args)))
-          (easysession-register-major-mode
+          (easysession-add-managed-major-mode
            (car config)
 
            :save
@@ -116,7 +116,7 @@
            :validate
            #'easysession-magit--git-repo-p)))
     (dolist (config easysession-magit--mode-configs)
-      (easysession-unregister-major-mode (car config)))))
+      (easysession-remove-managed-major-mode (car config)))))
 
 (provide 'easysession-magit)
 ;;; easysession-magit.el ends here
