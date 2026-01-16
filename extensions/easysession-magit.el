@@ -42,28 +42,32 @@
 (defvar magit-display-buffer-noselect)
 
 (defvar easysession-magit--mode-configs
-  '((magit-status-mode . ( :restore-fn magit-status-setup-buffer
-                           :restore-args ()))
-    (magit-log-mode . ( :save-vars ((revisions . magit-buffer-revisions)
-                                    (args . magit-buffer-log-args)
-                                    (files . magit-buffer-files))
-                        :restore-fn magit-log-setup-buffer
-                        :restore-args (revisions args files)))
-    (magit-diff-mode . ( :save-vars ((range . magit-buffer-range)
-                                     (typearg . magit-buffer-typearg)
-                                     (args . magit-buffer-diff-args)
-                                     (files . magit-buffer-diff-files))
-                         :restore-fn magit-diff-setup-buffer
-                         :restore-args (range typearg args files)))
-    (magit-revision-mode . ( :save-vars ((revision . magit-buffer-revision))
-                             :restore-fn magit-revision-setup-buffer
-                             :restore-args (revision nil nil)))
-    (magit-refs-mode . ( :save-vars ((upstream . magit-buffer-upstream)
-                                     (args . magit-buffer-arguments))
-                         :restore-fn magit-refs-setup-buffer
-                         :restore-args (upstream args)))
-    (magit-stashes-mode . ( :restore-fn magit-stashes-setup-buffer
-                            :restore-args ())))
+  '((magit-status-mode . (:restore-fn magit-status-setup-buffer :restore-args ()))
+    (magit-log-mode . (:save-vars
+                       ((revisions . magit-buffer-revisions)
+                        (args . magit-buffer-log-args)
+                        (files . magit-buffer-files))
+                       :restore-fn magit-log-setup-buffer
+                       :restore-args (revisions args files)))
+    (magit-diff-mode . (:save-vars
+                        ((range . magit-buffer-range)
+                         (typearg . magit-buffer-typearg)
+                         (args . magit-buffer-diff-args)
+                         (files . magit-buffer-diff-files))
+                        :restore-fn magit-diff-setup-buffer
+                        :restore-args (range typearg args files)))
+    (magit-revision-mode . (:save-vars
+                            ((revision . magit-buffer-revision))
+                            :restore-fn magit-revision-setup-buffer
+                            :restore-args (revision nil nil)))
+    (magit-refs-mode . (:save-vars
+                        ((upstream . magit-buffer-upstream)
+                         (args . magit-buffer-arguments))
+                        :restore-fn magit-refs-setup-buffer
+                        :restore-args (upstream args)))
+    (magit-stashes-mode
+     . (:restore-fn magit-stashes-setup-buffer
+                    :restore-args ())))
   "Configuration for saving/restoring each Magit mode.")
 
 (defun easysession-magit--git-repo-p (state)
@@ -77,29 +81,40 @@
 (define-minor-mode easysession-magit-mode
   "Persist and restore Magit buffers."
   :global t
-  :group 'easysession-magit
+  :group
+  'easysession-magit
   (if easysession-magit-mode
       (dolist (config easysession-magit--mode-configs)
         (let* ((props (cdr config))
                (save-vars (plist-get props :save-vars))
                (restore-args (plist-get props :restore-args)))
-          (easysession-register-mode (car config)
-                                     :save (when save-vars
-                                             (lambda ()
-                                               (mapcar (lambda (entry)
-                                                         (let ((key (car entry))
-                                                               (var (cdr entry)))
-                                                           (cons key (and (boundp var) (symbol-value var)))))
-                                                       save-vars)))
-                                     :restore (lambda (state)
-                                                (require 'magit nil t)
-                                                (let ((magit-display-buffer-noselect t)
-                                                      (data (alist-get 'data state)))
-                                                  (apply (plist-get props :restore-fn)
-                                                         (mapcar (lambda (arg)
-                                                                   (when arg (alist-get arg data)))
-                                                                 restore-args))))
-                                     :validate #'easysession-magit--git-repo-p)))
+          (easysession-register-mode
+           (car config)
+
+           :save
+           (when save-vars
+             (lambda ()
+               (mapcar
+                (lambda (entry)
+                  (let ((key (car entry))
+                        (var (cdr entry)))
+                    (cons key (and (boundp var) (symbol-value var)))))
+                save-vars)))
+
+           :restore
+           (lambda (state)
+             (require 'magit nil t)
+             (let ((magit-display-buffer-noselect t)
+                   (data (alist-get 'data state)))
+               (apply (plist-get props :restore-fn)
+                      (mapcar
+                       (lambda (arg)
+                         (when arg
+                           (alist-get arg data)))
+                       restore-args))))
+
+           :validate
+           #'easysession-magit--git-repo-p)))
     (dolist (config easysession-magit--mode-configs)
       (easysession-unregister-mode (car config)))))
 
