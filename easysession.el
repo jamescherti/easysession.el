@@ -1185,24 +1185,41 @@ HANDLER-FN is the function to be removed."
           easysession--load-handlers))
 
 (defun easysession-register-mode (mode &rest props)
-  "Register MODE for session save/restore.
-PROPS is a plist with keys :restore (required), :save, and :validate.
-The :restore function receives a state alist with `buffer-name', `major-mode',
-and `default-directory' keys automatically included, plus any data returned
-by :save nested under the `data' key."
+  "Register a MAJOR-MODE for session persistence.
+
+MODE must be a non-nil symbol representing a major mode.
+
+PROPS is a keyword-value property list. Supported keys are:
+
+:restore  (Required) A function called during session loading. It
+          receives an alist containing `buffer-name', `major-mode',
+          `default-directory', and a `data' key for mode-specific
+          state.
+:save     (Optional) A function that returns an alist of mode-specific
+          data to be persisted.
+:validate (Optional) A function used to verify the integrity of
+          restored data.
+
+If MODE is already registered, the new properties replace the existing
+registration."
   (unless (and (symbolp mode) mode)
     (error "[easysession] MODE must be a non-nil symbol"))
+
   (unless (plist-get props :restore)
-    (error "[easysession] :restore function is required"))
+    (error "[easysession] :restore function is required for mode %S" mode))
+
   (setq easysession--mode-registry
-        (assq-delete-all mode easysession--mode-registry))
-  (push (cons mode props) easysession--mode-registry))
+        (cons (cons mode props)
+              (assq-delete-all mode easysession--mode-registry))))
 
 (defun easysession-unregister-mode (mode)
-  "Unregister MODE from session save/restore.
-MODE is the major mode symbol to be removed from the registry."
+  "Remove MODE from the session save/restore registry.
+
+MODE is the major mode symbol to be purged from the registry. If MODE is not
+present in the registry, this function does nothing."
   (unless (and (symbolp mode) mode)
     (error "[easysession] MODE must be a non-nil symbol"))
+
   (setq easysession--mode-registry
         (assq-delete-all mode easysession--mode-registry)))
 
@@ -1657,56 +1674,57 @@ accordingly."
             (or easysession--current-session-name
                 ""))
           easysession-switch-to-exclude-current)))
-  (let ((session-name (or session-name
-                          easysession--current-session-name)))
-    (unless session-name
-      (user-error "%s%s"
-                  "[easysession] A session name must be provided "
-                  "to `easysession-switch-to'"))
 
-    (let* ((new-session-file (easysession-get-session-file-path session-name))
-           (new-session-exists (file-exists-p new-session-file))
-           (session-reloaded (and easysession--current-session-name
-                                  (string= session-name
-                                           easysession--current-session-name)))
-           saved
-           new-session)
-      (when (or new-session-exists
-                (yes-or-no-p
-                 (format
-                  "[easysession] Session '%s' does not exist. Would you like to create it? "
-                  session-name)))
-        (when (and easysession--current-session-name
-                   easysession-switch-to-save-session
-                   (or (or easysession--load-error
-                           (not session-reloaded))
-                       (yes-or-no-p
-                        (format "[easysession] Do you want to save the current session '%s' before reloading it?"
-                                easysession--current-session-name))))
-          (easysession-save easysession--current-session-name)
-          (setq saved t))
+  (setq session-name (or session-name
+                         easysession--current-session-name))
 
-        (condition-case err
-            (easysession-load session-name)
-          (error
-           (user-error "[easysession] Failed to load session '%s': %s"
-                       session-name (error-message-string err))))
-        (easysession-set-current-session-name session-name)
+  (unless session-name
+    (user-error
+     "[easysession] A session name must be provided to `easysession-switch-to'"))
 
-        (when (and (not session-reloaded)
-                   (not (file-exists-p new-session-file)))
-          (run-hooks 'easysession-new-session-hook)
-          (easysession-save)
-          (setq new-session t))
+  (let* ((new-session-file (easysession-get-session-file-path session-name))
+         (new-session-exists (file-exists-p new-session-file))
+         (session-reloaded (and easysession--current-session-name
+                                (string= session-name
+                                         easysession--current-session-name)))
+         saved
+         new-session)
+    (when (or new-session-exists
+              (yes-or-no-p
+               (format
+                "[easysession] Session '%s' does not exist. Would you like to create it? "
+                session-name)))
+      (when (and easysession--current-session-name
+                 easysession-switch-to-save-session
+                 (or (or easysession--load-error
+                         (not session-reloaded))
+                     (yes-or-no-p
+                      (format "[easysession] Do you want to save the current session '%s' before reloading it?"
+                              easysession--current-session-name))))
+        (easysession-save easysession--current-session-name)
+        (setq saved t))
 
-        (cond
-         (session-reloaded
-          (easysession--message "Reloaded session: %s" session-name))
-         (saved
-          (easysession--message "Saved and switched to %ssession: %s"
-                                (if new-session "new " "") session-name))
-         (t (easysession--message "Switched to %ssession: %s"
-                                  (if new-session "new " "") session-name)))))))
+      (condition-case err
+          (easysession-load session-name)
+        (error
+         (user-error "[easysession] Failed to load session '%s': %s"
+                     session-name (error-message-string err))))
+      (easysession-set-current-session-name session-name)
+
+      (when (and (not session-reloaded)
+                 (not (file-exists-p new-session-file)))
+        (run-hooks 'easysession-new-session-hook)
+        (easysession-save session-name)
+        (setq new-session t))
+
+      (cond
+       (session-reloaded
+        (easysession--message "Reloaded session: %s" session-name))
+       (saved
+        (easysession--message "Saved and switched to %ssession: %s"
+                              (if new-session "new " "") session-name))
+       (t (easysession--message "Switched to %ssession: %s"
+                                (if new-session "new " "") session-name))))))
 
 ;;;###autoload
 (define-minor-mode easysession-save-mode
