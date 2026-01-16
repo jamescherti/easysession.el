@@ -5,6 +5,8 @@ Author: [James Cherti](https://www.jamescherti.com/)
 
 ### WIP
 
+* Enhance session buffer restoration logic Refactor `easysession--handler-load-file-editing-buffers` to improve robustness and structural clarity.
+
 * Add two interactive confirmations to `easysession-switch-to`:
 
   * Prompt the user before creating a new session, requiring explicit approval to switch to a session that does not yet exist.
