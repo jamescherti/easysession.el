@@ -1225,7 +1225,7 @@ found."
   (declare (indent 0) (debug t))
   `(progn
      (defun
-         ,(intern (concat "easysession--" key "-load-handler")) (session-data)
+         ,(intern (concat "easysession--handler-load-" key)) (session-data)
        ,(format "Load handler for restoring: %s."
                 key)
        (let ((handler-data (assoc-default ,key session-data)))
@@ -1233,7 +1233,7 @@ found."
            (funcall ,handler-func handler-data))))
 
      (easysession-add-load-handler
-      ',(intern (concat "easysession--" key "-load-handler")))))
+      ',(intern (concat "easysession--handler-load-" key)))))
 
 (defmacro easysession-define-generic-save-handler (key &rest body)
   "Add a save handler to EasySession.
@@ -1309,12 +1309,10 @@ Returns a list:
         (cons 'buffers ,saved-buffers)
         (cons 'remaining-buffers ,remaining-buffers)))))
 
-
-
 (defmacro easysession-undefine-load-handler (key)
   "Remove the load handler associated with KEY from EasySession."
   (declare (indent 0) (debug t))
-  `(let ((fn ',(intern (concat "easysession--" key "-load-handler"))))
+  `(let ((fn ',(intern (concat "easysession--handler-load-" key))))
      (when (fboundp fn)
        (unintern fn nil))
      (setq easysession--load-handlers
