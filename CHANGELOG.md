@@ -5,7 +5,9 @@ Author: [James Cherti](https://www.jamescherti.com/)
 
 ### WIP
 
-* Enhance session buffer restoration logic Refactor `easysession--handler-load-file-editing-buffers` to improve robustness and structural clarity.
+* Refactored `easysession-load` to use direct buffer-stream deserialization rather than string-based evaluation, reducing memory overhead and computational pressure when restoring large session files.
+
+* Enhance session buffer restoration logic Refactor `easysession--handler-load-file-editing-buffers` and `easysession--handler-load-indirect-buffers` to improve robustness and structural clarity.
 
 * Add two interactive confirmations to `easysession-switch-to`:
 

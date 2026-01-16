@@ -1036,44 +1036,46 @@ not. It returns an alist with the following structure."
       (value . ,file-editing-buffers)
       (remaining-buffers . ,remaining-buffers))))
 
-
 (defun easysession--handler-load-indirect-buffers (session-data)
   "Load indirect buffers from the SESSION-DATA variable."
-  (let ((indirect-buffers (assoc-default "indirect-buffers"
-                                         session-data)))
-    (when indirect-buffers
-      (dolist (item indirect-buffers)
-        (let* ((indirect-buffer-name (alist-get 'indirect-buffer-name item))
-               (base-buffer-name (alist-get 'base-buffer-name (cdr item)))
-               (narrowing-bounds (alist-get 'narrowing-bounds item)))
-          (when (and base-buffer-name indirect-buffer-name)
-            (let ((base-buffer (get-buffer base-buffer-name))
-                  (indirect-buffer (get-buffer indirect-buffer-name)))
-              (when (and (not (buffer-live-p indirect-buffer))
-                         (buffer-live-p base-buffer))
-                (with-current-buffer base-buffer
-                  (let ((indirect-buffer
-                         (ignore-errors (clone-indirect-buffer
-                                         indirect-buffer-name nil))))
-                    (if indirect-buffer
-                        (progn
-                          (easysession--ensure-buffer-name indirect-buffer
-                                                           indirect-buffer-name)
+  (dolist (item (assoc-default "indirect-buffers" session-data))
+    (let ((indirect-buffer-name (alist-get 'indirect-buffer-name item))
+          (base-buffer-name (alist-get 'base-buffer-name item))
+          (narrowing-bounds (alist-get 'narrowing-bounds item)))
+      (when (and indirect-buffer-name
+                 base-buffer-name)
+        (let ((base-buffer (get-buffer base-buffer-name))
+              (indirect-buffer (get-buffer indirect-buffer-name)))
+          (when (and (not (buffer-live-p indirect-buffer))
+                     (buffer-live-p base-buffer))
+            (condition-case err
+                (progn
+                  (setq indirect-buffer (with-current-buffer base-buffer
+                                          (clone-indirect-buffer
+                                           indirect-buffer-name nil)))
 
-                          ;; Restore buffer narrowing if present
-                          (let* ((narrow-enabled (consp narrowing-bounds))
-                                 (start (and narrow-enabled
-                                             (car narrowing-bounds)))
-                                 (end (and narrow-enabled
-                                           (cdr narrowing-bounds))))
-                            (when (and (numberp start)
-                                       (numberp end))
-                              (with-current-buffer indirect-buffer
-                                (narrow-to-region start end)))))
+                  (if (not (buffer-live-p indirect-buffer))
                       (easysession--warning
-                       (concat "Failed to restore the indirect "
-                               "buffer (clone): %s")
-                       indirect-buffer-name))))))))))))
+                       "Failed to restore the indirect buffer/clone: %s"
+                       indirect-buffer-name)
+                    ;; Restore indirect buffer
+                    (easysession--ensure-buffer-name indirect-buffer
+                                                     indirect-buffer-name)
+
+                    ;; Restore buffer narrowing if present
+                    (let* ((narrowing (consp narrowing-bounds))
+                           (start (and narrowing
+                                       (car narrowing-bounds)))
+                           (end (and narrowing
+                                     (cdr narrowing-bounds))))
+                      (when (and (numberp start)
+                                 (numberp end))
+                        (with-current-buffer indirect-buffer
+                          (narrow-to-region start end))))))
+              (error
+               (easysession--warning
+                "Failed to restore indirect buffer/clone '%s': %s"
+                indirect-buffer-name (error-message-string err))))))))))
 
 (defun easysession--handler-save-indirect-buffers (buffers)
   "Collect and categorize indirect buffers from the provided list.
@@ -1412,74 +1414,78 @@ SESSION-NAME is the session name."
 
 ;;;###autoload
 (defun easysession-load (&optional session-name)
-  "Load the current session. SESSION-NAME is the session name."
+  "Load the current session. SESSION-NAME is the session name.
+
+It returns non-nil upon successful restoration and nil if an error occurs or
+if the process is interrupted."
   (interactive)
   (setq easysession-load-in-progress nil)
-  (setq easysession--load-error t)
+  (setq easysession--load-error nil)
+  (unwind-protect
+      (condition-case err
+          (progn
+            (let* ((session-name (or session-name
+                                     easysession--current-session-name
+                                     ;; The default session loaded when none is
+                                     ;; specified is 'main'.
+                                     "main"))
+                   (session-file (easysession--exists session-name)))
+              (setq easysession-load-in-progress session-name)
 
-  (let* ((session-name (if session-name
-                           session-name
-                         (if easysession--current-session-name
-                             easysession--current-session-name
-                           ;; The default session loaded when none is
-                           ;; specified is 'main'.
-                           "main")))
-         (easysession-load-in-progress session-name)
-         (session-data nil)
-         (file-contents nil)
-         (session-file (easysession--exists session-name)))
-    (if (not session-file)
-        (easysession-set-current-session-name session-name)
-      ;; Load session
-      (setq file-contents (let ((coding-system-for-read 'utf-8-emacs)
-                                (file-coding-system-alist nil))
-                            (with-temp-buffer
-                              (insert-file-contents session-file)
-                              (buffer-string))))
-      (when (or (not file-contents)
-                (and (stringp file-contents)
-                     (string= (string-trim file-contents) "")))
-        (error "[easysession] %s: Failed to read session information from %s"
-               session-name session-file))
+              (if (not session-file)
+                  (easysession-set-current-session-name session-name)
+                ;; Load and evaluate session
+                (let ((session-data
+                       (let ((coding-system-for-read 'utf-8-emacs)
+                             (file-coding-system-alist nil))
+                         (with-temp-buffer
+                           (insert-file-contents session-file)
 
-      ;; Evaluate file
-      (progn
-        (setq session-data (ignore-errors (read file-contents)))
+                           (when (= (buffer-size) 0)
+                             (error
+                              "[easysession] %s: Failed to read session information from %s"
+                              session-name
+                              session-file))
 
-        (when (not session-data)
-          (error
-           "[easysession] %s: Failed to evaluate session information from %s"
-           session-name session-file))
+                           (goto-char (point-min))
+                           (read (current-buffer))))))
 
-        ;; Load buffers first because the cursor, window-start, or hscroll
-        ;; might be altered by packages such as saveplace. This will allow
-        ;; the frameset to modify the cursor later on.
-        (run-hooks 'easysession-before-load-hook)
+                  ;; Load buffers first because the cursor, window-start, or
+                  ;; hscroll might be altered by packages such as saveplace.
+                  ;; This will allow the frameset to modify the cursor later on.
+                  (run-hooks 'easysession-before-load-hook)
 
-        (dolist (handler (easysession-get-load-handlers))
-          (when handler
-            (cond
-             ((and (symbolp handler)
-                   (fboundp handler))
-              (funcall handler session-data))
+                  (dolist (handler (easysession-get-load-handlers))
+                    (when handler
+                      (cond
+                       ((and (symbolp handler)
+                             (fboundp handler))
+                        (funcall handler session-data))
 
-             (t
-              (easysession--warning
-               "The following load handler is not a defined function: %s"
-               handler)))))
+                       (t
+                        (easysession--warning
+                         "The following load handler is not a defined function: %s"
+                         handler)))))
 
-        ;; Load the frame set
-        (easysession--load-frameset session-data
-                                    (bound-and-true-p
-                                     easysession-frameset-restore-geometry))
+                  ;; Load the frame set
+                  (easysession--load-frameset
+                   session-data
+                   (bound-and-true-p easysession-frameset-restore-geometry))
 
-        (setq easysession--load-error nil)
-        (when (called-interactively-p 'any)
-          (easysession--message "Session loaded: %s" session-name))
+                  ;; (setq easysession--load-error nil)
+                  (when (called-interactively-p 'any)
+                    (easysession--message "Session loaded: %s" session-name))
 
-        (easysession-set-current-session-name session-name)
+                  (easysession-set-current-session-name session-name)
 
-        (run-hooks 'easysession-after-load-hook))))
+                  (run-hooks 'easysession-after-load-hook)))))
+        (error
+         (setq easysession--load-error t)
+         (easysession--warning "easysession-load error: %s"
+                               (error-message-string err))))
+    ;; Unwind protect
+    (setq easysession-load-in-progress nil))
+
   ;; Return easysession--load-error
   (not easysession--load-error))
 
@@ -1670,10 +1676,10 @@ accordingly."
                  (format
                   "[easysession] Session '%s' does not exist. Would you like to create it? "
                   session-name)))
-        (when (and (not easysession--load-error)
-                   easysession--current-session-name
+        (when (and easysession--current-session-name
                    easysession-switch-to-save-session
-                   (or (not session-reloaded)
+                   (or (or easysession--load-error
+                           (not session-reloaded))
                        (yes-or-no-p
                         (format "[easysession] Do you want to save the current session '%s' before reloading it?"
                                 easysession--current-session-name))))
