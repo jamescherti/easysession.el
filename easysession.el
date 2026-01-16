@@ -741,58 +741,59 @@ If BUFFER is not a base buffer or has no associated path, return nil."
 (defun easysession--get-indirect-buffer-info (indirect-buffer)
   "Get information about the indirect buffer INDIRECT-BUFFER.
 
-This function retrieves details about the indirect buffer BUF and its base
-buffer. It returns a list of cons cells containing the names of both buffers,
-the point position, window start position, and horizontal scroll position of
-the base buffer.
-
-- BUF: The buffer to get information from.
+This function retrieves details about the indirect buffer INDIRECT-BUFFER and
+its base buffer. It returns a list of cons cells containing the names of both
+buffers, and narrowing bounds.
 
 Return:
 A list of cons cells: ((indirect-buffer-name . name-of-indirect-buffer)
                        (base-buffer-name . name-of-base-buffer)
-                       (base-buffer-point . point-position)
-                       (base-buffer-window-start . window-start-position)
-                       (base-buffer-hscroll . horizontal-scroll-position))
+                       (narrowing-bounds . (a, b))
 
 Return nil if BUF is not an indirect buffer or if the base buffer cannot be
 determined."
-  (when (and indirect-buffer (buffer-live-p indirect-buffer))
-    (let* ((base-buffer (buffer-base-buffer indirect-buffer)))
-      (when (and base-buffer
-                 (buffer-live-p base-buffer)
-                 (not (eq base-buffer indirect-buffer))
+  (when (buffer-live-p indirect-buffer)
+    (let ((base-buffer (buffer-base-buffer indirect-buffer)))
+      (when (and (buffer-live-p base-buffer) ; Indirect buffer?
                  ;; The base has to be a file visiting buffer
                  (or (buffer-file-name base-buffer)
-                     (derived-mode-p 'dired-mode)))
-        (with-current-buffer indirect-buffer  ; indirect buffer
-          (let ((base-buffer-name (buffer-name base-buffer))
-                (indirect-buffer-name (buffer-name)))
-            (when (and base-buffer-name indirect-buffer-name)
-              `((indirect-buffer-name . ,indirect-buffer-name)
-                (base-buffer-name . ,base-buffer-name)
-                (narrowing-bounds . ,(easysession--buffer-narrowing-bounds
-                                      indirect-buffer))))))))))
+                     (with-current-buffer base-buffer
+                       (derived-mode-p 'dired-mode))))
+        (let ((base-buffer-name (buffer-name base-buffer))
+              (indirect-buffer-name (buffer-name indirect-buffer)))
+          (when (and base-buffer-name
+                     indirect-buffer-name)
+            `((indirect-buffer-name . ,indirect-buffer-name)
+              (base-buffer-name . ,base-buffer-name)
+              (narrowing-bounds . ,(easysession--buffer-narrowing-bounds
+                                    indirect-buffer)))))))))
 
 (defun easysession--get-registered-mode-buffer-info (buffer)
-  "Get information about the registered mode buffer BUFFER.
-Return nil if the buffer's mode is not in the registry.
-Return an alist with `buffer-name', `major-mode', `default-directory',
-and any custom data nested under `data'."
-  (when (and buffer (buffer-live-p buffer))
+  "Retrieve persistent state for BUFFER if registered in the mode registry.
+
+Returns an alist containing `buffer-name', `major-mode', and `default-directory'
+if the buffer's major mode derives from a key in `easysession--mode-registry'.
+
+If the registry configuration includes a `:save' function, it is invoked safely
+to obtain custom state data, which is appended to the result under the `data'
+key.
+
+Returns nil if BUFFER is not live or if no matching registry entry exists."
+  (when (buffer-live-p buffer)
     (with-current-buffer buffer
-      (let ((config (cl-find-if (lambda (entry)
-                                  (derived-mode-p (car entry)))
-                                easysession--mode-registry)))
-        (when config
-          (let ((state `((buffer-name . ,(buffer-name))
-                         (major-mode . ,(car config))
-                         (default-directory . ,default-directory)))
-                (save-fn (plist-get (cdr config) :save)))
-            (when save-fn
-              (let ((data (ignore-errors (funcall save-fn))))
-                (when data
-                  (nconc state (list (cons 'data data))))))
+      (let ((entry (cl-find-if (lambda (entry)
+                                 (derived-mode-p (car entry)))
+                               easysession--mode-registry)))
+        (when entry
+          (let* ((state `((buffer-name . ,(buffer-name))
+                          (major-mode . ,(car entry))
+                          (default-directory . ,default-directory)))
+                 (save-fn (plist-get (cdr entry) :save))
+                 (data (when (functionp save-fn)
+                         (ignore-errors
+                           (funcall save-fn)))))
+            (when data
+              (nconc state (list (cons 'data data))))
             state))))))
 
 (defun easysession-get-session-name ()
@@ -986,6 +987,7 @@ The current session is displayed only when a session is actively loaded."
           (setq buffer-name (car buffer-info))
           (setq buffer-path (cdr buffer-info))
           (setq narrowing-bounds nil))
+
         (when buffer-path
           (let* ((buffer (get-file-buffer buffer-path)))
             (unless buffer
@@ -996,7 +998,7 @@ The current session is displayed only when a session is actively loaded."
                               find-file-hook
                               easysession-exclude-from-find-file-hook)))
                         (find-file-noselect buffer-path :nowarn)))))
-            (if (and buffer (buffer-live-p buffer))
+            (if (buffer-live-p buffer)
                 (progn
                   ;; We are going to be using buffer-base-buffer to make sure
                   ;; that the buffer that was returned by find-file-noselect is
