@@ -1032,7 +1032,7 @@ not. It returns an alist with the following structure."
         (if base-buffer-info
             (push base-buffer-info file-editing-buffers)
           (push buf remaining-buffers))))
-    `((key . "buffers")
+    `((key . "path-buffers")
       (value . ,file-editing-buffers)
       (remaining-buffers . ,remaining-buffers))))
 
@@ -1600,6 +1600,17 @@ SESSION-NAME is the name of the session."
                      (remaining-buffers (alist-get 'remaining-buffers result)))
                 ;; Push results into session-data
                 (push (cons key value) session-data)
+
+                ;; Generate legacy list of buffers
+                (when (string= key "path-buffers")
+                  (let (legacy-list-buffers)
+                    (dolist (item value)
+                      (let ((path (alist-get 'buffer-path item))
+                            (name (alist-get 'buffer-name item)))
+                        (when (and path name)
+                          (push (cons path name) legacy-list-buffers))))
+
+                    (push (cons "buffers" legacy-list-buffers) session-data)))
 
                 ;; The following optimizes buffer processing by updating the
                 ;; list of buffers for the next iteration By setting buffers
