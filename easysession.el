@@ -773,7 +773,8 @@ determined."
   "Retrieve the persistent state for BUFFER if the major mode is managed.
 
 Returns an alist containing `buffer-name', `major-mode', and `default-directory'
-if the buffer's major mode derives from a key in `easysession--managed-major-modes'.
+if the buffer's major mode derives from a key in
+`easysession--managed-major-modes'.
 
 If the configuration includes a `:save' function, it is invoked safely to obtain
 custom state data, which is appended to the result under the `data' key.
@@ -1094,7 +1095,8 @@ buffers and separates them from other buffers."
       (remaining-buffers . ,remaining-buffers))))
 
 (defun easysession--handler-load-managed-major-modes (session-data)
-  "Load managed major mode buffers from the SESSION-DATA variable."
+  "Load managed major mode buffers from SESSION-DATA safely.
+Failures restoring individual buffers are logged but do not stop other buffers."
   (let ((managed-mode-buffers (assoc-default "managed-major-modes"
                                              session-data)))
     (when managed-mode-buffers
@@ -1111,10 +1113,12 @@ buffers and separates them from other buffers."
                     (let ((default-directory
                            (or (alist-get 'default-directory item)
                                default-directory)))
-                      (unless (ignore-errors (funcall restore-fn item))
-                        (easysession--warning
-                         "Failed to restore the %s buffer '%s'"
-                         mode buffer-name)))))))))))))
+                      (condition-case err
+                          (funcall restore-fn item)
+                        (error
+                         (easysession--warning
+                          "Failed to restore %s buffer '%s': %s"
+                          mode buffer-name (error-message-string err)))))))))))))))
 
 (defun easysession--handler-save-managed-major-modes (buffers)
   "Collect and categorize managed mode buffers from the provided list.

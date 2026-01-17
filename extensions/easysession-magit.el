@@ -33,6 +33,7 @@
 ;;; Code:
 
 (require 'easysession)
+(require 'cl-lib)
 
 (defgroup easysession-magit nil
   "Customization options for persisting Magit buffers."
@@ -42,7 +43,8 @@
 (defvar magit-display-buffer-noselect)
 
 (defvar easysession-magit--mode-configs
-  '((magit-status-mode . (:restore-fn magit-status-setup-buffer :restore-args ()))
+  '((magit-status-mode . (:restore-fn magit-status-setup-buffer
+                                      :restore-args ()))
     (magit-log-mode . (:save-vars
                        ((revisions . magit-buffer-revisions)
                         (args . magit-buffer-log-args)
@@ -65,17 +67,16 @@
                          (args . magit-buffer-arguments))
                         :restore-fn magit-refs-setup-buffer
                         :restore-args (upstream args)))
-    (magit-stashes-mode
-     . (:restore-fn magit-stashes-setup-buffer
-                    :restore-args ())))
+    (magit-stashes-mode . (:restore-fn magit-stashes-setup-buffer
+                                       :restore-args ())))
   "Configuration for saving/restoring each Magit mode.")
 
 (defun easysession-magit--git-repo-p (state)
-  "Return non-nil if STATE's directory is a Git repository."
+  "Return non-nil if STATE's directory belongs to a Git repository."
   (let ((directory (alist-get 'default-directory state)))
     (when directory
-      (let ((git-path (expand-file-name ".git" directory)))
-        (or (file-directory-p git-path) (file-regular-p git-path))))))
+      (require 'vc)
+      (eq (vc-responsible-backend directory) 'Git))))
 
 ;;;###autoload
 (define-minor-mode easysession-magit-mode
@@ -103,7 +104,7 @@
 
            :restore
            (lambda (state)
-             (require 'magit nil t)
+             (require 'magit)
              (let ((magit-display-buffer-noselect t)
                    (data (alist-get 'data state)))
                (apply (plist-get props :restore-fn)
