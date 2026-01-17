@@ -1608,7 +1608,7 @@ SESSION-NAME is the name of the session."
                       (let ((path (alist-get 'buffer-path item))
                             (name (alist-get 'buffer-name item)))
                         (when (and path name)
-                          (push (cons path name) legacy-list-buffers))))
+                          (push (cons name path) legacy-list-buffers))))
 
                     (push (cons "buffers" legacy-list-buffers) session-data)))
 
