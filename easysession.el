@@ -1669,6 +1669,10 @@ If the function is called interactively, prompt the user for a session name."
     t))
 
 ;;;###autoload
+
+(defvar easysession-confirm-new-session t
+  "Non-nil prompts the user for confirmation when creating a new session.")
+
 (defun easysession-switch-to (session-name)
   "Load a session without altering the frame's size or position.
 SESSION-NAME is the session name.
@@ -1711,10 +1715,11 @@ accordingly."
          saved
          new-session)
     (when (or new-session-exists
-              (yes-or-no-p
-               (format
-                "[easysession] Session '%s' does not exist. Would you like to create it? "
-                session-name)))
+              (or (not easysession-confirm-new-session)
+                  (yes-or-no-p
+                   (format
+                    "[easysession] Session '%s' does not exist. Would you like to create it? "
+                    session-name))))
       (when (and easysession--current-session-name
                  easysession-switch-to-save-session
                  (or (or easysession--load-error

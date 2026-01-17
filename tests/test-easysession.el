@@ -113,7 +113,8 @@ session name before and after the switch."
   ;; Switch to the test session
   (easysession-save)
   (easysession-delete "test")
-  (easysession-switch-to "test")
+  (let ((easysession-confirm-new-session nil))
+    (easysession-switch-to "test"))
 
   ;; Verify the session name after switching
   (unless (string= "test" (easysession-get-session-name))
@@ -306,7 +307,7 @@ storing them in respective variables for later use."
                    "be working"))))
 
 (defun test-easysession--init ()
-  "Init tests."
+  "Init test."
   (easysession--set-current-session "main")
 
   ;; Init
@@ -323,4 +324,9 @@ storing them in respective variables for later use."
   (test-easysession-save-mode-predicate))
 
 (provide 'test-easysession)
+
+;; Local variables:
+;; byte-compile-warnings: (not lexical)
+;; End:
+
 ;;; test-easysession.el ends here
