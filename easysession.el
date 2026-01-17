@@ -83,6 +83,7 @@
 
 (require 'frameset)
 (require 'cl-lib)
+(require 'seq)
 
 ;;; Variables
 
@@ -904,7 +905,7 @@ Also checks if `easysession-dont-save' is set to t."
   (and (not (frame-parameter frame 'parent-frame))
        (not (frame-parameter frame 'easysession-dont-save))))
 
-(defun easysession--exists (session-name)
+(defun easysession--session-file (session-name)
   "Check if a session with the given SESSION-NAME exists.
 Returns the session file if the session file exists, nil otherwise."
   (let ((file-name (easysession-get-session-file-path session-name)))
@@ -1013,9 +1014,9 @@ The current session is displayed only when a session is actively loaded."
                     (jit-lock-fontify-now)))
 
                 ;; Restore buffer narrowing if present
-                (let* ((narrowing (consp narrowing-bounds))
-                       (start (and narrowing (car narrowing-bounds)))
-                       (end (and narrowing (cdr narrowing-bounds))))
+                (let* ((narrowing-enabled (consp narrowing-bounds))
+                       (start (and narrowing-enabled (car narrowing-bounds)))
+                       (end (and narrowing-enabled (cdr narrowing-bounds))))
                   (when (and (numberp start)
                              (numberp end))
                     (narrow-to-region start end)))))))))))
@@ -1063,10 +1064,10 @@ not. It returns an alist with the following structure."
                                                      indirect-buffer-name)
 
                     ;; Restore buffer narrowing if present
-                    (let* ((narrowing (consp narrowing-bounds))
-                           (start (and narrowing
+                    (let* ((narrowing-enabled (consp narrowing-bounds))
+                           (start (and narrowing-enabled
                                        (car narrowing-bounds)))
-                           (end (and narrowing
+                           (end (and narrowing-enabled
                                      (cdr narrowing-bounds))))
                       (when (and (numberp start)
                                  (numberp end))
@@ -1419,7 +1420,7 @@ NEW-SESSION-NAME is the session name."
   "Delete a session.
 SESSION-NAME is the session name."
   (interactive (list (easysession--prompt-session-name "Delete session: ")))
-  (let* ((session-file (easysession--exists session-name)))
+  (let* ((session-file (easysession--session-file session-name)))
     (if session-file
         (progn
           (let ((session-buffer (find-buffer-visiting session-file)))
@@ -1451,7 +1452,7 @@ if the process is interrupted."
                                      ;; The default session loaded when none is
                                      ;; specified is 'main'.
                                      "main"))
-                   (session-file (easysession--exists session-name)))
+                   (session-file (easysession--session-file session-name)))
               (setq easysession-load-in-progress session-name)
 
               (if (not session-file)
