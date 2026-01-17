@@ -21,7 +21,7 @@ Author: [James Cherti](https://www.jamescherti.com/)
 
 * Contribution by Herman He (@hermanhel on GitHub): Added support for persisting and restoring the narrowing state of both base and indirect buffers.
 
-* Add interactive session selection prompt to easysession-load
+* Add interactive session selection prompts to `easysession-load` and `easysession-save`.  Make `easysession-save-as` obsolete in favor of `easysession-save`
 
 ## 1.1.7
 

@@ -1579,7 +1579,14 @@ accordingly."
 (defun easysession-save (&optional session-name)
   "Save the current session.
 SESSION-NAME is the name of the session."
-  (interactive)
+  (interactive
+   (list (easysession--prompt-session-name
+          "Save session as: "
+          (or easysession--current-session-name
+              "")
+          nil
+          (or easysession--current-session-name
+              ""))))
   (when (and (not session-name)
              (not easysession--current-session-name))
     (user-error "%s%s"
@@ -1657,32 +1664,14 @@ SESSION-NAME is the name of the session."
           nil))
 
       (when (called-interactively-p 'any)
-        (easysession--message "Session saved: %s" session-name)))
+        (if (string= session-name easysession--current-session-name)
+            (easysession--message "Session saved: %s" session-name)
+          (easysession--message "Session saved as: %s" session-name))))
 
     (run-hooks 'easysession-after-save-hook)))
 
-;;;###autoload
-(defun easysession-save-as (session-name)
-  "Save the session as SESSION-NAME.
-SESSION-NAME is the session to save to and switch to.
-If the function is called interactively, prompt the user for a session name."
-  (interactive
-   (list (easysession--prompt-session-name "Save session as: "
-                                           (or easysession--current-session-name
-                                               ""))))
-  (when (or (not session-name)
-            (string= session-name ""))
-    (user-error "[easysession] Please provide a valid session name"))
-
-  (let* ((new-session-name (or session-name
-                               easysession--current-session-name)))
-    (easysession--ensure-session-name-valid new-session-name)
-    (easysession-save new-session-name)
-
-    (easysession--message
-     "Session saved as: '%s'. Use 'M-x easysession-switch-to' to switch to it."
-     new-session-name)
-    t))
+(defalias 'easysession-save-as 'easysession-save)
+(make-obsolete 'easysession-save-as 'easysession-save "1.1.7")
 
 ;;;###autoload
 
