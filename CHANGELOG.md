@@ -3,13 +3,13 @@
 URL: https://github.com/jamescherti/easysession.el
 Author: [James Cherti](https://www.jamescherti.com/)
 
-### WIP
+## WIP
 
 * Refactored `easysession-load` to use direct buffer-stream deserialization rather than string-based evaluation, reducing memory overhead and computational pressure when restoring large session files.
 
-* Enhance session buffer restoration logic Refactor `easysession--handler-load-file-editing-buffers` and `easysession--handler-load-indirect-buffers` to improve robustness and structural clarity.
+* Enhanced session buffer restoration logic (`easysession--handler-load-file-editing-buffers` and `easysession--handler-load-indirect-buffers`) to improve robustness and structural clarity.
 
-* Add two interactive confirmations to `easysession-switch-to`:
+* Added two interactive confirmations to `easysession-switch-to`:
 
   * Prompt the user before creating a new session, requiring explicit approval to switch to a session that does not yet exist.
   * When reloading the current session, prompt the user to confirm saving it before reloading it.
@@ -21,16 +21,16 @@ Author: [James Cherti](https://www.jamescherti.com/)
 
 * Contribution by Herman He (@hermanhel on GitHub): Added support for persisting and restoring the narrowing state of both base and indirect buffers.
 
-### 1.1.7
+## 1.1.7
 
 * Fix #48: Prevent clearing `file-name-handler-alist` during execution
 
-### 1.1.6
+## 1.1.6
 
 * Update the `easysession-load` function to set the session name when the session file is absent
 * Revise docstrings and refresh `README.md` for improved clarity and completeness
 
-### 1.1.5
+## 1.1.5
 
 * Add the `easysession-scratch` extension to enable persisting and restoring the scratch buffer in session files
 * Ensure the session name is set only after the session has been successfully loaded
