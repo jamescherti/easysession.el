@@ -969,7 +969,8 @@ The current session is displayed only when a session is actively loaded."
 
 (defun easysession--handler-load-file-editing-buffers (session-data)
   "Load base buffers from the SESSION-DATA variable."
-  (dolist (buffer-info (assoc-default "buffers" session-data))
+  (dolist (buffer-info (or (assoc-default "path-buffers" session-data)
+                           (assoc-default "buffers" session-data)))
     (let* ((new-format-p (and (consp buffer-info)
                               (consp (car buffer-info))))
            (buffer-name (if new-format-p
