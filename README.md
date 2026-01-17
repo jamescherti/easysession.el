@@ -9,6 +9,8 @@ The **easysession** package provides a comprehensive session management for Emac
 
 With **easysession**, your Emacs setup is restored automatically when you restart. All files, Dired buffers, and window layouts come back as they were, so you can continue working right where you left off. While editing, you can also switch to another session, switch back, rename sessions, or delete them, giving you full control over multiple work environments.
 
+Easysession also supports extensions, enabling the restoration of Magit buffers and the scratch buffer. Custom extensions can also be created to extend its functionality.
+
 <p align="center">
 <img src="https://jamescherti.com/misc/easysession-m.png" width="40%" />
 </p>
