@@ -204,6 +204,11 @@ activated when `easysession-save-mode' is enabled."
 (defcustom easysession-switch-to-exclude-current nil
   "Non-nil to exclude the current session when switching sessions.
 
+This setting affects the interactive prompt used by the following functions:
+  - `easysession-load'
+  - `easysession-switch-to'
+  - `easysession-switch-to-and-restore-geometry'
+
 This can be useful to prevent accidental re-selection of the session already in
 use, especially when cycling through or interactively selecting among available
 sessions."
@@ -1441,11 +1446,22 @@ SESSION-NAME is the session name."
 
 ;;;###autoload
 (defun easysession-load (&optional session-name)
-  "Load the current session. SESSION-NAME is the session name.
+  "Load a session.
 
-It returns non-nil upon successful restoration and nil if an error occurs or
-if the process is interrupted."
-  (interactive)
+If SESSION-NAME is non-nil, that session is loaded. Otherwise, the function
+loads the current session if set, or defaults to the \"main\" session.
+
+This function performs the following steps:
+
+Returns non-nil if the session loaded successfully, or nil if an error
+occurred."
+  (interactive
+   (list (easysession--prompt-session-name
+          "Load session: "
+          (unless easysession-switch-to-exclude-current
+            (or easysession--current-session-name
+                ""))
+          easysession-switch-to-exclude-current)))
   (setq easysession-load-in-progress nil)
   (setq easysession--load-error nil)
   (unwind-protect
@@ -1694,7 +1710,11 @@ reloaded. If the session is newly created or switched to, a message is displayed
 accordingly."
   (interactive
    (list (easysession--prompt-session-name
-          "Switch to session: "
+          (format "%s to session: "
+                  (if (and easysession--current-session-name
+                           easysession-switch-to-save-session)
+                      "Save and switch"
+                    "Switch"))
           (unless easysession-switch-to-exclude-current
             (or easysession--current-session-name
                 ""))
