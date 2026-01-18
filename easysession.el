@@ -659,7 +659,6 @@ the invalid name.
 
 Return the SESSION-NAME if it is valid.
 
-Errors:
 Raise an error if the session name is invalid."
   (when (or (not session-name)
             (string= session-name "")
@@ -708,11 +707,15 @@ If EXCLUDE-CURRENT is non-nil, exclude the current session name from the list."
 
 (defun easysession--prompt-session-name (prompt &optional session-name
                                                 exclude-current initial-input)
-  "Prompt for a session name with PROMPT.
-Use SESSION-NAME as the default value.
-If EXCLUDE-CURRENT is non-nil, exclude the current session from
-If INITIAL-INPUT is non-nil, insert it in the minibuffer initially.
-completion candidates."
+  "Read a session name from the minibuffer using PROMPT.
+
+SESSION-NAME specifies the default selection.
+When EXCLUDE-CURRENT is non-nil, the active session name is omitted from the
+completion candidates.
+When INITIAL-INPUT is non-nil, it is inserted into the minibuffer as the initial
+contents.
+
+Return the selected session name as a string."
   (completing-read (concat "[easysession] " prompt)
                    (easysession--get-all-names exclude-current)
                    nil nil initial-input nil session-name))
@@ -751,10 +754,9 @@ This function retrieves details about the indirect buffer INDIRECT-BUFFER and
 its base buffer. It returns a list of cons cells containing the names of both
 buffers, and narrowing bounds.
 
-Return:
-A list of cons cells: ((indirect-buffer-name . name-of-indirect-buffer)
-                       (base-buffer-name . name-of-base-buffer)
-                       (narrowing-bounds . (a, b))
+Return a list of cons cells: ((indirect-buffer-name . name-of-indirect-buffer)
+                              (base-buffer-name . name-of-base-buffer)
+                              (narrowing-bounds . (a, b))
 
 Return nil if BUF is not an indirect buffer or if the base buffer cannot be
 determined."
@@ -831,10 +833,14 @@ Return nil if no session is loaded."
 
 (defun easysession--save-frameset (session-name
                                    &optional save-geometry)
-  "Return a frameset for FRAME-LIST, a list of frames.
-SESSION-NAME is the session name.
-When SAVE-GEOMETRY is non-nil, include the frame geometry.
-Return nil if there is no frame to save."
+  "Create and return a frameset for the current Emacs session.
+
+SESSION-NAME identifies the session associated with the saved frameset. When
+SAVE-GEOMETRY is non-nil, frame geometry parameters are included; otherwise,
+geometry-related parameters are excluded.
+
+The frameset is generated only when at least one live frame exists. Return nil
+when no frames are available for persistence."
   (let ((modified-filter-alist
          (if save-geometry
              ;; Include geometry
@@ -944,17 +950,17 @@ This function is usually called by `easysession-save-mode'. It evaluates the
     t))
 
 (defun easysession--mode-line-session-name-format ()
-  "Return the mode-line representation of the current EasySession.
-The current session is displayed only when a session is actively loaded."
+  "Return a mode-line construct for the currently loaded session.
+The session name is displayed only when a session is actively loaded."
   (if (bound-and-true-p easysession--current-session-name)
-      (let* ((session-name (eval easysession--current-session-name)))
-        (list
-         easysession-mode-line-misc-info-prefix
-         (propertize session-name
-                     'face 'easysession-mode-line-session-name-face
-                     'help-echo (format "Current session: %s" session-name)
-                     'mouse-face 'mode-line-highlight)
-         easysession-mode-line-misc-info-suffix))))
+      (list easysession-mode-line-misc-info-prefix
+            (propertize
+             easysession--current-session-name
+             'face 'easysession-mode-line-session-name-face
+             'help-echo (format "Current session: %s"
+                                easysession--current-session-name)
+             'mouse-face 'mode-line-highlight)
+            easysession-mode-line-misc-info-suffix)))
 
 (defun easysession--get-scratch-buffer-create ()
   "Return the *scratch* buffer, creating a new one if needed."
@@ -975,7 +981,21 @@ The current session is displayed only when a session is actively loaded."
 ;;; Internal functions: handlers
 
 (defun easysession--handler-load-file-editing-buffers (session-data)
-  "Load base buffers from the SESSION-DATA variable."
+  "Load base buffers from SESSION-DATA.
+
+SESSION-DATA may encode buffer entries using either a legacy or a current
+representation:
+- In the legacy representation, each buffer entry is a cons cell of the
+  form (BUFFER-NAME . BUFFER-PATH). In this case, the buffer name is taken from
+  the car and the file path from the cdr, and no additional buffer state is
+  available.
+- In the current representation, each buffer entry is an alist. This format is
+  identified when the car of the entry is itself a cons. The alist provides
+  structured fields such as `buffer-name' and `buffer-path', and may optionally
+  include `narrowing-bounds', allowing additional buffer state to be restored.
+
+(The loader detects the representation dynamically and restores buffers
+accordingly, ensuring backward compatibility with legacy session files.)"
   (dolist (buffer-info (or (assoc-default "path-buffers" session-data)
                            (assoc-default "buffers" session-data)))
     (let* ((new-format-p (and (consp buffer-info)
