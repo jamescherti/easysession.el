@@ -162,30 +162,62 @@ To ensure that only visible buffers are saved and restored in your sessions, fol
 
 Here is the Lisp code:
 ``` emacs-lisp
+(defun my-easysession-buffer-is-visible (buffer)
+  "Return non-nil if BUFFER is currently visible in the Emacs session.
+
+A buffer is considered visible if it is:
+
+- Displayed in any visible window (`get-buffer-window').
+- Associated with a visible tab in `tab-bar-mode' (if enabled).
+
+Returns nil if the buffer is not displayed in a window or tab."
+  (or
+   ;; Windows
+   (get-buffer-window buffer 'visible)
+   ;; Tab-bar windows
+   (and (bound-and-true-p tab-bar-mode)
+        (fboundp 'tab-bar-get-buffer-tab)
+        (tab-bar-get-buffer-tab buffer t nil))))
+
 (defun my-easysession-visible-buffer-list ()
   "Return a list of all buffers considered visible in the current session.
 
 A buffer is included if it satisfies any of the following:
+- It is the *scratch* buffer (included as a special case).
 - It is currently displayed in a visible window.
 - It is associated with a visible tab in `tab-bar-mode', if enabled.
-- It is the *scratch* buffer (included as a special case).
 
 The returned list contains live buffers only."
   (let ((visible-buffers '()))
     (dolist (buffer (buffer-list))
       (when (and (buffer-live-p buffer)
-                 (or ;; Exception: The scratch buffer
+                 (or
+                  ;; Exception: The scratch buffer. (Useful for the
+                  ;; easysession-scratch extension.)
                   (string= (buffer-name buffer) "*scratch*")
-                  ;; Windows
-                  (get-buffer-window buffer 'visible)
-                  ;; Tab-bar windows
-                  (and (bound-and-true-p tab-bar-mode)
-                       (fboundp 'tab-bar-get-buffer-tab)
-                       (tab-bar-get-buffer-tab buffer t nil))))
+
+                  ;; Buffers and indirect buffers
+                  (let ((base-buffer (buffer-base-buffer buffer)))
+                    (cond
+                     ;; Indirect buffers
+                     (base-buffer
+                      (and
+                       (buffer-live-p base-buffer)
+
+                       ;; Is the indirect buffer visible?
+                       (my-easysession-buffer-is-visible buffer)
+
+                       ;; Is the base buffer visible?
+                       (my-easysession-buffer-is-visible base-buffer)))
+
+                     ;; Normal buffers
+                     (t
+                      (my-easysession-buffer-is-visible buffer))))))
         (push buffer visible-buffers)))
     visible-buffers))
 
-(setq easysession-buffer-list-function #'my-easysession-visible-buffer-list)
+(when (fboundp 'my-easysession-visible-buffer-list)
+  (setq easysession-buffer-list-function #'my-easysession-visible-buffer-list))
 ```
 
 (`get-buffer-window` checks if a buffer is visible in any window. `tab-bar-get-buffer-tab` checks if the buffer is visible in a tab-bar tab window. The function collects all visible buffers into the visible-buffers list and returns it.)
