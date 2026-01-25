@@ -1011,13 +1011,14 @@ accordingly, ensuring backward compatibility with legacy session files.)"
       (when buffer-path
         (let ((buffer (get-file-buffer buffer-path)))
           (unless (buffer-live-p buffer)
-            (setq buffer
-                  (ignore-errors
-                    (let ((find-file-hook
-                           (seq-difference
-                            find-file-hook
-                            easysession-exclude-from-find-file-hook)))
-                      (find-file-noselect buffer-path t)))))
+            (setq buffer (let ((find-file-hook
+                                (seq-difference
+                                 find-file-hook
+                                 easysession-exclude-from-find-file-hook)))
+                           (condition-case nil
+                               (find-file-noselect buffer-path t)
+                             (error
+                              nil)))))
 
           (if (not (buffer-live-p buffer))
               (easysession--warning "Failed to restore the buffer '%s': %s"
@@ -1036,8 +1037,11 @@ accordingly, ensuring backward compatibility with legacy session files.)"
                            (bound-and-true-p
                             redisplay-skip-fontification-on-input)
                            (fboundp 'jit-lock-fontify-now))
-                  (ignore-errors
-                    (jit-lock-fontify-now)))
+                  (condition-case nil
+
+                      (jit-lock-fontify-now)
+                    (error
+                     nil)))
 
                 ;; Restore buffer narrowing if present
                 (let* ((narrowing-enabled (consp narrowing-bounds))
