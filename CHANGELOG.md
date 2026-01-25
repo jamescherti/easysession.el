@@ -5,6 +5,8 @@ Author: [James Cherti](https://www.jamescherti.com/)
 
 ## WIP
 
+* Added the `easysession-visible-buffer-list` function, allowing session persistence and restoration to be limited to buffers that are currently visible in windows or associated with visible tab-bar tabs.
+
 * Refactored `easysession-load` to use direct buffer-stream deserialization rather than string-based evaluation, reducing memory overhead and computational pressure when restoring large session files.
 
 * Enhanced session buffer restoration logic (`easysession--handler-load-file-editing-buffers` and `easysession--handler-load-indirect-buffers`) to improve robustness and structural clarity.
