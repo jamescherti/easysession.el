@@ -53,8 +53,8 @@
         #'(lambda (session-data)
             "Load SESSION-DATA."
             (unless (member "*scratch*"
-                            easysession-visible-buffer-list-exceptions)
-              (add-to-list 'easysession-visible-buffer-list-exceptions
+                            easysession-visible-buffer-list-include-names)
+              (add-to-list 'easysession-visible-buffer-list-include-names
                            "*scratch*"))
 
             ;; Load the scratch buffer

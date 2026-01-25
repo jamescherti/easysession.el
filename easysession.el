@@ -1409,7 +1409,7 @@ Returns a list:
 
 ;;; Autoloaded functions
 
-(defvar easysession-visible-buffer-list-exceptions '()
+(defvar easysession-visible-buffer-list-include-names '()
   "List of buffer names that are always included in the session.
 
 Each entry must be a string matching `buffer-name'. Buffers whose
@@ -1432,7 +1432,7 @@ The returned list contains live buffers only."
                  (or
                   ;; Exceptions
                   (member (buffer-name buffer)
-                          easysession-visible-buffer-list-exceptions)
+                          easysession-visible-buffer-list-include-names)
 
                   ;; Buffers and indirect buffers
                   (let ((base-buffer (buffer-base-buffer buffer)))
