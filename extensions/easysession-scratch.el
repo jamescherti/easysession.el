@@ -52,6 +52,11 @@
         ;; Load
         #'(lambda (session-data)
             "Load SESSION-DATA."
+            (unless (member "*scratch*"
+                            easysession-visible-buffer-list-exceptions)
+              (add-to-list 'easysession-visible-buffer-list-exceptions
+                           "*scratch*"))
+
             ;; Load the scratch buffer
             (let (buffer-string)
               (catch 'done

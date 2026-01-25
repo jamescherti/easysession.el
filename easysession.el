@@ -1409,6 +1409,13 @@ Returns a list:
 
 ;;; Autoloaded functions
 
+(defvar easysession-visible-buffer-list-exceptions '()
+  "List of buffer names that are always included in the session.
+
+Each entry must be a string matching `buffer-name'. Buffers whose
+names appear in this list are persisted and restored regardless
+of their visibility.")
+
 ;;;###autoload
 (defun easysession-visible-buffer-list ()
   "Return a list of all buffers considered visible in the current session.
@@ -1423,9 +1430,9 @@ The returned list contains live buffers only."
     (dolist (buffer (buffer-list))
       (when (and (buffer-live-p buffer)
                  (or
-                  ;; Exception: The scratch buffer. (Useful for the
-                  ;; easysession-scratch extension.)
-                  (string= (buffer-name buffer) "*scratch*")
+                  ;; Exceptions
+                  (member (buffer-name buffer)
+                          easysession-visible-buffer-list-exceptions)
 
                   ;; Buffers and indirect buffers
                   (let ((base-buffer (buffer-base-buffer buffer)))
