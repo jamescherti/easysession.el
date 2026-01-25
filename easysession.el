@@ -728,25 +728,6 @@ the active narrowing region. If BUFFER is not narrowed, return nil."
     (when (buffer-narrowed-p)
       (cons (point-min) (point-max)))))
 
-(defun easysession--get-base-buffer-info (buffer)
-  "Return base buffer metadata for BUFFER.
-
-If BUFFER is a live base buffer associated with a path, return an alist with the
-buffer name, buffer path, and narrowing information.
-
-If BUFFER is not a base buffer or has no associated path, return nil."
-  (when (buffer-live-p buffer)
-    (with-current-buffer buffer
-      (let ((path (if (derived-mode-p 'dired-mode)
-                      default-directory
-                    (buffer-file-name))))
-        (when path
-          ;; File visiting buffer and base buffers (not carbon copies)
-          `((buffer-name . ,(buffer-name))
-            (buffer-path . ,path)
-            (narrowing-bounds . ,(easysession--buffer-narrowing-bounds
-                                  buffer))))))))
-
 (defun easysession--get-indirect-buffer-info (indirect-buffer)
   "Get information about the indirect buffer INDIRECT-BUFFER.
 
@@ -980,6 +961,28 @@ The session name is displayed only when a session is actively loaded."
 
 ;;; Internal functions: handlers
 
+(defun easysession--restore-buffer-state (buffer buffer-info)
+  "Restore the state of BUFFER from previously recorded session DATA.
+
+BUFFER is the target buffer to restore. BUFFER-INFO is an alist containing saved
+buffer attributes, currently including `narrowing-bounds` which specifies the
+start and end of the narrowed region.
+
+This function currently restores the narrowing region in the buffer so that it
+reflects the same visible portion as when the session was saved.
+
+In the future, this function may be extended to restore additional buffer
+attributes such as point position, mark, local variables, or other editor state
+information."
+  (let* ((narrowing-bounds (alist-get 'narrowing-bounds buffer-info)))
+    (when (and narrowing-bounds (consp narrowing-bounds))
+      (let* ((start (car narrowing-bounds))
+             (end (cdr narrowing-bounds)))
+        (when (and (numberp start)
+                   (numberp end))
+          (with-current-buffer buffer
+            (narrow-to-region start end)))))))
+
 (defun easysession--handler-load-file-editing-buffers (session-data)
   "Load base buffers from SESSION-DATA.
 
@@ -1005,9 +1008,7 @@ accordingly, ensuring backward compatibility with legacy session files.)"
                           (car buffer-info)))
            (buffer-path (if new-format-p
                             (alist-get 'buffer-path buffer-info)
-                          (cdr buffer-info)))
-           (narrowing-bounds (when new-format-p
-                               (alist-get 'narrowing-bounds buffer-info))))
+                          (cdr buffer-info))))
       (when buffer-path
         (let ((buffer (get-file-buffer buffer-path)))
           (unless (buffer-live-p buffer)
@@ -1038,41 +1039,20 @@ accordingly, ensuring backward compatibility with legacy session files.)"
                             redisplay-skip-fontification-on-input)
                            (fboundp 'jit-lock-fontify-now))
                   (condition-case nil
-
                       (jit-lock-fontify-now)
                     (error
                      nil)))
 
                 ;; Restore buffer narrowing if present
-                (let* ((narrowing-enabled (consp narrowing-bounds))
-                       (start (and narrowing-enabled (car narrowing-bounds)))
-                       (end (and narrowing-enabled (cdr narrowing-bounds))))
-                  (when (and (numberp start)
-                             (numberp end))
-                    (narrow-to-region start end)))))))))))
-
-(defun easysession--handler-save-file-editing-buffers (buffers)
-  "Collect and categorize file editing buffers from the provided list.
-BUFFERS is the list of buffers to process. This function identifies buffers
-that are associated with files (file editing buffers) and those that are
-not. It returns an alist with the following structure."
-  (let ((file-editing-buffers '())
-        (remaining-buffers '()))
-    (dolist (buf buffers)
-      (let ((base-buffer-info (easysession--get-base-buffer-info buf)))
-        (if base-buffer-info
-            (push base-buffer-info file-editing-buffers)
-          (push buf remaining-buffers))))
-    `((key . "path-buffers")
-      (value . ,file-editing-buffers)
-      (remaining-buffers . ,remaining-buffers))))
+                (when new-format-p
+                  (easysession--restore-buffer-state (current-buffer)
+                                                     buffer-info))))))))))
 
 (defun easysession--handler-load-indirect-buffers (session-data)
   "Load indirect buffers from the SESSION-DATA variable."
   (dolist (item (assoc-default "indirect-buffers" session-data))
     (let ((indirect-buffer-name (alist-get 'indirect-buffer-name item))
-          (base-buffer-name (alist-get 'base-buffer-name item))
-          (narrowing-bounds (alist-get 'narrowing-bounds item)))
+          (base-buffer-name (alist-get 'base-buffer-name item)))
       (when (and indirect-buffer-name
                  base-buffer-name)
         (let ((base-buffer (get-buffer base-buffer-name))
@@ -1094,19 +1074,46 @@ not. It returns an alist with the following structure."
                                                      indirect-buffer-name)
 
                     ;; Restore buffer narrowing if present
-                    (let* ((narrowing-enabled (consp narrowing-bounds))
-                           (start (and narrowing-enabled
-                                       (car narrowing-bounds)))
-                           (end (and narrowing-enabled
-                                     (cdr narrowing-bounds))))
-                      (when (and (numberp start)
-                                 (numberp end))
-                        (with-current-buffer indirect-buffer
-                          (narrow-to-region start end))))))
+                    (easysession--restore-buffer-state indirect-buffer item)))
               (error
                (easysession--warning
                 "Failed to restore indirect buffer/clone '%s': %s"
                 indirect-buffer-name (error-message-string err))))))))))
+
+(defun easysession--get-base-buffer-info (buffer)
+  "Return base buffer metadata for BUFFER.
+
+If BUFFER is a live base buffer associated with a path, return an alist with the
+buffer name, buffer path, and narrowing information.
+
+If BUFFER is not a base buffer or has no associated path, return nil."
+  (with-current-buffer buffer
+    (let ((path (if (derived-mode-p 'dired-mode)
+                    default-directory
+                  (buffer-file-name))))
+      (when path
+        ;; File visiting buffer and base buffers (not carbon copies)
+        `((buffer-name . ,(buffer-name))
+          (buffer-path . ,path)
+          (narrowing-bounds . ,(easysession--buffer-narrowing-bounds
+                                buffer)))))))
+
+(defun easysession--handler-save-file-editing-buffers (buffers)
+  "Collect and categorize file editing buffers from the provided list.
+BUFFERS is the list of buffers to process. This function identifies buffers
+that are associated with files (file editing buffers) and those that are
+not. It returns an alist with the following structure."
+  (let ((file-editing-buffers '())
+        (remaining-buffers '()))
+    (dolist (buf buffers)
+      (when (buffer-live-p buf)
+        (let ((base-buffer-info (easysession--get-base-buffer-info buf)))
+          (if base-buffer-info
+              (push base-buffer-info file-editing-buffers)
+            (push buf remaining-buffers)))))
+    `((key . "path-buffers")
+      (value . ,file-editing-buffers)
+      (remaining-buffers . ,remaining-buffers))))
 
 (defun easysession--handler-save-indirect-buffers (buffers)
   "Collect and categorize indirect buffers from the provided list.
