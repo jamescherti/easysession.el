@@ -93,7 +93,10 @@ To install **easysession** from MELPA:
   :init
   ;; Automatically load the session at startup and restore frame size and
   ;; position (geometry)
-  (add-hook 'emacs-startup-hook #'easysession-load-including-geometry 102)
+  (if (daemonp)
+      (add-hook 'server-after-make-frame-hook
+                #'easysession-load-including-geometry 102)
+    (add-hook 'emacs-startup-hook #'easysession-load-including-geometry 102))
 
   ;; Automatically save the current session every `easysession-save-interval'
   ;; seconds (default: 10 minutes)
@@ -103,7 +106,6 @@ To install **easysession** from MELPA:
 Note that:
 - The `easysession-load-including-geometry` function is only needed at startup. During an Emacs session, use `M-x easysession-switch-to` or `M-x easysession-switch-to-and-restore-geometry` to switch sessions or reload the current session without changing frame size or position.
 - The author added 102 and 103 to `add-hook` in the code snippet above to ensure that the session is loaded after all other packages. (Using the depth 102 and 103 is useful for those using [minimal-emacs.d](https://github.com/jamescherti/minimal-emacs.d), where some optimizations restore `file-name-handler-alist` at depth 101 during `emacs-startup-hook`.)
-- When using Emacs in daemon mode (`emacs --daemon`), if using the `after-init-hook` results in issues on startup, an alternative approach is to use `server-after-make-frame-hook`. This hook ensures that the session is loaded once the client frame is created.
 
 ## Extensions
 
