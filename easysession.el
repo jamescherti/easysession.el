@@ -6,7 +6,7 @@
 ;; Version: 1.1.7
 ;; URL: https://github.com/jamescherti/easysession.el
 ;; Keywords: convenience
-;; Package-Requires: ((emacs "25.1"))
+;; Package-Requires: ((emacs "26.1"))
 ;; SPDX-License-Identifier: GPL-3.0-or-later
 
 ;; This file is free software; you can redistribute it and/or modify
@@ -977,6 +977,84 @@ Returns nil if the buffer is not displayed in a window or tab."
         (fboundp 'tab-bar-get-buffer-tab)
         (tab-bar-get-buffer-tab buffer t nil))))
 
+(defun easysession--serialize-to-quoted-sexp (value)
+  "Convert VALUE to a pair (QUOTE . SEXP); (eval SEXP) gives VALUE.
+SEXP is an sexp that when evaluated yields VALUE.
+QUOTE may be `may' (value may be quoted),
+`must' (value must be quoted), or nil (value must not be quoted)."
+  (cond
+   ((or (numberp value) (null value) (eq t value) (keywordp value))
+    (cons 'may value))
+   ((stringp value)
+    ;; Get rid of unreadable text properties.
+    (if (condition-case nil (read (format "%S" value)) (error nil))
+        (cons 'may value)
+      (let ((copy (copy-sequence value)))
+        (set-text-properties 0 (length copy) nil copy)
+        (cons 'may copy))))
+   ((symbolp value)
+    (cons 'must value))
+   ((vectorp value)
+    (let* ((pass1 (mapcar #'easysession--serialize-to-quoted-sexp value))
+           (special (assq nil pass1)))
+      (if special
+          (cons nil `(vector
+                      ,@(mapcar (lambda (el)
+                                  (if (eq (car el) 'must)
+                                      `',(cdr el) (cdr el)))
+                                pass1)))
+        (cons 'may `[,@(mapcar #'cdr pass1)]))))
+   ((and (recordp value) (symbolp (aref value 0)))
+    (let* ((pass1 (let ((res ()))
+                    (dotimes (i (length value))
+                      (push (easysession--serialize-to-quoted-sexp (aref value i)) res))
+                    (nreverse res)))
+           (special (assq nil pass1)))
+      (if special
+          (cons nil `(record
+                      ,@(mapcar (lambda (el)
+                                  (if (eq (car el) 'must)
+                                      `',(cdr el) (cdr el)))
+                                pass1)))
+        (cons 'may (apply #'record (mapcar #'cdr pass1))))))
+   ((consp value)
+    (let ((p value)
+          newlist
+          use-list*)
+      (while (consp p)
+        (let ((q.sexp (easysession--serialize-to-quoted-sexp (car p))))
+          (push q.sexp newlist))
+        (setq p (cdr p)))
+      (when p
+        (let ((last (easysession--serialize-to-quoted-sexp p)))
+          (setq use-list* t)
+          (push last newlist)))
+      (if (assq nil newlist)
+          (cons nil
+                `(,(if use-list* 'desktop-list* 'list)
+                  ,@(mapcar (lambda (el)
+                              (if (eq (car el) 'must)
+                                  `',(cdr el) (cdr el)))
+                            (nreverse newlist))))
+        (cons 'must
+              `(,@(mapcar #'cdr
+                          (nreverse (if use-list* (cdr newlist) newlist)))
+                ,@(if use-list* (cdar newlist)))))))
+   ((subrp value)
+    (cons nil `(symbol-function
+                ',(intern-soft (substring (prin1-to-string value) 7 -1)))))
+   ((markerp value)
+    (let ((pos (marker-position value))
+          (buf (buffer-name (marker-buffer value))))
+      (cons nil
+            `(let ((mk (make-marker)))
+               (add-hook 'desktop-delay-hook
+                         (lambda ()
+                           (set-marker mk ,pos (get-buffer ,buf))))
+               mk))))
+   (t
+    (cons 'may "Unprintable entity"))))
+
 ;;; Internal functions: handlers
 
 (defun easysession--restore-buffer-state (buffer buffer-info)
@@ -1015,8 +1093,8 @@ representation:
   structured fields such as `buffer-name' and `buffer-path', and may optionally
   include `narrowing-bounds', allowing additional buffer state to be restored.
 
-(The loader detects the representation dynamically and restores buffers
-accordingly, ensuring backward compatibility with legacy session files.)"
+The loader detects the representation dynamically and restores buffers
+accordingly, ensuring backward compatibility with legacy session files."
   (dolist (buffer-info (or (assoc-default "path-buffers" session-data)
                            (assoc-default "buffers" session-data)))
     (let* ((new-format-p (and (consp buffer-info)
@@ -1748,19 +1826,25 @@ SESSION-NAME is the name of the session."
     (unless (file-directory-p session-dir)
       (make-directory session-dir :parents))
 
-    (let* ((serialized-data (prin1-to-string session-data)))
-      (with-temp-buffer
-        (insert serialized-data)
-        (let ((coding-system-for-write 'utf-8-emacs)
-              (write-region-annotate-functions nil)
-              (write-region-post-annotation-function nil))
-          (write-region (point-min) (point-max) session-file nil 'silent)
-          nil))
+    (let* ((print-escape-newlines t)
+           (print-length nil)
+           (print-level nil)
+           (float-output-format nil)
+           (quote-sexp (easysession--serialize-to-quoted-sexp session-data))
+           (print-quoted t))
+      (let* ((serialized-data (prin1-to-string (cdr quote-sexp))))
+        (with-temp-buffer
+          (insert serialized-data)
+          (let ((coding-system-for-write 'utf-8-emacs)
+                (write-region-annotate-functions nil)
+                (write-region-post-annotation-function nil))
+            (write-region (point-min) (point-max) session-file nil 'silent)
+            nil))
 
-      (when (called-interactively-p 'any)
-        (if (string= session-name easysession--current-session-name)
-            (easysession--message "Session saved: %s" session-name)
-          (easysession--message "Session saved as: %s" session-name))))
+        (when (called-interactively-p 'any)
+          (if (string= session-name easysession--current-session-name)
+              (easysession--message "Session saved: %s" session-name)
+            (easysession--message "Session saved as: %s" session-name)))))
 
     (run-hooks 'easysession-after-save-hook)))
 
