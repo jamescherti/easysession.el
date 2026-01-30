@@ -1023,8 +1023,8 @@ any arguments. Each element of ARGS becomes part of the resulting list, with the
 last argument as the final element of the list."
   (and args (apply #'cl-list* args)))
 
-(defvar easysession--internal-delay-hook nil
-  "Hooks that run after all buffers have loaded; intended for internal use.")
+;; (defvar easysession--internal-delay-hook nil
+;;   "Hooks that run after all buffers have loaded; intended for internal use.")
 
 (defun easysession--serialize-to-quoted-sexp (value)
   "Convert VALUE to a pair (QUOTE . SEXP); (eval SEXP) gives VALUE.
