@@ -25,6 +25,8 @@ Author: [James Cherti](https://www.jamescherti.com/)
 
 * Add support for deleting multiple sessions at once via `easysession-delete`.
 
+* Do not run `jit-lock-fontify-now` when `redisplay-skip-fontification-on-input` is non-nil.
+
 * Support the `desktop-dont-save` frame parameter.
 
 * Convert warnings to errors in `easysession-load`, `easysession-delete` for missing sessions

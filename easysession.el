@@ -1168,25 +1168,35 @@ accordingly, ensuring backward compatibility with legacy session files."
             ;; the buffer that was returned by `find-file-noselect' is a
             ;; base buffer and not a clone
             (let ((target-buffer (or (buffer-base-buffer buffer) buffer)))
-              (with-current-buffer target-buffer
-                (easysession--ensure-buffer-name target-buffer buffer-name)
+              (easysession--ensure-buffer-name target-buffer buffer-name)
 
-                ;; Fixes the issue preventing font-lock-mode from fontifying
-                ;; restored buffers, causing the text to remain unfontified
-                ;; until the user presses a key.
-                (when (and (bound-and-true-p font-lock-mode)
-                           (bound-and-true-p
-                            redisplay-skip-fontification-on-input)
-                           (fboundp 'jit-lock-fontify-now))
-                  (condition-case err
-                      (jit-lock-fontify-now)
-                    (error
-                     (easysession--warning "%s" (error-message-string err)))))
+              ;; Fixes the issue preventing font-lock-mode from fontifying
+              ;; restored buffers, causing the text to remain unfontified
+              ;; until the user presses a key.
+              ;;
+              ;; TODO: This is inefficient and requires optimization. The Emacs
+              ;; developers appear to have addressed this issue in their
+              ;; upstream codebase.
+              ;;
+              ;; (with-current-buffer target-buffer
+              ;; (when (and (bound-and-true-p font-lock-mode)
+              ;;            (bound-and-true-p
+              ;;             redisplay-skip-fontification-on-input)
+              ;;            (fboundp 'jit-lock-fontify-now))
+              ;;   (run-with-idle-timer
+              ;;    0.1 nil
+              ;;    (lambda ()
+              ;;      (message "Hello %s" (buffer-name))
+              ;;      (condition-case err
+              ;;          (jit-lock-fontify-now)
+              ;;        (error
+              ;;         (easysession--warning
+              ;;          "%s" (error-message-string err))))))))
 
-                ;; Restore buffer narrowing if present
-                (when new-format-p
-                  (easysession--restore-buffer-state (current-buffer)
-                                                     buffer-info))))))))))
+              ;; Restore buffer narrowing if present
+              (when new-format-p
+                (easysession--restore-buffer-state target-buffer
+                                                   buffer-info)))))))))
 
 (defun easysession--handler-load-indirect-buffers (session-data)
   "Load indirect buffers from the SESSION-DATA variable."
