@@ -977,6 +977,12 @@ Returns nil if the buffer is not displayed in a window or tab."
         (fboundp 'tab-bar-get-buffer-tab)
         (tab-bar-get-buffer-tab buffer t nil))))
 
+(defun easysession--list* (&rest args)
+  (and args (apply #'cl-list* args)))
+
+;; (defvar easysession--internal-delay-hook nil
+;;   "Hooks that run after all buffers have loaded; intended for internal use.")
+
 (defun easysession--serialize-to-quoted-sexp (value)
   "Convert VALUE to a pair (QUOTE . SEXP); (eval SEXP) gives VALUE.
 SEXP is an sexp that when evaluated yields VALUE.
@@ -987,7 +993,7 @@ QUOTE may be `may' (value may be quoted),
     (cons 'may value))
 
    ((stringp value)
-    ;; Get rid of unreadable text properties.
+    ;; Remove any unreadable text properties
     (if (condition-case nil (read (format "%S" value)) (error nil))
         (cons 'may value)
       (let ((copy (copy-sequence value)))
@@ -1011,7 +1017,8 @@ QUOTE may be `may' (value may be quoted),
    ((and (recordp value) (symbolp (aref value 0)))
     (let* ((pass1 (let ((res ()))
                     (dotimes (i (length value))
-                      (push (easysession--serialize-to-quoted-sexp (aref value i)) res))
+                      (push (easysession--serialize-to-quoted-sexp
+                             (aref value i)) res))
                     (nreverse res)))
            (special (assq nil pass1)))
       (if special
@@ -1036,7 +1043,7 @@ QUOTE may be `may' (value may be quoted),
           (push last newlist)))
       (if (assq nil newlist)
           (cons nil
-                `(,(if use-list* 'desktop-list* 'list)
+                `(,(if use-list* 'easysession--list* 'list)
                   ,@(mapcar (lambda (el)
                               (if (eq (car el) 'must)
                                   `',(cdr el) (cdr el)))
@@ -1055,7 +1062,7 @@ QUOTE may be `may' (value may be quoted),
    ;;        (buf (buffer-name (marker-buffer value))))
    ;;    (cons nil
    ;;          `(let ((mk (make-marker)))
-   ;;             (add-hook 'easysession-delay-hook
+   ;;             (add-hook 'easysession--internal-delay-hook
    ;;                       (lambda ()
    ;;                         (set-marker mk ,pos (get-buffer ,buf))))
    ;;             mk))))
