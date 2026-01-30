@@ -1898,7 +1898,14 @@ SESSION-NAME is the name of the session."
                 ;; handler operates on a progressively reduced set of buffers.
                 (setq buffers remaining-buffers)))))))
 
-    ;; (push (cons "file-version" easysession-file-version) session-data)
+    (push (cons "file-format-version" easysession-file-version) session-data)
+    (push (cons "mtime" (format-time-string "%Y-%m-%d %H:%M:%S %Z"))
+          session-data)
+    (push
+     (cons
+      "comment"
+      "EasySession session file - https://github.com/jamescherti/easysession.el")
+     session-data)
 
     (unless (file-directory-p session-dir)
       (make-directory session-dir :parents))
