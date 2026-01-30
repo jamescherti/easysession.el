@@ -23,7 +23,11 @@ Author: [James Cherti](https://www.jamescherti.com/)
   * Added Magit integration through the `easysession-magit` extension (`extensions/easysession-magit.el`). This introduces `easysession-magit-mode`, allowing Magit status, log, and diff buffers to be persisted and restored across sessions. Log and diff buffers retain their arguments, including selected revisions and ranges, ensuring continuity when working with Git repositories.
   * Introduced a mode registration system for persisting and restoring custom major modes across EasySession sessions. Users can register and unregister modes using `easysession-add-managed-major-mode` and `easysession-remove-managed-major-mode`.
 
+* Add support for deleting multiple sessions at once via `easysession-delete`.
+
 * Support the `desktop-dont-save` frame parameter.
+
+* Convert warnings to errors in `easysession-load`, `easysession-delete` for missing sessions
 
 * Contribution by Herman He (@hermanhel on GitHub): Added support for persisting and restoring the narrowing state of both base and indirect buffers.
 

@@ -667,7 +667,7 @@ Raise an error if the session name is invalid."
                   (string-match-p "/" session-name)))
             (string= session-name "..")
             (string= session-name "."))
-    (user-error "[easysession] Invalid session name: %S" session-name))
+    (user-error "[easysession] Invalid session name: %s" session-name))
   session-name)
 
 (defun easysession-set-current-session-name (&optional session-name)
@@ -728,6 +728,23 @@ Return the selected session name as a string."
   (completing-read (concat "[easysession] " prompt)
                    (easysession--get-all-names exclude-current)
                    nil nil initial-input nil session-name))
+
+(defun easysession--prompt-multiple-session-names (prompt
+                                                   &optional session-name
+                                                   exclude-current
+                                                   initial-input)
+  "Read a session name from the minibuffer using PROMPT.
+
+SESSION-NAME specifies the default selection.
+When EXCLUDE-CURRENT is non-nil, the active session name is omitted from the
+completion candidates.
+When INITIAL-INPUT is non-nil, it is inserted into the minibuffer as the initial
+contents.
+
+Return the selected session name as a string."
+  (completing-read-multiple (concat "[easysession] " prompt)
+                            (easysession--get-all-names exclude-current)
+                            nil t initial-input nil session-name))
 
 (defun easysession--buffer-narrowing-bounds (buffer)
   "Return narrowing boundaries of BUFFER if it is narrowed.
@@ -870,25 +887,20 @@ When LOAD-GEOMETRY is non-nil, load the frame geometry."
         (setq data (when (assoc "frameset" session-data)
                      (assoc-default "frameset" session-data))))
       (when data
-        (condition-case err
-            (progn
-              (frameset-restore
-               data
-               :reuse-frames easysession-frameset-restore-reuse-frames
-               :cleanup-frames easysession-frameset-restore-cleanup-frames
-               :force-display easysession-frameset-restore-force-display
-               :force-onscreen easysession-frameset-restore-force-onscreen)
+        (frameset-restore
+         data
+         :reuse-frames easysession-frameset-restore-reuse-frames
+         :cleanup-frames easysession-frameset-restore-cleanup-frames
+         :force-display easysession-frameset-restore-force-display
+         :force-onscreen easysession-frameset-restore-force-onscreen)
 
-              (when (fboundp 'tab-bar-mode)
-                (when (seq-some
-                       (lambda (frame)
-                         (menu-bar-positive-p
-                          (frame-parameter frame 'tab-bar-lines)))
-                       (frame-list))
-                  (tab-bar-mode 1))))
-          (error
-           (user-error "[easysession] Failed to restore the frameset: %s"
-                       (error-message-string err))))))))
+        (when (fboundp 'tab-bar-mode)
+          (when (seq-some
+                 (lambda (frame)
+                   (menu-bar-positive-p
+                    (frame-parameter frame 'tab-bar-lines)))
+                 (frame-list))
+            (tab-bar-mode 1)))))))
 
 (defun easysession--ensure-buffer-name (buffer name)
   "Ensure that BUFFER name is NAME."
@@ -1140,9 +1152,13 @@ accordingly, ensuring backward compatibility with legacy session files."
                                 (seq-difference
                                  find-file-hook
                                  easysession-exclude-from-find-file-hook)))
-                           (condition-case nil
+                           (condition-case err
                                (find-file-noselect buffer-path t)
                              (error
+                              (easysession--warning
+                               "Failed to restore the buffer '%s': %s"
+                               buffer-name
+                               (error-message-string err))
                               nil)))))
 
           (if (not (buffer-live-p buffer))
@@ -1162,10 +1178,10 @@ accordingly, ensuring backward compatibility with legacy session files."
                            (bound-and-true-p
                             redisplay-skip-fontification-on-input)
                            (fboundp 'jit-lock-fontify-now))
-                  (condition-case nil
+                  (condition-case err
                       (jit-lock-fontify-now)
                     (error
-                     nil)))
+                     (easysession--warning "%s" (error-message-string err)))))
 
                 ;; Restore buffer narrowing if present
                 (when new-format-p
@@ -1600,8 +1616,8 @@ NEW-SESSION-NAME is the session name."
    (list
     (progn
       (unless easysession--current-session-name
-        (error
-         "No session is active. Load a session with `easysession-switch-to'"))
+        (user-error
+         "[easysession] No session is active. Load a session with `easysession-switch-to'"))
 
       (easysession--prompt-session-name
        (format "Rename session '%s' to: "
@@ -1610,39 +1626,71 @@ NEW-SESSION-NAME is the session name."
        nil
        easysession--current-session-name))))
   (unless easysession--current-session-name
-    (user-error "%s%s"
-                "[easysession] No session is active. "
-                "Load a session with `easysession-switch-to'"))
+    (user-error
+     "[easysession] No session is active. Load a session with `easysession-switch-to'"))
+
   (unless new-session-name
-    (user-error (concat "[easysession] easysession-rename: You need to specify"
-                        "the new session name.")))
+    (user-error "[easysession] You need to specify the new session name"))
+
   (let* ((old-path (easysession-get-session-file-path
                     easysession--current-session-name))
          (new-path (easysession-get-session-file-path new-session-name)))
     (unless (file-regular-p old-path)
-      (error "[easysession] No such file or directory: %s" old-path))
+      (user-error "[easysession] No such file or directory: %s" old-path))
+
     (rename-file old-path new-path)
     (setq easysession--current-session-name new-session-name)))
 
 ;;;###autoload
-(defun easysession-delete (session-name)
-  "Delete a session.
-SESSION-NAME is the session name."
-  (interactive (list (easysession--prompt-session-name "Delete session: ")))
-  (let* ((session-file (easysession--session-file session-name)))
-    (if session-file
-        (progn
-          (let ((session-buffer (find-buffer-visiting session-file)))
-            (when session-buffer
-              (kill-buffer session-buffer)))
+(defun easysession-delete (session-names)
+  "Delete one or more sessions.
+SESSION-NAMES is a string or a list of session names."
+  (interactive (list
+                (easysession--prompt-multiple-session-names
+                 "Delete session(s): "
+                 nil nil nil)))
 
-          (delete-file session-file nil)
-          (easysession--message "Session deleted: %s" session-name)
-          t)
-      (easysession--warning
-       "The session '%s' cannot be deleted because it does not exist"
-       session-name)
-      nil)))
+  (setq session-names
+        (delete-dups
+         (copy-sequence
+          (cond
+           ((null session-names) nil)
+           ((stringp session-names) (list session-names))
+           (t session-names)))))
+
+  (unless session-names
+    (user-error "[easysession] No sessions selected"))
+
+  (let ((session-files (mapcar
+                        (lambda (name)
+                          (cons name (easysession--session-file name)))
+                        session-names)))
+    (dolist (entry session-files)
+      (unless (cdr entry)
+        (user-error
+         "[easysession] The session '%s' cannot be deleted because it doesn't exist"
+         (car entry))))
+
+    (when (and (called-interactively-p 'any)
+               (> (length session-names) 1)
+               (not
+                (yes-or-no-p
+                 (format "[easysession] Delete the sessions %s? "
+                         (string-join session-names ", ")))))
+      (user-error "[easysession] Deletion aborted"))
+
+    (dolist (entry session-files)
+      (let* ((file (cdr entry))
+             (buffer (find-buffer-visiting file)))
+        (when buffer
+          (kill-buffer buffer))
+        (delete-file file nil)))
+
+    (when (called-interactively-p 'any)
+      (easysession--message
+       "Deleted session%s: %s"
+       (if (> (length session-names) 1) "s" "")
+       (string-join session-names ", ")))))
 
 ;;;###autoload
 (defun easysession-load (&optional session-name)
@@ -1706,8 +1754,8 @@ occurred."
                         (funcall handler session-data))
 
                        (t
-                        (easysession--warning
-                         "The following load handler is not a defined function: %s"
+                        (error
+                         "[easysession] The following load handler is not a defined function: %s"
                          handler)))))
 
                   ;; Load the frame set
@@ -1724,8 +1772,8 @@ occurred."
                   (run-hooks 'easysession-after-load-hook)))))
         (error
          (setq easysession--load-error t)
-         (easysession--warning "easysession-load error: %s"
-                               (error-message-string err))))
+         (error "[easysession] easysession-load error: %s"
+                (error-message-string err))))
     ;; Unwind protect
     (setq easysession-load-in-progress nil))
 
@@ -1813,9 +1861,8 @@ SESSION-NAME is the name of the session."
         (if (not (and handler
                       (symbolp handler)
                       (fboundp handler)))
-            (easysession--warning
-             "The following save handler is not a defined function: %s"
-             handler)
+            (error "The following save handler is not a defined function: %s"
+                   handler)
           (let ((result (funcall handler buffers)))
             (when result
               (let* ((key (alist-get 'key result))
