@@ -682,9 +682,18 @@ Return t if the session name is successfully set."
   (easysession-set-current-session-name session-name))
 
 (defun easysession--init-frame-parameters-filters (overwrite-alist)
-  "Return the EasySession version of `frameset-filter-alist'.
-OVERWRITE-ALIST is an alist similar to
-`easysession--overwrite-frameset-filter-alist'."
+  "Return an adjusted version of `frameset-filter-alist'.
+
+This function produces a frameset filter alist based on the current
+`frameset-filter-alist', applying any overrides specified in OVERWRITE-ALIST.
+
+OVERWRITE-ALIST should be an alist where each element has the
+form (FRAME-PARAM . VALUE), similar to
+`easysession--overwrite-frameset-filter-alist'. Each pair in OVERWRITE-ALIST
+replaces or adds the corresponding parameter in the resulting alist.
+
+The returned alist can be used to control which frame parameters are
+saved by EasySession."
   (let ((result (copy-tree frameset-filter-alist)))
     (dolist (pair overwrite-alist)
       (setq result (assq-delete-all (car pair) result))
@@ -984,8 +993,8 @@ any arguments. Each element of ARGS becomes part of the resulting list, with the
 last argument as the final element of the list."
   (and args (apply #'cl-list* args)))
 
-;; (defvar easysession--internal-delay-hook nil
-;;   "Hooks that run after all buffers have loaded; intended for internal use.")
+(defvar easysession--internal-delay-hook nil
+  "Hooks that run after all buffers have loaded; intended for internal use.")
 
 (defun easysession--serialize-to-quoted-sexp (value)
   "Convert VALUE to a pair (QUOTE . SEXP); (eval SEXP) gives VALUE.
@@ -1061,15 +1070,15 @@ QUOTE may be `may' (value may be quoted),
     (cons nil `(symbol-function
                 ',(intern-soft (substring (prin1-to-string value) 7 -1)))))
 
-   ;; ((markerp value)
-   ;;  (let ((pos (marker-position value))
-   ;;        (buf (buffer-name (marker-buffer value))))
-   ;;    (cons nil
-   ;;          `(let ((mk (make-marker)))
-   ;;             (add-hook 'easysession--internal-delay-hook
-   ;;                       (lambda ()
-   ;;                         (set-marker mk ,pos (get-buffer ,buf))))
-   ;;             mk))))
+   ((markerp value)
+    (let ((pos (marker-position value))
+          (buf (buffer-name (marker-buffer value))))
+      (cons nil
+            `(let ((mk (make-marker)))
+               (add-hook 'easysession--internal-delay-hook
+                         (lambda ()
+                           (set-marker mk ,pos (get-buffer ,buf))))
+               mk))))
 
    (t
     (cons 'may "Unprintable entity"))))
