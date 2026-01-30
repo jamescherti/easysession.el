@@ -1034,7 +1034,6 @@ QUOTE may be `may' (value may be quoted),
   (cond
    ((or (numberp value) (null value) (eq t value) (keywordp value))
     (cons 'may value))
-
    ((stringp value)
     ;; Remove any unreadable text properties
     (if (condition-case nil (read (format "%S" value)) (error nil))
@@ -1042,10 +1041,8 @@ QUOTE may be `may' (value may be quoted),
       (let ((copy (copy-sequence value)))
         (set-text-properties 0 (length copy) nil copy)
         (cons 'may copy))))
-
    ((symbolp value)
     (cons 'must value))
-
    ((vectorp value)
     (let* ((pass1 (mapcar #'easysession--serialize-to-quoted-sexp value))
            (special (assq nil pass1)))
@@ -1056,12 +1053,10 @@ QUOTE may be `may' (value may be quoted),
                                       `',(cdr el) (cdr el)))
                                 pass1)))
         (cons 'may `[,@(mapcar #'cdr pass1)]))))
-
    ((and (recordp value) (symbolp (aref value 0)))
     (let* ((pass1 (let ((res ()))
                     (dotimes (i (length value))
-                      (push (easysession--serialize-to-quoted-sexp
-                             (aref value i)) res))
+                      (push (easysession--serialize-to-quoted-sexp (aref value i)) res))
                     (nreverse res)))
            (special (assq nil pass1)))
       (if special
@@ -1071,7 +1066,6 @@ QUOTE may be `may' (value may be quoted),
                                       `',(cdr el) (cdr el)))
                                 pass1)))
         (cons 'may (apply #'record (mapcar #'cdr pass1))))))
-
    ((consp value)
     (let ((p value)
           newlist
@@ -1094,21 +1088,22 @@ QUOTE may be `may' (value may be quoted),
         (cons 'must
               `(,@(mapcar #'cdr
                           (nreverse (if use-list* (cdr newlist) newlist)))
-                ,@(if use-list* (cdar newlist)))))))
-
+                . ,(if use-list* (cdar newlist)))))))
    ((subrp value)
     (cons nil `(symbol-function
                 ',(intern-soft (substring (prin1-to-string value) 7 -1)))))
 
-   ((markerp value)
-    (let ((pos (marker-position value))
-          (buf (buffer-name (marker-buffer value))))
-      (cons nil
-            `(let ((mk (make-marker)))
-               (add-hook 'easysession--internal-delay-hook
-                         (lambda ()
-                           (set-marker mk ,pos (get-buffer ,buf))))
-               mk))))
+   ;; NOTE: Causes issues when opening `org-agenda', then
+   ;;       `window-toggle-side-windows', then `easysession-save'
+   ;; ((markerp value)
+   ;;  (let ((pos (marker-position value))
+   ;;        (buf (buffer-name (marker-buffer value))))
+   ;;    (cons nil
+   ;;          `(let ((mk (make-marker)))
+   ;;             (add-hook 'easysession--internal-delay-hook
+   ;;                       (lambda ()
+   ;;                         (set-marker mk ,pos (get-buffer ,buf))))
+   ;;             mk))))
 
    (t
     (cons 'may "Unprintable entity"))))
@@ -1903,6 +1898,8 @@ SESSION-NAME is the name of the session."
                 ;; handler operates on a progressively reduced set of buffers.
                 (setq buffers remaining-buffers)))))))
 
+    ;; (push (cons "file-version" easysession-file-version) session-data)
+
     (unless (file-directory-p session-dir)
       (make-directory session-dir :parents))
 
@@ -1910,9 +1907,18 @@ SESSION-NAME is the name of the session."
            (print-length nil)
            (print-level nil)
            (float-output-format nil)
+           ;; TODO: Fix issues with org-agenda
            (quote-sexp (easysession--serialize-to-quoted-sexp session-data))
+           ;; (quote (car quote-sexp))
            (print-quoted t))
       (let* ((serialized-data (prin1-to-string (cdr quote-sexp))))
+        ;; NOTE Causes a an issue. It forces the session file to begin with '(
+        ;; which prevents the `read' function from correctly interpreting the
+        ;; file structure.
+        ;;
+        ;; (when (eq quote 'must)
+        ;;   (setq serialized-data (concat "'" serialized-data)))
+
         (with-temp-buffer
           (insert serialized-data)
           (let ((coding-system-for-write 'utf-8-emacs)
