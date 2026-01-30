@@ -861,25 +861,25 @@ When LOAD-GEOMETRY is non-nil, load the frame geometry."
         (setq data (when (assoc "frameset" session-data)
                      (assoc-default "frameset" session-data))))
       (when data
-        (unless (ignore-errors
-                  (frameset-restore
-                   data
-                   :reuse-frames easysession-frameset-restore-reuse-frames
-                   :cleanup-frames easysession-frameset-restore-cleanup-frames
-                   :force-display easysession-frameset-restore-force-display
-                   :force-onscreen easysession-frameset-restore-force-onscreen)
+        (condition-case err
+            (progn
+              (frameset-restore
+               data
+               :reuse-frames easysession-frameset-restore-reuse-frames
+               :cleanup-frames easysession-frameset-restore-cleanup-frames
+               :force-display easysession-frameset-restore-force-display
+               :force-onscreen easysession-frameset-restore-force-onscreen)
 
-                  (when (fboundp 'tab-bar-mode)
-                    (when (seq-some
-                           (lambda (frame)
-                             (menu-bar-positive-p
-                              (frame-parameter frame 'tab-bar-lines)))
-                           (frame-list))
-                      (tab-bar-mode 1)))
-
-                  ;; Return t
-                  t)
-          (easysession--warning "%s: Failed to restore the frameset"))))))
+              (when (fboundp 'tab-bar-mode)
+                (when (seq-some
+                       (lambda (frame)
+                         (menu-bar-positive-p
+                          (frame-parameter frame 'tab-bar-lines)))
+                       (frame-list))
+                  (tab-bar-mode 1))))
+          (error
+           (user-error "[easysession] Failed to restore the frameset: %s"
+                       (error-message-string err))))))))
 
 (defun easysession--ensure-buffer-name (buffer name)
   "Ensure that BUFFER name is NAME."
@@ -985,6 +985,7 @@ QUOTE may be `may' (value may be quoted),
   (cond
    ((or (numberp value) (null value) (eq t value) (keywordp value))
     (cons 'may value))
+
    ((stringp value)
     ;; Get rid of unreadable text properties.
     (if (condition-case nil (read (format "%S" value)) (error nil))
@@ -992,8 +993,10 @@ QUOTE may be `may' (value may be quoted),
       (let ((copy (copy-sequence value)))
         (set-text-properties 0 (length copy) nil copy)
         (cons 'may copy))))
+
    ((symbolp value)
     (cons 'must value))
+
    ((vectorp value)
     (let* ((pass1 (mapcar #'easysession--serialize-to-quoted-sexp value))
            (special (assq nil pass1)))
@@ -1004,6 +1007,7 @@ QUOTE may be `may' (value may be quoted),
                                       `',(cdr el) (cdr el)))
                                 pass1)))
         (cons 'may `[,@(mapcar #'cdr pass1)]))))
+
    ((and (recordp value) (symbolp (aref value 0)))
     (let* ((pass1 (let ((res ()))
                     (dotimes (i (length value))
@@ -1017,6 +1021,7 @@ QUOTE may be `may' (value may be quoted),
                                       `',(cdr el) (cdr el)))
                                 pass1)))
         (cons 'may (apply #'record (mapcar #'cdr pass1))))))
+
    ((consp value)
     (let ((p value)
           newlist
@@ -1040,18 +1045,21 @@ QUOTE may be `may' (value may be quoted),
               `(,@(mapcar #'cdr
                           (nreverse (if use-list* (cdr newlist) newlist)))
                 ,@(if use-list* (cdar newlist)))))))
+
    ((subrp value)
     (cons nil `(symbol-function
                 ',(intern-soft (substring (prin1-to-string value) 7 -1)))))
-   ((markerp value)
-    (let ((pos (marker-position value))
-          (buf (buffer-name (marker-buffer value))))
-      (cons nil
-            `(let ((mk (make-marker)))
-               (add-hook 'desktop-delay-hook
-                         (lambda ()
-                           (set-marker mk ,pos (get-buffer ,buf))))
-               mk))))
+
+   ;; ((markerp value)
+   ;;  (let ((pos (marker-position value))
+   ;;        (buf (buffer-name (marker-buffer value))))
+   ;;    (cons nil
+   ;;          `(let ((mk (make-marker)))
+   ;;             (add-hook 'easysession-delay-hook
+   ;;                       (lambda ()
+   ;;                         (set-marker mk ,pos (get-buffer ,buf))))
+   ;;             mk))))
+
    (t
     (cons 'may "Unprintable entity"))))
 
@@ -1922,6 +1930,7 @@ accordingly."
         (error
          (user-error "[easysession] Failed to load session '%s': %s"
                      session-name (error-message-string err))))
+
       (easysession-set-current-session-name session-name)
 
       (when (and (not session-reloaded)
