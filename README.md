@@ -5,7 +5,7 @@
 ![License](https://img.shields.io/github/license/jamescherti/easysession.el)
 ![](https://jamescherti.com/misc/made-for-gnu-emacs.svg)
 
-The **easysession** package provides a comprehensive session management for Emacs. It is capable of persisting and restoring file-visiting buffers, indirect buffers (clones), buffer narrowing, Dired buffers, window configurations, the built-in tab-bar (including tabs, their buffers, and associated windows), as well as entire Emacs frames.
+The **easysession** Emacs package provides a comprehensive session management for Emacs. It is capable of persisting and restoring file-visiting buffers, indirect buffers (clones), buffer narrowing, Dired buffers, window configurations, the built-in tab-bar (including tabs, their buffers, and associated windows), as well as entire Emacs frames.
 
 With **easysession**, your Emacs setup is restored automatically when you restart. All files, Dired buffers, and window layouts come back as they were, so you can continue working right where you left off. While editing, you can also switch to another session, switch back, rename sessions, or delete them, giving you full control over multiple work environments.
 
@@ -17,11 +17,24 @@ Easysession also supports extensions, enabling the restoration of Magit buffers 
 
 If this package enhances your workflow, please show your support by **⭐ starring EasySession on GitHub** to help more users discover its benefits.
 
+**Key features include:**
+* Quickly switch between sessions while editing with or without disrupting the frame geometry.
+* Capture the full Emacs workspace state: file buffers, indirect buffers and clones, buffer narrowing, Dired buffers, window layouts and splits, the built-in tab-bar with its tabs and buffers, and Emacs frames with optional position and size restoration.
+* Built from the ground up with an emphasis on speed, minimalism, and predictable behavior, even in large or long-running Emacs setups.
+* Never lose context with automatic session persistence. (Enable `easysession-save-mode` to save the active session at regular intervals defined by `easysession-save-interval` and again on Emacs exit.)
+* Comprehensive command set for session management: switch sessions instantly with `easysession-switch-to`, save with `easysession-save`, delete with `easysession-delete`, and rename with `easysession-rename`.
+* Highly extensible architecture that allows custom handlers for non-file buffers, making it possible to restore complex or project-specific buffers exactly as needed.
+* Fine-grained control over file restoration by selectively excluding functions from `find-file-hook` during session loading.
+* Clear visibility of the active session through modeline integration or a lighter.
+* Built-in predicate to determine whether the current session qualifies for automatic saving.
+* Optional **scratch buffer persistence** via the `easysession-scratch` extension, preserving notes and experiments across restarts.
+* Optional **Magit state restoration** via the `easysession-magit` extension, keeping version control workflows intact.
+* Exact restoration of **narrowed regions** in both base and indirect buffers, ensuring each buffer reopens with the same visible scope as when it was saved.
+
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
 ## Table of Contents
 
 - [easysession.el - Easily persist and restore your Emacs editing sessions](#easysessionel---easily-persist-and-restore-your-emacs-editing-sessions)
-  - [Features](#features)
   - [Installation](#installation)
   - [Extensions](#extensions)
     - [Extension: easysession-scratch (Persist and restore the scratch buffer)](#extension-easysession-scratch-persist-and-restore-the-scratch-buffer)
@@ -52,22 +65,6 @@ If this package enhances your workflow, please show your support by **⭐ starri
   - [Links](#links)
 
 <!-- markdown-toc end -->
-
-## Features
-
-Key features include:
-- Quickly switch between sessions while editing without disrupting the frame geometry, enabling you to resume work immediately.
-- Save and load file editing buffers, indirect buffers/clones, dired buffers, windows/splits, the built-in tab-bar (including tabs, their buffers, and windows), the Emacs frames (with or without their position and size).
-- Automatically save sessions by activating the mode with `easysession-save-mode` to ensure that the current session is automatically saved every `easysession-save-interval` seconds and when emacs quits.
-- Design focused on performance, simplicity, and efficiency.
-- Helper functions: Switch to a session (i.e., load and change the current session) with `easysession-switch-to`, load the Emacs editing session with `easysession-load`, save the Emacs editing session with `easysession-save` and `easysession-save-as`, delete the current Emacs session with `easysession-delete`, and rename the current Emacs session with `easysession-rename`.
-- Customizable: Users can implement their own handlers to manage non-file-editing buffers, enabling the creation of custom functions for restoring buffers.
-- The ability to exclude specific functions from being executed in `find-file-hook` when Easysession restores a file.
-- Display the currently loaded session in the modeline or as a lighter.
-- Predicate that determines if the session is saved automatically.
-- Persist and restore the scratch buffer (Extension: easysession-scratch): Ensures that the contents of the Emacs `*scratch*` buffer are saved as part of the session and restored when the session is reloaded, preserving any temporary notes, code snippets, or evaluation history.
-- Persist and restore Magit buffers (Extension: easysession-magit): Saves the state of Magit buffers.
-- Persist and restore narrowing: Ensures that any narrowed regions in both base and indirect buffers are preserved, so the visible portion of each buffer is restored exactly as it was when the session was saved.
 
 ## Installation
 
@@ -136,14 +133,14 @@ To activate `easysession-magit-mode`, add the following to your Emacs configurat
 ## Usage
 
 It is recommended to use the following functions:
-- `easysession-switch-to` to switch to another session or `easysession-load` to reload the current one,
-- `easysession-save-as` to save the current session as the current name or another name.
+- `easysession-switch-to` to switch to another session,
+- `easysession-save` to save the current session as the current name or another name.
 
 To facilitate session management, consider using the following key mappings:
 ``` emacs-lisp
 ;; Main keybindings
 (global-set-key (kbd "C-c sl") 'easysession-switch-to)  ; Load
-(global-set-key (kbd "C-c ss") 'easysession-save-as)  ; Save
+(global-set-key (kbd "C-c ss") 'easysession-save)  ; Save
 
 ;; Other keybindings
 (global-set-key (kbd "C-c sL") 'easysession-switch-to-and-restore-geometry)
@@ -161,6 +158,10 @@ By default, all file-visiting buffers, Dired buffers, and indirect buffers are p
 To restrict session persistence and restoration to buffers that are actually visible, configure `easysession-buffer-list-function` to use the `easysession-visible-buffer-list` function:
 
 ```emacs-lisp
+;; Restrict session persistence and restoration to buffers that are visible
+;; A buffer is included if it satisfies any of the following:
+;; - It is currently displayed in a visible window.
+;; - It is associated with a visible tab in tab-bar-mode, if enabled.
 (setq easysession-buffer-list-function 'easysession-visible-buffer-list)
 ```
 
