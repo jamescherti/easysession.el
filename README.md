@@ -24,7 +24,7 @@ If this package enhances your workflow, please show your support by **⭐ starri
 * Never lose context with automatic session persistence. (Enable `easysession-save-mode` to save the active session at regular intervals defined by `easysession-save-interval` and again on Emacs exit.)
 * Comprehensive command set for session management: switch sessions instantly with `easysession-switch-to`, save with `easysession-save`, delete with `easysession-delete`, and rename with `easysession-rename`.
 * Highly extensible architecture that allows custom handlers for non-file buffers, making it possible to restore complex or project-specific buffers exactly as needed.
-* Fine-grained control over file restoration by selectively excluding functions from `find-file-hook` during session loading.
+* Fine-grained control over file restoration by selectively excluding individual functions from `find-file-hook` during session loading via `easysession-exclude-from-find-file-hook`.
 * Clear visibility of the active session through modeline integration or a lighter.
 * Built-in predicate to determine whether the current session qualifies for automatic saving.
 * Optional **scratch buffer persistence** via the `easysession-scratch` extension, preserving notes and experiments across restarts.

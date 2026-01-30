@@ -34,18 +34,37 @@
 ;; ensuring a consistent and uninterrupted editing experience.
 ;;
 ;; Key features include:
-;; - Minimalist design focused on performance and simplicity, avoiding
-;;   unnecessary complexity.
-;; - Quickly switch between sessions while editing without disrupting the frame
-;;   geometry, enabling you to resume work immediately.
-;; - Save and load file editing buffers, indirect buffers/clones, Dired buffers,
-;;   windows/splits, the Emacs frame (including support for the tab-bar).
-;; - Helper functions: Switch to a session (i.e., load and change the current
-;;   session) with `easysession-switch-to', load the Emacs editing session with
-;;   `easysession-load', save the Emacs editing session with `easysession-save'
-;;   and `easysession-save-as', delete the current Emacs session with
-;;   `easysession-delete', and rename the current Emacs session with
-;;   `easysession-rename'.
+;; - Quickly switch between sessions while editing with or without disrupting
+;;   the frame geometry.
+;; - Capture the full Emacs workspace state: file buffers, indirect buffers and
+;;   clones, buffer narrowing, Dired buffers, window layouts and splits, the
+;;   built-in tab-bar with its tabs and buffers, and Emacs frames with optional
+;;   position and size restoration.
+;; - Built from the ground up with an emphasis on speed, minimalism, and
+;;   predictable behavior, even in large or long-running Emacs setups.
+;; - Never lose context with automatic session persistence. (Enable
+;;   `easysession-save-mode' to save the active session at regular intervals
+;;   defined by `easysession-save-interval' and again on Emacs exit.)
+;; - Comprehensive command set for session management: switch sessions instantly
+;;   with `easysession-switch-to', save with `easysession-save', delete with
+;;   `easysession-delete', and rename with `easysession-rename'.
+;; - Highly extensible architecture that allows custom handlers for non-file
+;;   buffers, making it possible to restore complex or project-specific buffers
+;;   exactly as needed.
+;; - Fine-grained control over file restoration by selectively excluding
+;;   individual functions from `find-file-hook' during session loading via
+;;   `easysession-exclude-from-find-file-hook'.
+;; - Clear visibility of the active session through modeline integration or a
+;;   lighter.
+;; - Built-in predicate to determine whether the current session qualifies for
+;;   automatic saving.
+;; - Optional scratch buffer persistence via the `easysession-scratch'
+;;   extension, preserving notes and experiments across restarts.
+;; - Optional Magit state restoration via the `easysession-magit' extension,
+;;   keeping version control workflows intact.
+;; - Exact restoration of narrowed regions in both base and indirect buffers,
+;;   ensuring each buffer reopens with the same visible scope as when it was
+;;   saved.
 ;;
 ;; Installation from MELPA:
 ;; ------------------------
@@ -65,14 +84,14 @@
 ;; It is recommended to use the following functions:
 ;; - (easysession-switch-to) to switch to another session or (easysession-load)
 ;;   to reload the current one,
-;; - (easysession-save-as) to save the current session as the current name or
+;; - (easysession-save) to save the current session as the current name or
 ;;   another name.
 ;;
 ;; To facilitate session management, consider using the following key mappings:
 ;; C-c l for switching sessions with easysession-switch-to, and C-c s for
-;; saving the current session with easysession-save-as:
+;; saving the current session with easysession-save:
 ;;   (global-set-key (kbd "C-c l") 'easysession-switch-to)
-;;   (global-set-key (kbd "C-c s") 'easysession-save-as)
+;;   (global-set-key (kbd "C-c s") 'easysession-save)
 ;;
 ;; Links:
 ;; ------
@@ -367,7 +386,6 @@ geometry.")
 
 (defcustom easysession-exclude-from-find-file-hook '(recentf-track-opened-file)
   "List of hooks to be excluded from `find-file-hook'.
-
 When EasySession restores a file editing buffer using `find-file-noselect', the
 functions in this list are skipped and not executed by `find-file-hook'. This
 provides control over which hooks should be bypassed during the file restoration
