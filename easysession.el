@@ -977,7 +977,11 @@ Returns nil if the buffer is not displayed in a window or tab."
         (fboundp 'tab-bar-get-buffer-tab)
         (tab-bar-get-buffer-tab buffer t nil))))
 
-(defun easysession--list* (&rest args)
+(defun easysession--cl-list* (&rest args)
+  "Return a list from ARGS using `cl-list*', or nil if ARGS is empty.
+This is a safe wrapper around `cl-list*' that avoids errors when called without
+any arguments. Each element of ARGS becomes part of the resulting list, with the
+last argument as the final element of the list."
   (and args (apply #'cl-list* args)))
 
 ;; (defvar easysession--internal-delay-hook nil
@@ -1043,7 +1047,7 @@ QUOTE may be `may' (value may be quoted),
           (push last newlist)))
       (if (assq nil newlist)
           (cons nil
-                `(,(if use-list* 'easysession--list* 'list)
+                `(,(if use-list* 'easysession--cl-list* 'list)
                   ,@(mapcar (lambda (el)
                               (if (eq (car el) 'must)
                                   `',(cdr el) (cdr el)))
