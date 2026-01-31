@@ -7,7 +7,7 @@ Author: [James Cherti](https://www.jamescherti.com/)
 
 * easysession-save: Serialization now reliably produces `(QUOTE . SEXP)` pairs, preserving the exact structure of saved values. This ensures correct quoting of complex Emacs Lisp objects, including structs (`#s(...)`) and other otherwise unreadable or unloadable entities (`#>`), preventing errors when restoring sessions.
 
-* Fix Emacs daemon mode issue
+* Fix frameset restoration in Emacs daemon mode: Avoid cleaning up the initial daemon frame during frameset restoration by disabling frame cleanup when running under a daemon with a single frame.
 
 * Added the `easysession-visible-buffer-list` function, allowing session persistence and restoration to be limited to buffers that are currently visible in windows or associated with visible tab-bar tabs.
 
