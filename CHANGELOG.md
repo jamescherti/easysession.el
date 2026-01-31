@@ -37,6 +37,8 @@ Author: [James Cherti](https://www.jamescherti.com/)
 
 * Contribution by Herman He (@hermanhel on GitHub): Added support for persisting and restoring the narrowing state of both base and indirect buffers.
 
+* Track successful session loads and prevent auto-save from writing if the session has not been loaded.
+
 * Add the following to the session file: comment, file-format-version, and mtime.
 
 * Add interactive session selection prompts to `easysession-load` and `easysession-save`.  Make `easysession-save-as` obsolete in favor of `easysession-save`

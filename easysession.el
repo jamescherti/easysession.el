@@ -615,7 +615,7 @@ from `easysession--overwrite-frameset-filter-alist`."
 (defvar easysession--current-session-name nil
   "Current session.")
 
-(defvar easysession--load-error nil
+(defvar easysession--session-loaded nil
   "Non-nil indicates whether loading the current session has failed.
 
 This variable is non-nil if an error occurred while attempting to load
@@ -957,20 +957,16 @@ This function is usually called by `easysession-save-mode'. It evaluates the
 `easysession-save-mode-predicate' function."
   ;; Auto save when there is at least one frame and a session has been loaded
   (unwind-protect
-      (progn
-        (when (and (frame-list)
-                   easysession--current-session-name)
-          (if (funcall easysession-save-mode-predicate)
-              (easysession-save)
-            (when easysession--debug
-              (easysession--message
-               (concat
-                "[DEBUG] Auto-save ignored: `easysession-save-mode-predicate' "
-                "returned nil.")))))
-        ;; Always return t, since this `easysession--auto-save' is part of
-        ;; `kill-emacs-query-functions'. Returning nil would prevent Emacs from
-        ;; exiting.
-        t)
+      (when (and (frame-list)
+                 easysession--current-session-name
+                 easysession--session-loaded)
+        (if (funcall easysession-save-mode-predicate)
+            (easysession-save)
+          (when easysession--debug
+            (easysession--message
+             (concat
+              "[DEBUG] Auto-save ignored: `easysession-save-mode-predicate' "
+              "returned nil.")))))
     ;; Always return t, since this `easysession--auto-save' is part of
     ;; `kill-emacs-query-functions'. Returning nil would prevent Emacs from
     ;; exiting.
@@ -1554,14 +1550,15 @@ frame hooks.")
   "Save the current session when a client frame is deleted in daemon mode.
 FRAME designates the frame scheduled for deletion."
   (when (and easysession--current-session-name
-             (not easysession--load-error)
+             easysession--session-loaded
              (daemonp)
              (frame-live-p frame)
              ;; The number 2 accounts for both the initial daemon frame and the
              ;; client frame
              (<= (length (frame-list)) 2))
     (with-selected-frame frame
-      (easysession-save))))
+      (easysession-save))
+    (setq easysession--session-loaded nil)))
 
 ;;;###autoload
 (defun easysession-setup ()
@@ -1755,12 +1752,7 @@ SESSION-NAMES is a string or a list of session names."
   "Load a session.
 
 If SESSION-NAME is non-nil, that session is loaded. Otherwise, the function
-loads the current session if set, or defaults to the \"main\" session.
-
-This function performs the following steps:
-
-Returns non-nil if the session loaded successfully, or nil if an error
-occurred."
+loads the current session if set, or defaults to the \"main\" session."
   (interactive
    (list (easysession--prompt-session-name
           "Load session: "
@@ -1769,7 +1761,7 @@ occurred."
                 ""))
           easysession-switch-to-exclude-current)))
   (setq easysession-load-in-progress nil)
-  (setq easysession--load-error nil)
+  (setq easysession--session-loaded nil)
   (unwind-protect
       (condition-case err
           (progn
@@ -1821,22 +1813,19 @@ occurred."
                    session-data
                    (bound-and-true-p easysession-frameset-restore-geometry))
 
-                  ;; (setq easysession--load-error nil)
                   (when (called-interactively-p 'any)
                     (easysession--message "Session loaded: %s" session-name))
 
                   (easysession-set-current-session-name session-name)
 
+                  (setq easysession--session-loaded t)
+
                   (run-hooks 'easysession-after-load-hook)))))
         (error
-         (setq easysession--load-error t)
          (error "[easysession] easysession-load error: %s"
                 (error-message-string err))))
     ;; Unwind protect
-    (setq easysession-load-in-progress nil))
-
-  ;; Return easysession--load-error
-  (not easysession--load-error))
+    (setq easysession-load-in-progress nil)))
 
 ;;;###autoload
 (defun easysession-load-including-geometry (&optional session-name)
@@ -2060,7 +2049,7 @@ accordingly."
                     session-name))))
       (when (and easysession--current-session-name
                  easysession-switch-to-save-session
-                 (or (or easysession--load-error
+                 (or (or (not easysession--session-loaded)
                          (not session-reloaded))
                      (yes-or-no-p
                       (format "[easysession] Do you want to save the current session '%s' before reloading it?"
