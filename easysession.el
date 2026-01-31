@@ -911,8 +911,7 @@ when no frames are available for persistence."
 (defun easysession--load-frameset (session-data &optional load-geometry)
   "Load the frameset from the SESSION-DATA argument.
 When LOAD-GEOMETRY is non-nil, load the frame geometry."
-  (when (and easysession-enable-frameset-restore
-             (easysession--can-restore-frameset-p))
+  (when (easysession--can-restore-frameset-p)
     (let* ((key (if load-geometry
                     "frameset-geo"
                   "frameset"))
