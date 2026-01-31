@@ -408,6 +408,7 @@ Other packages focus more on managing activities rather than full session manage
 - EasySession relies on Emacs built-in functions for saving and restoring frames and tab-bar tabs (the built-in `frameset` package). Activities uses the built-in bookmark system to save and restore buffers and tabs.
 - Both EasySession and Activities are customizable. In EasySession, users can define custom handlers to manage non-file-backed buffers, allowing the creation of specialized functions for restoring them. In Activities, bookmarks can be used to achieve similar customizations.
 - EasySession persists and restores all frames and tabs. Activities, by design, operates differently: Its scope is limited to a single frame (without referencing tabs) or to a single tab when `tab-bar-mode` is active; it does not span multiple frames or tabs. Each buffer is managed through its major mode's bookmark handler, which handles details such as indirect buffers and narrowing.
+- Activities is fundamentally limited to bookmarkable buffers by design, whereas EasySession is architected for extensibility and can reliably support arbitrary buffer types. (e.g., EasySession supports Magit buffers through the easysession-magit extension.)
 
 ### Testimonials from users
 
