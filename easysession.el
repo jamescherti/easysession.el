@@ -635,6 +635,23 @@ buffer (e.g., file editing buffers, indirect buffers) from the current
 session. These functions are applied sequentially to capture the state of
 the session, which can later be restored by the corresponding load handlers.")
 
+(defvar easysession-visible-buffer-list-include-names '()
+  "List of buffer names that are always included in the session.
+
+Each entry must be a string matching `buffer-name'. Buffers whose
+names appear in this list are persisted and restored regardless
+of their visibility.")
+
+(defvar easysession-setup-add-hook-depth 102
+  "Priority depth used when `easysession-setup' adds `easysession' hooks.
+Higher values ensure that `easysession' hooks run after most other startup or
+frame hooks.")
+
+(defvar easysession-setup-load-session t
+  "Non-nil means `easysession-setup' automatically loads the session.
+Nil means the session is not loaded automatically; the user can load it
+manually.")
+
 (defvar easysession--builtin-load-handlers
   '(easysession--handler-load-file-editing-buffers
     easysession--handler-load-indirect-buffers
@@ -1534,18 +1551,6 @@ Returns a list:
 
 ;;; Autoloaded functions
 
-(defvar easysession-visible-buffer-list-include-names '()
-  "List of buffer names that are always included in the session.
-
-Each entry must be a string matching `buffer-name'. Buffers whose
-names appear in this list are persisted and restored regardless
-of their visibility.")
-
-(defvar easysession-setup-add-hook-depth 102
-  "Priority depth used when `easysession-setup' adds `easysession' hooks.
-Higher values ensure that `easysession' hooks run after most other startup or
-frame hooks.")
-
 (defun easysession--daemon-save-on-delete-frame (frame)
   "Save the current session when a client frame is deleted in daemon mode.
 FRAME designates the frame scheduled for deletion."
@@ -1559,11 +1564,6 @@ FRAME designates the frame scheduled for deletion."
     (with-selected-frame frame
       (easysession-save))
     (setq easysession--session-loaded nil)))
-
-(defvar easysession-setup-load-session t
-  "Non-nil means `easysession-setup' automatically loads the session.
-Nil means the session is not loaded automatically; the user can load it
-manually.")
 
 ;;;###autoload
 (defun easysession-setup ()
