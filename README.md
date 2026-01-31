@@ -48,7 +48,6 @@ If this package enhances your workflow, please show your support by **⭐ starri
     - [Preventing EasySession from Saving When Switching Sessions](#preventing-easysession-from-saving-when-switching-sessions)
     - [How to configure easysession-save-mode to automatically save only the "main" session and let me manually save others?](#how-to-configure-easysession-save-mode-to-automatically-save-only-the-main-session-and-let-me-manually-save-others)
     - [Passing the session name to Emacs via an environment variable](#passing-the-session-name-to-emacs-via-an-environment-variable)
-    - [Configuring EasySession with Emacs daemon mode](#configuring-easysession-with-emacs-daemon-mode)
     - [How to make EasySession kill all buffers, frames, and windows before loading a session?](#how-to-make-easysession-kill-all-buffers-frames-and-windows-before-loading-a-session)
     - [How to create custom load and save handlers for non-file-visiting buffers](#how-to-create-custom-load-and-save-handlers-for-non-file-visiting-buffers)
   - [Frequently asked questions](#frequently-asked-questions)
@@ -259,25 +258,6 @@ The corresponding Elisp code to restore the session is:
 ```
 
 This Elisp code adds a function to the `emacs-startup-hook` that automatically restores a session. It retrieves the value of the `EMACS_SESSION_NAME` environment variable and falls back to `"main"` if the variable is unset or empty. Before switching sessions, it sets `easysession-frameset-restore-geometry` to `t` to ensure that the frame layout is also restored.
-
-### Configuring EasySession with Emacs daemon mode
-
-When using Emacs in daemon mode (`emacs --daemon`), loading sessions needs to be triggered appropriately. If using the `after-init-hook` results in issues on startup, an alternative approach is to use `server-after-make-frame-hook`. This hook ensures that the session is loaded once the client frame is created.
-
-Here is an example:
-```emacs-lisp
-(use-package easysession
-  :ensure t
-  :config
-  (defun my-setup-easy-session ()
-    (easysession-load-including-geometry)
-    (easysession-save-mode)
-    (remove-hook 'server-after-make-frame-hook #'my-setup-easy-session))
-
-  (add-hook 'server-after-make-frame-hook #'my-setup-easy-session))
-```
-
-([read this discussion](https://github.com/jamescherti/easysession.el/discussions/15) for more information.)
 
 ### How to make EasySession kill all buffers, frames, and windows before loading a session?
 
