@@ -1560,6 +1560,11 @@ FRAME designates the frame scheduled for deletion."
       (easysession-save))
     (setq easysession--session-loaded nil)))
 
+(defvar easysession-setup-load-session t
+  "Non-nil means `easysession-setup' automatically loads the session.
+Nil means the session is not loaded automatically; the user can load it
+manually.")
+
 ;;;###autoload
 (defun easysession-setup ()
   "Initialize `easysession' for session persistence.
@@ -1579,16 +1584,18 @@ buffers, and session data."
   (if (daemonp)
       (progn
         ;; This ensures the session is saved before the last client frame is
-        ;; closed in daemon mode, allowing correct restoration when a new frame
-        ;; is created.
+        ;; closed in daemon mode, allowing correct restoration when a new
+        ;; frame is created.
         (add-hook 'delete-frame-functions
                   #'easysession--daemon-save-on-delete-frame)
 
-        (add-hook 'server-after-make-frame-hook
-                  #'easysession-load-including-geometry
-                  easysession-setup-add-hook-depth))
-    (add-hook 'emacs-startup-hook #'easysession-load-including-geometry
-              easysession-setup-add-hook-depth))
+        (when easysession-setup-load-session
+          (add-hook 'server-after-make-frame-hook
+                    #'easysession-load-including-geometry
+                    easysession-setup-add-hook-depth)))
+    (when easysession-setup-load-session
+      (add-hook 'emacs-startup-hook #'easysession-load-including-geometry
+                easysession-setup-add-hook-depth)))
 
   ;; Automatically save the current session every `easysession-save-interval'
   (add-hook 'emacs-startup-hook #'easysession-save-mode

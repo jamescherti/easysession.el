@@ -43,6 +43,8 @@ Author: [James Cherti](https://www.jamescherti.com/)
 
 * Add interactive session selection prompts to `easysession-load` and `easysession-save`.  Make `easysession-save-as` obsolete in favor of `easysession-save`
 
+* Introduce `easysession-setup` and `easysession-setup-load-session` to simplify EasySession configuration in both normal and daemon modes.
+
 ## 1.1.7
 
 * Fix #48: Prevent clearing `file-name-handler-alist` during execution
