@@ -1550,6 +1550,19 @@ of their visibility.")
 Higher values ensure that `easysession' hooks run after most other startup or
 frame hooks.")
 
+(defun easysession--daemon-save-on-delete-frame (frame)
+  "Save the current session when a client frame is deleted in daemon mode.
+FRAME designates the frame scheduled for deletion."
+  (when (and easysession--current-session-name
+             (not easysession--load-error)
+             (daemonp)
+             (frame-live-p frame)
+             ;; The number 2 accounts for both the initial daemon frame and the
+             ;; client frame
+             (<= (length (frame-list)) 2))
+    (with-selected-frame frame
+      (easysession-save))))
+
 ;;;###autoload
 (defun easysession-setup ()
   "Initialize `easysession' for session persistence.
@@ -1569,9 +1582,16 @@ buffers, and session data."
   ;; Automatically load the session at startup and restore frame size and
   ;; position (geometry)
   (if (daemonp)
-      (add-hook 'server-after-make-frame-hook
-                #'easysession-load-including-geometry
-                easysession-setup-add-hook-depth)
+      (progn
+        ;; This ensures the session is saved before the last client frame is
+        ;; closed in daemon mode, allowing correct restoration when a new frame
+        ;; is created.
+        (add-hook 'delete-frame-functions
+                  #'easysession--daemon-save-on-delete-frame)
+
+        (add-hook 'server-after-make-frame-hook
+                  #'easysession-load-including-geometry
+                  easysession-setup-add-hook-depth))
     (add-hook 'emacs-startup-hook #'easysession-load-including-geometry
               easysession-setup-add-hook-depth))
 
