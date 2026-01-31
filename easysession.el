@@ -1581,17 +1581,10 @@ buffers, and session data."
   ;; Automatically load the session at startup and restore frame size and
   ;; position (geometry)
   (if (daemonp)
-      (progn
-        ;; This ensures the session is saved before the last client frame is
-        ;; closed in daemon mode, allowing correct restoration when a new
-        ;; frame is created.
-        (add-hook 'delete-frame-functions
-                  #'easysession--daemon-save-on-delete-frame)
-
-        (when easysession-setup-load-session
-          (add-hook 'server-after-make-frame-hook
-                    #'easysession-load-including-geometry
-                    easysession-setup-add-hook-depth)))
+      (when easysession-setup-load-session
+        (add-hook 'server-after-make-frame-hook
+                  #'easysession-load-including-geometry
+                  easysession-setup-add-hook-depth))
     (when easysession-setup-load-session
       (add-hook 'emacs-startup-hook #'easysession-load-including-geometry
                 easysession-setup-add-hook-depth)))
@@ -2097,6 +2090,13 @@ accordingly."
   :group 'easysession
   (if easysession-save-mode
       (progn
+        (when (daemonp)
+          ;; This ensures the session is saved before the last client frame is
+          ;; closed in daemon mode, allowing correct restoration when a new
+          ;; frame is created.
+          (add-hook 'delete-frame-functions
+                    #'easysession--daemon-save-on-delete-frame))
+
         (when (and easysession-save-interval
                    (null easysession--timer))
           (setq easysession--timer (run-with-timer easysession-save-interval
