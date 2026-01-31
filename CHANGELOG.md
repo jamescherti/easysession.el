@@ -9,6 +9,8 @@ Author: [James Cherti](https://www.jamescherti.com/)
 
 * Fix frameset restoration in Emacs daemon mode: Avoid cleaning up the initial daemon frame during frameset restoration by disabling frame cleanup when running under a daemon with a single frame.
 
+* Save the current session when a client frame is deleted in daemon mode, ensuring the session is preserved before the last frame closes and enabling complete restoration when a new frame is subsequently created.
+
 * Added the `easysession-visible-buffer-list` function, allowing session persistence and restoration to be limited to buffers that are currently visible in windows or associated with visible tab-bar tabs.
 
 * Refactored `easysession-load` to use direct buffer-stream deserialization rather than string-based evaluation, reducing memory overhead and computational pressure when restoring large session files.
