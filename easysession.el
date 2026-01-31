@@ -900,15 +900,21 @@ When LOAD-GEOMETRY is non-nil, load the frame geometry."
                     "frameset-geo"
                   "frameset"))
            (data (when (assoc key session-data)
-                   (assoc-default key session-data))))
+                   (assoc-default key session-data)))
+           (cleanup-frames easysession-frameset-restore-cleanup-frames))
       (when (and (not data) load-geometry)
         (setq data (when (assoc "frameset" session-data)
                      (assoc-default "frameset" session-data))))
+      ;; Ignore cleaning up the daemon's initial frame
+      ;; TODO Write a function that ignores the first frame instead
+      (when (and (daemonp) (< (length (frame-list)) 2))
+        (setq cleanup-frames nil))
+
       (when data
         (frameset-restore
          data
          :reuse-frames easysession-frameset-restore-reuse-frames
-         :cleanup-frames easysession-frameset-restore-cleanup-frames
+         :cleanup-frames cleanup-frames
          :force-display easysession-frameset-restore-force-display
          :force-onscreen easysession-frameset-restore-force-onscreen)
 
