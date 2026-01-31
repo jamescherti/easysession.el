@@ -1545,6 +1545,40 @@ Each entry must be a string matching `buffer-name'. Buffers whose
 names appear in this list are persisted and restored regardless
 of their visibility.")
 
+(defvar easysession-setup-add-hook-depth 102
+  "Priority depth used when `easysession-setup' adds `easysession' hooks.
+Higher values ensure that `easysession' hooks run after most other startup or
+frame hooks.")
+
+;;;###autoload
+(defun easysession-setup ()
+  "Initialize `easysession' for session persistence.
+
+If Emacs is running as a daemon, add `easysession-load-including-geometry' to
+`server-after-make-frame-hook' so that session restoration occurs for each new
+frame. Otherwise, add it to `emacs-startup-hook' to restore the session at
+startup.
+
+Also enable `easysession-save-mode' on startup to automatically save sessions.
+Hook priorities are controlled by `easysession-setup-add-hook-depth'.
+
+This function prepares `easysession' for automatic loading and saving of frames,
+buffers, and session data."
+  ;; TODO Implement saving during easysession-save-on-frame-close
+
+  ;; Automatically load the session at startup and restore frame size and
+  ;; position (geometry)
+  (if (daemonp)
+      (add-hook 'server-after-make-frame-hook
+                #'easysession-load-including-geometry
+                easysession-setup-add-hook-depth)
+    (add-hook 'emacs-startup-hook #'easysession-load-including-geometry
+              easysession-setup-add-hook-depth))
+
+  ;; Automatically save the current session every `easysession-save-interval'
+  (add-hook 'emacs-startup-hook #'easysession-save-mode
+            easysession-setup-add-hook-depth))
+
 ;;;###autoload
 (defun easysession-visible-buffer-list ()
   "Return a list of all buffers considered visible in the current session.

@@ -77,7 +77,6 @@ To install **easysession** from MELPA:
 ``` emacs-lisp
 (use-package easysession
   :ensure t
-
   :custom
   (easysession-save-interval (* 10 60))  ; Save every 10 minutes
 
@@ -87,17 +86,8 @@ To install **easysession** from MELPA:
   ;; Optionally, the session name can be shown in the modeline info area:
   ;; (easysession-mode-line-misc-info t)
 
-  :init
-  ;; Automatically load the session at startup and restore frame size and
-  ;; position (geometry)
-  (if (daemonp)
-      (add-hook 'server-after-make-frame-hook
-                #'easysession-load-including-geometry 102)
-    (add-hook 'emacs-startup-hook #'easysession-load-including-geometry 102))
-
-  ;; Automatically save the current session every `easysession-save-interval'
-  ;; seconds (default: 10 minutes)
-  (add-hook 'emacs-startup-hook #'easysession-save-mode 103))
+  :config
+  (easysession-setup))
 ```
 
 Note that:
