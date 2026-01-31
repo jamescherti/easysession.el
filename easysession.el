@@ -968,12 +968,17 @@ Returns the session file if the session file exists, nil otherwise."
       file-name)))
 
 (defun easysession--auto-save ()
-  "Save the session automatically based on the auto-save predicate.
-This function is usually called by `easysession-save-mode'. It evaluates the
-`easysession-save-mode-predicate' function."
+  "Automatically save the current session when permitted.
+
+This function is invoked by `easysession-save-mode'. It evaluates
+`easysession-save-mode-predicate' and saves the current session when a session
+is loaded, a session name is defined, and at least one frame exists.
+
+The function always returns non-nil so that it does not inhibit Emacs
+termination when used from `kill-emacs-query-functions'."
   ;; Auto save when there is at least one frame and a session has been loaded
   (unwind-protect
-      (when (and (frame-list)
+      (when (and (> (length (frame-list)) 0)
                  easysession--current-session-name
                  easysession--session-loaded)
         (if (funcall easysession-save-mode-predicate)
@@ -986,7 +991,13 @@ This function is usually called by `easysession-save-mode'. It evaluates the
     ;; Always return t, since this `easysession--auto-save' is part of
     ;; `kill-emacs-query-functions'. Returning nil would prevent Emacs from
     ;; exiting.
-    t))
+    t)
+  ;; The second one is important.
+  ;;
+  ;; Always return t, since this `easysession--auto-save' is part of
+  ;; `kill-emacs-query-functions'. Returning nil would prevent Emacs from
+  ;; exiting.
+  t)
 
 (defun easysession--mode-line-session-name-format ()
   "Return a mode-line construct for the currently loaded session.
