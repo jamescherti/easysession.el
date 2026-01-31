@@ -1577,8 +1577,6 @@ Hook priorities are controlled by `easysession-setup-add-hook-depth'.
 
 This function prepares `easysession' for automatic loading and saving of frames,
 buffers, and session data."
-  ;; TODO Implement saving during easysession-save-on-frame-close
-
   ;; Automatically load the session at startup and restore frame size and
   ;; position (geometry)
   (if (daemonp)

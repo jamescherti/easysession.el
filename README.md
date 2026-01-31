@@ -87,6 +87,10 @@ To install **easysession** from MELPA:
   ;; (easysession-mode-line-misc-info t)
 
   :config
+  ;; The `easysession-setup' function adds hooks:
+  ;; - To automatically load the session during `emacs-startup-hook'.
+  ;; - To automatically save the session at regular intervals, and when Emacs
+  ;; exits.
   (easysession-setup))
 ```
 
