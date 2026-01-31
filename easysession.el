@@ -907,7 +907,7 @@ When LOAD-GEOMETRY is non-nil, load the frame geometry."
                      (assoc-default "frameset" session-data))))
       ;; Ignore cleaning up the daemon's initial frame
       ;; TODO Write a function that ignores the first frame instead
-      (when (and (daemonp) (< (length (frame-list)) 2))
+      (when (daemonp)
         (setq cleanup-frames nil))
 
       (when data
