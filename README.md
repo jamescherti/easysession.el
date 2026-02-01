@@ -87,8 +87,8 @@ To install **easysession** from MELPA:
 
   :config
   ;; Key mappings
-  (global-set-key (kbd "C-c ss") #'easysession-save)
-  (global-set-key (kbd "C-c sl") #'easysession-switch-to)
+  (global-set-key (kbd "C-c sl") #'easysession-switch-to) ; Load session
+  (global-set-key (kbd "C-c ss") #'easysession-save) ; Save session
   (global-set-key (kbd "C-c sL") #'easysession-switch-to-and-restore-geometry)
   (global-set-key (kbd "C-c sr") #'easysession-rename)
   (global-set-key (kbd "C-c sR") #'easysession-reset)
