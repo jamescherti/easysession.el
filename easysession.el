@@ -652,6 +652,10 @@ frame hooks.")
 Nil means the session is not loaded automatically; the user can load it
 manually.")
 
+(defvar easysession-setup-load-session-including-geometry t
+  "Non-nil means the `easysession-setup' session restores frame geometry.
+If nil, the first session is loaded without restoring frame sizes or positions.")
+
 (defvar easysession--builtin-load-handlers
   '(easysession--handler-load-file-editing-buffers
     easysession--handler-load-indirect-buffers
@@ -1566,6 +1570,12 @@ Returns a list:
 
 ;;; Autoloaded functions
 
+(defvar easysession--daemon-session-loaded nil
+  "Non-nil if an EasySession session has already been loaded in daemon mode.
+This variable prevents multiple session loads when Emacs is running as a daemon.
+It is set to t after the first successful session load and should not be
+manually modified under normal operation.")
+
 (defun easysession--daemon-save-on-delete-frame (frame)
   "Save the current session when a client frame is deleted in daemon mode.
 FRAME designates the frame scheduled for deletion."
@@ -1576,9 +1586,21 @@ FRAME designates the frame scheduled for deletion."
              ;; The number 2 accounts for both the initial daemon frame and the
              ;; client frame
              (<= (length (frame-list)) 2))
+    (setq easysession--daemon-session-loaded nil)
     (with-selected-frame frame
       (easysession-save))
     (setq easysession--session-loaded nil)))
+
+(defun easysession--daemon-load ()
+  "Load an EasySession session when Emacs is running in daemon mode.
+After loading, `easysession--daemon-session-loaded' is set to t to prevent
+multiple loads during the same daemon session."
+  (unless easysession--daemon-session-loaded
+    (if easysession-setup-load-session-including-geometry
+        (easysession-load-including-geometry)
+      (easysession-load))
+
+    (setq easysession--daemon-session-loaded t)))
 
 ;;;###autoload
 (defun easysession-setup ()
@@ -1594,15 +1616,16 @@ Hook priorities are controlled by `easysession-setup-add-hook-depth'.
 
 This function prepares `easysession' for automatic loading and saving of frames,
 buffers, and session data."
-  ;; Automatically load the session at startup and restore frame size and
-  ;; position (geometry)
   (if (daemonp)
       (when easysession-setup-load-session
         (add-hook 'server-after-make-frame-hook
-                  #'easysession-load-including-geometry
+                  #'easysession--daemon-load
                   easysession-setup-add-hook-depth))
     (when easysession-setup-load-session
-      (add-hook 'emacs-startup-hook #'easysession-load-including-geometry
+      (add-hook 'emacs-startup-hook
+                (when easysession-setup-load-session-including-geometry
+                  #'easysession-load-including-geometry
+                  #'easysession-load)
                 easysession-setup-add-hook-depth)))
 
   ;; Automatically save the current session every `easysession-save-interval'
