@@ -98,6 +98,10 @@ To install **easysession** from MELPA:
   ;; Nil: session is not loaded automatically; the user can load it manually.
   (setq easysession-setup-load-session t)
 
+  ;; Priority depth used when `easysession-setup' adds `easysession' hooks.
+  ;; 102 ensures that the session is loaded after all other packages.
+  (setq easysession-setup-add-hook-depth 102)
+
   ;; The `easysession-setup' function adds hooks:
   ;; - To automatically load the session during `emacs-startup-hook'.
   ;; - To automatically save the session at regular intervals, and when Emacs
@@ -106,7 +110,6 @@ To install **easysession** from MELPA:
 ```
 
 Note that:
-- The `easysession-load-including-geometry` function is only needed at startup. During an Emacs session, use `M-x easysession-switch-to` or `M-x easysession-switch-to-and-restore-geometry` to switch sessions or reload the current session without changing frame size or position.
 - The author added 102 and 103 to `add-hook` in the code snippet above to ensure that the session is loaded after all other packages. (Using the depth 102 and 103 is useful for those using [minimal-emacs.d](https://github.com/jamescherti/minimal-emacs.d), where some optimizations restore `file-name-handler-alist` at depth 101 during `emacs-startup-hook`.)
 
 ## Extensions
