@@ -645,7 +645,12 @@ of their visibility.")
 (defvar easysession-setup-add-hook-depth 102
   "Priority depth used when `easysession-setup' adds `easysession' hooks.
 Higher values ensure that `easysession' hooks run after most other startup or
-frame hooks.")
+frame hooks.
+
+The default value of 102 ensures that the session loads after all other
+packages. Setting the depth to 102 is useful for users of minimal-emacs.d, where
+certain optimizations restore `file-name-handler-alist' at depth 101 during
+`emacs-startup-hook'.")
 
 (defvar easysession-setup-load-session t
   "Non-nil means `easysession-setup' automatically loads the session.
@@ -932,6 +937,9 @@ When LOAD-GEOMETRY is non-nil, load the frame geometry."
          (if (eq easysession-frameset-restore-cleanup-frames t)
              (lambda (frame action)
                (when (and (memq action '(:rejected :ignored))
+                          ;; Avoid cleaning up the initial daemon frame during
+                          ;; frameset restoration by disabling frame cleanup
+                          ;; when running under a daemon with a single frame.
                           (not (and (daemonp)
                                     (equal (terminal-name (frame-terminal frame))
                                            "initial_terminal"))))
@@ -965,6 +973,7 @@ Also checks if `easysession-dont-save' is set to t."
   (and (not (frame-parameter frame 'parent-frame))
        (not (frame-parameter frame 'easysession-dont-save))
        (not (frame-parameter frame 'desktop-dont-save))
+       ;; Avoid saving the initial daemon frame
        (not (and (daemonp)
                  (equal (terminal-name (frame-terminal frame))
                         "initial_terminal")))))
