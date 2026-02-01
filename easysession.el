@@ -958,7 +958,11 @@ Also checks if `easysession-dont-save' is set to t."
   ;; spatial relationship.
   (and (not (frame-parameter frame 'parent-frame))
        (not (frame-parameter frame 'easysession-dont-save))
-       (not (frame-parameter frame 'desktop-dont-save))))
+
+       (not (frame-parameter frame 'desktop-dont-save))
+       (not (and (daemonp)
+                 (equal (terminal-name (frame-terminal frame))
+                        "initial_terminal")))))
 
 (defun easysession--session-file (session-name)
   "Check if a session with the given SESSION-NAME exists.
