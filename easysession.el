@@ -1769,7 +1769,8 @@ loads the current session if set, or defaults to the \"main\" session."
           (unless easysession-switch-to-exclude-current
             (or easysession--current-session-name
                 ""))
-          easysession-switch-to-exclude-current)))
+          (or easysession-switch-to-exclude-current
+              (not easysession--session-loaded)))))
   (setq easysession-load-in-progress nil)
   (setq easysession--session-loaded nil)
   (unwind-protect
@@ -1876,7 +1877,8 @@ accordingly."
           (unless easysession-switch-to-exclude-current
             (or easysession--current-session-name
                 ""))
-          easysession-switch-to-exclude-current)))
+          (and easysession-switch-to-exclude-current
+               (not easysession--session-loaded)))))
   (let ((easysession-frameset-restore-geometry t))
     (easysession-switch-to session-name)))
 
@@ -2035,7 +2037,8 @@ accordingly."
           (unless easysession-switch-to-exclude-current
             (or easysession--current-session-name
                 ""))
-          easysession-switch-to-exclude-current)))
+          (and easysession-switch-to-exclude-current
+               (not easysession--session-loaded)))))
 
   (setq session-name (or session-name
                          easysession--current-session-name))
