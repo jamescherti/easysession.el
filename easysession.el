@@ -916,21 +916,23 @@ When LOAD-GEOMETRY is non-nil, load the frame geometry."
                     "frameset-geo"
                   "frameset"))
            (data (when (assoc key session-data)
-                   (assoc-default key session-data)))
-           (cleanup-frames easysession-frameset-restore-cleanup-frames))
+                   (assoc-default key session-data))))
       (when (and (not data) load-geometry)
         (setq data (when (assoc "frameset" session-data)
                      (assoc-default "frameset" session-data))))
-      ;; Ignore cleaning up the daemon's initial frame
-      ;; TODO Write a function that ignores the first frame instead
-      (when (and (daemonp) (eq cleanup-frames t))
-        (setq cleanup-frames nil))
-
       (when data
         (frameset-restore
          data
          :reuse-frames easysession-frameset-restore-reuse-frames
-         :cleanup-frames cleanup-frames
+         :cleanup-frames
+         (if (eq easysession-frameset-restore-cleanup-frames t)
+             (lambda (frame action)
+               (when (and (memq action '(:rejected :ignored))
+                          (not (and (daemonp)
+                                    (equal (terminal-name (frame-terminal frame))
+                                           "initial_terminal"))))
+                 (delete-frame frame)))
+           easysession-frameset-restore-cleanup-frames)
          :force-display easysession-frameset-restore-force-display
          :force-onscreen easysession-frameset-restore-force-onscreen)
 
@@ -958,7 +960,6 @@ Also checks if `easysession-dont-save' is set to t."
   ;; spatial relationship.
   (and (not (frame-parameter frame 'parent-frame))
        (not (frame-parameter frame 'easysession-dont-save))
-
        (not (frame-parameter frame 'desktop-dont-save))
        (not (and (daemonp)
                  (equal (terminal-name (frame-terminal frame))
