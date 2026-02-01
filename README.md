@@ -21,6 +21,7 @@ If this package enhances your workflow, please show your support by **⭐ starri
 * Quickly switch between sessions while editing with or without disrupting the frame geometry.
 * Capture the full Emacs workspace state: file buffers, indirect buffers and clones, buffer narrowing, Dired buffers, window layouts and splits, the built-in tab-bar with its tabs and buffers, and Emacs frames with optional position and size restoration.
 * Built from the ground up with an emphasis on speed, minimalism, and predictable behavior, even in large or long-running Emacs setups.
+* Supports both standard Emacs sessions and Emacs running in daemon mode.
 * Never lose context with automatic session persistence. (Enable `easysession-save-mode` to save the active session at regular intervals defined by `easysession-save-interval` and again on Emacs exit.)
 * Comprehensive command set for session management: switch sessions instantly with `easysession-switch-to`, save with `easysession-save`, delete with `easysession-delete`, and rename with `easysession-rename`.
 * Highly extensible architecture that allows custom handlers for non-file buffers, making it possible to restore complex or project-specific buffers exactly as needed.
@@ -370,17 +371,19 @@ EasySession can persist and restore all original and indirect buffers exactly as
 
 ### What does EasySession offer that desktop.el doesn't?
 
-While `desktop.el` is a foundational session management tool for Emacs, it has several limitations:
+While desktop.el is a foundational session management tool for Emacs, it has several limitations:
 - It primarily saves Emacs' state on exit and restores it on startup, making it difficult to switch between different session files during an editing session.
-- `desktop.el` does not restores buffer narrowing, which is the restriction of a buffer to display and edit only a specific portion of its contents.
-- The `desktop.el` package does not allow the user to easily choose whether to load sessions with or without modifying the Emacs frame geometry. This last feature is important in easysession because it allows switching between sessions without the annoyance of changing the window position or size.
-- The `desktop.el` package saves and restores major modes and important global variables, which can prevent some packages from initializing correctly. For example, the `vdiff` package may stop working after comparing two files and reloading Emacs and the `desktop.el` session. This issue has also occurred with a few other packages.
-- The `desktop.el` package can be bulky and slow in operation.
-- The `desktop.el` package lacks support for saving and restoring indirect buffers (clones). Indirect buffers are secondary buffers that share the same content as an existing buffer but can have different point positions, narrowing, folds, and other buffer-local settings. This allows users to view and edit the same file or text content in multiple ways simultaneously without duplicating the actual data. There are third-party packages, such as desktop+, that extend desktop.el to restore indirect buffers. However, packages like desktop+ are still based on desktop.el and can cause the issues described above.
+- desktop.el does not restores buffer narrowing, which is the restriction of a buffer to display and edit only a specific portion of its contents.
+- The desktop.el package does not allow the user to easily choose whether to load sessions with or without modifying the Emacs frame geometry. This last feature is important in easysession because it allows switching between sessions without the annoyance of changing the window position or size.
+- The desktop.el package saves and restores major modes and important global variables, which can prevent some packages from initializing correctly. For example, the `vdiff` package may stop working after comparing two files and reloading Emacs and the desktop.el session. This issue has also occurred with a few other packages.
+- The desktop.el package can be bulky and slow in operation.
+- The desktop.el package lacks support for saving and restoring indirect buffers (clones). Indirect buffers are secondary buffers that share the same content as an existing buffer but can have different point positions, narrowing, folds, and other buffer-local settings. This allows users to view and edit the same file or text content in multiple ways simultaneously without duplicating the actual data. There are third-party packages, such as desktop+, that extend desktop.el to restore indirect buffers. However, packages like desktop+ are still based on desktop.el and can cause the issues described above.
+- Although desktop.el can operate in daemon mode, users have occasionally encountered issues such as sessions failing to save automatically when the last client frame is closed, and unpredictable behavior when multiple frames are opened or closed. EasySession addresses these challenges by ensuring reliable session saving and restoration across all frames and client connections, delivering consistent and dependable session management in both interactive and daemon workflows.
 
 In contrast, easysession offers enhanced functionality:
 - It supports saving and loading various buffer types, including indirect buffers (clones), and buffer narrowing.
 - It allows users to load or save different sessions while actively editing, without the need to restart Emacs.
+- EasySession provides full support for both standard Emacs sessions and Emacs running in daemon mode.
 - It excels in speed and efficiency, enabling seamless session management within Emacs.
 
 ### Why not just improve and submit patches to desktop.el?
