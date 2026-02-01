@@ -1585,16 +1585,23 @@ This variable prevents multiple session loads when Emacs is running as a daemon.
 It is set to t after the first successful session load and should not be
 manually modified under normal operation.")
 
-(defun easysession--daemon-save-on-delete-frame (frame)
+(defun easysession--persist-session-on-frame-delete-maybe (frame)
   "Save the current session when a client frame is deleted in daemon mode.
-FRAME designates the frame scheduled for deletion."
+FRAME designates the frame scheduled for deletion.
+
+This ensures the session is saved before the last client frame is closed in
+daemon mode, allowing correct restoration when a new frame is created."
   (when (and easysession--current-session-name
              easysession--session-loaded
              (daemonp)
              (frame-live-p frame)
              ;; The number 2 accounts for both the initial daemon frame and the
              ;; client frame
-             (<= (length (frame-list)) 2))
+             (= (length (seq-filter
+                         (lambda (frame)
+                           (not (equal (terminal-name (frame-terminal frame))
+                                       "initial_terminal")))
+                         (frame-list))) 1))
     (setq easysession--daemon-session-loaded nil)
     (with-selected-frame frame
       (easysession-save))
@@ -2146,7 +2153,7 @@ accordingly."
           ;; closed in daemon mode, allowing correct restoration when a new
           ;; frame is created.
           (add-hook 'delete-frame-functions
-                    #'easysession--daemon-save-on-delete-frame))
+                    #'easysession--persist-session-on-frame-delete-maybe))
 
         (when (and easysession-save-interval
                    (null easysession--timer))
