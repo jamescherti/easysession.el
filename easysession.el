@@ -1295,10 +1295,13 @@ If BUFFER is not a base buffer or has no associated path, return nil."
   (with-current-buffer buffer
     (let ((path (if (derived-mode-p 'dired-mode)
                     default-directory
-                  (buffer-file-name))))
+                  (buffer-file-name)))
+          (buffer-base-name (and (fboundp 'uniquify-buffer-base-name)
+                                 (uniquify-buffer-base-name))))
       (when path
         ;; File visiting buffer and base buffers (not carbon copies)
         `((buffer-name . ,(buffer-name))
+          (buffer-base-name . ,buffer-base-name)
           (buffer-path . ,path)
           (narrowing-bounds . ,(easysession--buffer-narrowing-bounds
                                 buffer)))))))
