@@ -700,6 +700,12 @@ This is an internal variable that is meant to be read-only. Do not modify it.
 This variable is used to indicate whether a session loading process is in
 progress.")
 
+(defvar easysession-save-in-progress nil
+  "Session name (string) if a session is currently being saved.
+This is an internal variable that is meant to be read-only. Do not modify it.
+This variable is used to indicate whether a session saving process is in
+progress.")
+
 ;;; Internal functions
 
 (defun easysession--message (&rest args)
@@ -1997,106 +2003,109 @@ SESSION-NAME is the name of the session."
     (user-error "%s%s"
                 "[easysession] No session is active. "
                 "Load a session with `easysession-switch-to'"))
+  (unwind-protect
+      (progn
+        (setq easysession-save-in-progress t)
+        (run-hooks 'easysession-before-save-hook)
+        (let* ((session-name (if session-name
+                                 session-name
+                               easysession--current-session-name))
+               (session-file (easysession-get-session-file-path session-name))
+               (data-frameset (easysession--save-frameset session-name))
+               (data-frameset-geometry (easysession--save-frameset
+                                        session-name t))
+               (session-data nil)
+               (session-dir (file-name-directory session-file)))
+          ;; Frameset
+          (push (cons "frameset" data-frameset) session-data)
+          (push (cons "frameset-geo" data-frameset-geometry) session-data)
 
-  (run-hooks 'easysession-before-save-hook)
-  (let* ((session-name (if session-name
-                           session-name
-                         easysession--current-session-name))
-         (session-file (easysession-get-session-file-path session-name))
-         (data-frameset (easysession--save-frameset session-name))
-         (data-frameset-geometry (easysession--save-frameset
-                                  session-name t))
-         (session-data nil)
-         (session-dir (file-name-directory session-file)))
-    ;; Frameset
-    (push (cons "frameset" data-frameset) session-data)
-    (push (cons "frameset-geo" data-frameset-geometry) session-data)
+          ;; Buffers and file buffers
+          (let* ((buffers (funcall easysession-buffer-list-function)))
+            (dolist (handler (easysession-get-save-handlers))
+              (if (not (and handler
+                            (symbolp handler)
+                            (fboundp handler)))
+                  (error "The following save handler is not a defined function: %s"
+                         handler)
+                (let ((result (funcall handler buffers)))
+                  (when result
+                    (let* ((key (alist-get 'key result))
+                           (value (let ((value (alist-get 'buffers result)))
+                                    (if value
+                                        ;; Backward compatibility
+                                        value
+                                      ;; New: 'value
+                                      (alist-get 'value result))))
+                           (remaining-buffers (alist-get 'remaining-buffers result)))
+                      ;; Push results into session-data
+                      (push (cons key value) session-data)
 
-    ;; Buffers and file buffers
-    (let* ((buffers (funcall easysession-buffer-list-function)))
-      (dolist (handler (easysession-get-save-handlers))
-        (if (not (and handler
-                      (symbolp handler)
-                      (fboundp handler)))
-            (error "The following save handler is not a defined function: %s"
-                   handler)
-          (let ((result (funcall handler buffers)))
-            (when result
-              (let* ((key (alist-get 'key result))
-                     (value (let ((value (alist-get 'buffers result)))
-                              (if value
-                                  ;; Backward compatibility
-                                  value
-                                ;; New: 'value
-                                (alist-get 'value result))))
-                     (remaining-buffers (alist-get 'remaining-buffers result)))
-                ;; Push results into session-data
-                (push (cons key value) session-data)
+                      ;; Generate legacy list of buffers
+                      (when (string= key "path-buffers")
+                        (let (legacy-list-buffers)
+                          (dolist (item value)
+                            (let ((path (alist-get 'buffer-path item))
+                                  (name (alist-get 'buffer-name item)))
+                              (when (and path name)
+                                (push (cons name path) legacy-list-buffers))))
 
-                ;; Generate legacy list of buffers
-                (when (string= key "path-buffers")
-                  (let (legacy-list-buffers)
-                    (dolist (item value)
-                      (let ((path (alist-get 'buffer-path item))
-                            (name (alist-get 'buffer-name item)))
-                        (when (and path name)
-                          (push (cons name path) legacy-list-buffers))))
+                          (push (cons "buffers" legacy-list-buffers) session-data)))
 
-                    (push (cons "buffers" legacy-list-buffers) session-data)))
+                      ;; The following optimizes buffer processing by updating the
+                      ;; list of buffers for the next iteration By setting buffers
+                      ;; to the remaining-buffers returned by each handler function,
+                      ;; it ensures that each subsequent handler only processes
+                      ;; buffers that have not yet been handled. This approach
+                      ;; avoids redundant processing of buffers that have already
+                      ;; been classified or processed by previous handlers,
+                      ;; resulting in more efficient processing. As a result, each
+                      ;; handler operates on a progressively reduced set of buffers.
+                      (setq buffers remaining-buffers)))))))
 
-                ;; The following optimizes buffer processing by updating the
-                ;; list of buffers for the next iteration By setting buffers
-                ;; to the remaining-buffers returned by each handler function,
-                ;; it ensures that each subsequent handler only processes
-                ;; buffers that have not yet been handled. This approach
-                ;; avoids redundant processing of buffers that have already
-                ;; been classified or processed by previous handlers,
-                ;; resulting in more efficient processing. As a result, each
-                ;; handler operates on a progressively reduced set of buffers.
-                (setq buffers remaining-buffers)))))))
+          (push (cons "file-format-version" easysession-file-version) session-data)
+          (push (cons "mtime" (format-time-string "%Y-%m-%d %H:%M:%S %Z"))
+                session-data)
+          (push
+           (cons
+            "comment"
+            "EasySession session file - https://github.com/jamescherti/easysession.el")
+           session-data)
 
-    (push (cons "file-format-version" easysession-file-version) session-data)
-    (push (cons "mtime" (format-time-string "%Y-%m-%d %H:%M:%S %Z"))
-          session-data)
-    (push
-     (cons
-      "comment"
-      "EasySession session file - https://github.com/jamescherti/easysession.el")
-     session-data)
+          (unless (file-directory-p session-dir)
+            (make-directory session-dir :parents))
 
-    (unless (file-directory-p session-dir)
-      (make-directory session-dir :parents))
+          (let* ((print-escape-newlines t)
+                 (print-length nil)
+                 (print-level nil)
+                 (float-output-format nil)
+                 ;; TODO: Fix issues with org-agenda
+                 (quote-sexp (easysession--serialize-to-quoted-sexp session-data))
+                 ;; (quote (car quote-sexp))
+                 (print-quoted t))
+            (let* ((serialized-data (prin1-to-string (cdr quote-sexp))))
+              ;; NOTE Causes a an issue. It forces the session file to begin with '(
+              ;; which prevents the `read' function from correctly interpreting the
+              ;; file structure.
+              ;;
+              ;; (when (eq quote 'must)
+              ;;   (setq serialized-data (concat "'" serialized-data)))
 
-    (let* ((print-escape-newlines t)
-           (print-length nil)
-           (print-level nil)
-           (float-output-format nil)
-           ;; TODO: Fix issues with org-agenda
-           (quote-sexp (easysession--serialize-to-quoted-sexp session-data))
-           ;; (quote (car quote-sexp))
-           (print-quoted t))
-      (let* ((serialized-data (prin1-to-string (cdr quote-sexp))))
-        ;; NOTE Causes a an issue. It forces the session file to begin with '(
-        ;; which prevents the `read' function from correctly interpreting the
-        ;; file structure.
-        ;;
-        ;; (when (eq quote 'must)
-        ;;   (setq serialized-data (concat "'" serialized-data)))
+              (with-temp-buffer
+                (insert serialized-data)
+                (let ((coding-system-for-write 'utf-8-emacs)
+                      (write-region-annotate-functions nil)
+                      (write-region-post-annotation-function nil))
+                  (write-region (point-min) (point-max) session-file nil 'silent)
+                  nil))
 
-        (with-temp-buffer
-          (insert serialized-data)
-          (let ((coding-system-for-write 'utf-8-emacs)
-                (write-region-annotate-functions nil)
-                (write-region-post-annotation-function nil))
-            (write-region (point-min) (point-max) session-file nil 'silent)
-            nil))
+              (when (called-interactively-p 'any)
+                (if (string= session-name easysession--current-session-name)
+                    (easysession--message "Session saved: %s" session-name)
+                  (easysession--message "Session saved as: %s" session-name)))))
 
-        (when (called-interactively-p 'any)
-          (if (string= session-name easysession--current-session-name)
-              (easysession--message "Session saved: %s" session-name)
-            (easysession--message "Session saved as: %s" session-name)))))
-
-    (run-hooks 'easysession-after-save-hook)))
+          (run-hooks 'easysession-after-save-hook)))
+    (setq easysession-save-in-progress nil)))
 
 (defalias 'easysession-save-as 'easysession-save)
 (make-obsolete 'easysession-save-as 'easysession-save "1.1.7")

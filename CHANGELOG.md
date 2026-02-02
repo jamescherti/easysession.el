@@ -49,6 +49,8 @@ Author: [James Cherti](https://www.jamescherti.com/)
 
 * Add the `easysession-edit` command, enabling direct editing of the currently loaded session.
 
+* Add `easysession-save-in-progress` to indicate when a session is actively being saved.
+
 * Introduce `easysession-setup` and `easysession-setup-load-session` to simplify EasySession configuration in both normal and daemon modes.
 
 ## 1.1.7
