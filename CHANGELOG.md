@@ -43,7 +43,11 @@ Author: [James Cherti](https://www.jamescherti.com/)
 
 * Add interactive session selection prompts to `easysession-load` and `easysession-save`.  Make `easysession-save-as` obsolete in favor of `easysession-save`
 
+* Add `easysession-unload`, which saves the active session and then clears all in-memory session state.
+
 * When `easysession-switch-to-exclude-current` is non-nil, ensure the session is excluded from the prompt only after it has been loaded.
+
+* Add the `easysession-edit` command, enabling direct editing of the currently loaded session.
 
 * Introduce `easysession-setup` and `easysession-setup-load-session` to simplify EasySession configuration in both normal and daemon modes.
 

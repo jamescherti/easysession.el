@@ -1901,6 +1901,40 @@ loads the current session if set, or defaults to the \"main\" session."
     (setq easysession-load-in-progress nil)))
 
 ;;;###autoload
+(defun easysession-unload ()
+  "Unload the currently loaded session.
+If a session is active and marked as loaded, the session state is saved before
+unloading.
+
+The function then clears all internal indicators of an active session by
+resetting the current session identifier and load flag.
+
+This operation only affects in-memory state. Session data on disk is preserved."
+  (interactive)
+  (when (and easysession--current-session-name
+             easysession--session-loaded)
+    (easysession-save))
+
+  (setq easysession--current-session-name nil)
+  (setq easysession--session-loaded nil))
+
+;;;###autoload
+(defun easysession-edit (session-name)
+  "Edit a session.
+If SESSION-NAME is nil, defaults to the current session.
+Signal an error if the session file does not exist."
+  (interactive
+   (list (easysession--prompt-session-name
+          "Edit session: "
+          nil
+          nil
+          easysession--current-session-name)))
+  (let ((session-file (easysession-get-session-file-path session-name)))
+    (unless (file-regular-p session-file)
+      (user-error "Session file does not exist: %s" session-file))
+    (find-file session-file)))
+
+;;;###autoload
 (defun easysession-load-including-geometry (&optional session-name)
   "Load the session and restore the position and size of the Emacs frames.
 SESSION-NAME is the session name.
@@ -1954,8 +1988,7 @@ SESSION-NAME is the name of the session."
           (or easysession--current-session-name
               "")
           nil
-          (or easysession--current-session-name
-              ""))))
+          easysession--current-session-name)))
   (when (and (not session-name)
              (not easysession--current-session-name))
     (user-error "%s%s"
