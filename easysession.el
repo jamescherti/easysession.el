@@ -111,12 +111,6 @@
 ;; - (easysession-save) to save the current session as the current name or
 ;;   another name.
 ;;
-;; To facilitate session management, consider using the following key mappings:
-;; C-c l for switching sessions with easysession-switch-to, and C-c s for
-;; saving the current session with easysession-save:
-;;   (global-set-key (kbd "C-c l") 'easysession-switch-to)
-;;   (global-set-key (kbd "C-c s") 'easysession-save)
-;;
 ;; Links:
 ;; ------
 ;; - More information about easysession (Frequently asked questions, usage...):
