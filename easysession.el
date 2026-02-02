@@ -706,6 +706,11 @@ This is an internal variable that is meant to be read-only. Do not modify it.
 This variable is used to indicate whether a session saving process is in
 progress.")
 
+(defvar easysession-confirm-new-session t
+  "Non-nil prompts the user for confirmation when creating a new session.")
+
+(defvar uniquify-buffer-name-style)
+
 ;;; Internal functions
 
 (defun easysession--message (&rest args)
@@ -982,6 +987,7 @@ When LOAD-GEOMETRY is non-nil, load the frame geometry."
 
 (defun easysession--ensure-buffer-name (buffer name)
   "Ensure that BUFFER name is NAME."
+  (message "ENSURE BUFFER NAME: %s -> %s" buffer name)
   (when (not (string= (buffer-name buffer) name))
     (with-current-buffer buffer
       (rename-buffer name t))))
@@ -1230,34 +1236,38 @@ accordingly, ensuring backward compatibility with legacy session files."
                             (alist-get 'buffer-path buffer-info)
                           (cdr buffer-info))))
       (when buffer-path
-        (let ((buffer (get-file-buffer buffer-path)))
-          (unless (buffer-live-p buffer)
-            (setq buffer (let ((find-file-hook
-                                (seq-difference
-                                 find-file-hook
-                                 easysession-exclude-from-find-file-hook)))
-                           (condition-case err
-                               (find-file-noselect buffer-path t)
-                             (error
-                              (easysession--warning
-                               "Failed to restore the buffer '%s': %s"
-                               buffer-name
-                               (error-message-string err))
-                              nil)))))
+        (let ((original-buffer (get-file-buffer buffer-path))
+              buffer)
+          (if (buffer-live-p original-buffer)
+              (setq buffer original-buffer)
+            (let ((new-buffer (let ((find-file-hook
+                                     (seq-difference
+                                      find-file-hook
+                                      easysession-exclude-from-find-file-hook)))
+                                (condition-case err
+                                    (find-file-noselect buffer-path t)
+                                  (error
+                                   (easysession--warning
+                                    "Failed to restore the buffer '%s': %s"
+                                    buffer-name
+                                    (error-message-string err))
+                                   nil)))))
+              ;; We are going to be using the base buffer to make sure that the
+              ;; buffer that was returned by `find-file-noselect' is a base
+              ;; buffer and not a clone
+              (setq buffer (or (buffer-base-buffer new-buffer) new-buffer))))
 
           (if (not (buffer-live-p buffer))
               (easysession--warning "Failed to restore the buffer '%s': %s"
                                     buffer-name buffer-path)
-            ;; We are going to be using the base buffer to make sure that
-            ;; the buffer that was returned by `find-file-noselect' is a
-            ;; base buffer and not a clone
-            (let ((target-buffer (or (buffer-base-buffer buffer) buffer)))
-              (easysession--ensure-buffer-name target-buffer buffer-name)
+            ;;; Ensure that buffer name is buffer-name
+            (let ((uniquify-buffer-name-style nil)) ; Disable uniquify
+              (easysession--ensure-buffer-name buffer buffer-name))
 
-              ;; Restore buffer narrowing if present
-              (when new-format-p
-                (easysession--restore-buffer-state target-buffer
-                                                   buffer-info)))))))))
+            ;; Restore buffer narrowing if present
+            (when new-format-p
+              (easysession--restore-buffer-state buffer
+                                                 buffer-info))))))))
 
 (defun easysession--handler-load-indirect-buffers (session-data)
   "Load indirect buffers from the SESSION-DATA variable."
@@ -1281,8 +1291,9 @@ accordingly, ensuring backward compatibility with legacy session files."
                        "Failed to restore the indirect buffer/clone: %s"
                        indirect-buffer-name)
                     ;; Restore indirect buffer
-                    (easysession--ensure-buffer-name indirect-buffer
-                                                     indirect-buffer-name)
+                    (let ((uniquify-buffer-name-style nil)) ; Disable uniquify
+                      (easysession--ensure-buffer-name indirect-buffer
+                                                       indirect-buffer-name))
 
                     ;; Restore buffer narrowing if present
                     (easysession--restore-buffer-state indirect-buffer item)))
@@ -1302,12 +1313,12 @@ If BUFFER is not a base buffer or has no associated path, return nil."
     (let ((path (if (derived-mode-p 'dired-mode)
                     default-directory
                   (buffer-file-name)))
-          (buffer-base-name (and (fboundp 'uniquify-buffer-base-name)
-                                 (uniquify-buffer-base-name))))
+          (uniquify-base-name (and (fboundp 'uniquify-buffer-base-name)
+                                   (uniquify-buffer-base-name))))
       (when path
         ;; File visiting buffer and base buffers (not carbon copies)
         `((buffer-name . ,(buffer-name))
-          (buffer-base-name . ,buffer-base-name)
+          (uniquify-base-name . ,uniquify-base-name)
           (buffer-path . ,path)
           (narrowing-bounds . ,(easysession--buffer-narrowing-bounds
                                 buffer)))))))
@@ -1852,7 +1863,9 @@ loads the current session if set, or defaults to the \"main\" session."
                                      ;; The default session loaded when none is
                                      ;; specified is 'main'.
                                      "main"))
-                   (session-file (easysession--session-file session-name)))
+                   (session-file (easysession--session-file session-name))
+                   ;; (uniquify-buffer-name-style nil)
+                   )  ; Disable uniquify
               (setq easysession-load-in-progress session-name)
 
               (if (not session-file)
@@ -2015,7 +2028,8 @@ SESSION-NAME is the name of the session."
                (data-frameset-geometry (easysession--save-frameset
                                         session-name t))
                (session-data nil)
-               (session-dir (file-name-directory session-file)))
+               (session-dir (file-name-directory session-file))
+               (uniquify-buffer-name-style nil))  ; Disable uniquify
           ;; Frameset
           (push (cons "frameset" data-frameset) session-data)
           (push (cons "frameset-geo" data-frameset-geometry) session-data)
@@ -2111,9 +2125,6 @@ SESSION-NAME is the name of the session."
 (make-obsolete 'easysession-save-as 'easysession-save "1.1.7")
 
 ;;;###autoload
-
-(defvar easysession-confirm-new-session t
-  "Non-nil prompts the user for confirmation when creating a new session.")
 
 (defun easysession-switch-to (session-name)
   "Load a session without altering the frame's size or position.

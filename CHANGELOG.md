@@ -51,6 +51,8 @@ Author: [James Cherti](https://www.jamescherti.com/)
 
 * Add `easysession-save-in-progress` to indicate when a session is actively being saved.
 
+* Fix conflict between easysession buffer renaming and uniquify. Avoid an ordering issue where easysession renames buffers while uniquify is managing their names, which could result in inconsistent uniquify-managed state or unexpected buffer names.
+
 * Introduce `easysession-setup` and `easysession-setup-load-session` to simplify EasySession configuration in both normal and daemon modes.
 
 ## 1.1.7
