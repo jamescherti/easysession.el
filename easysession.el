@@ -412,6 +412,28 @@ triggered in this context."
   :type '(repeat symbol)
   :group 'easysession)
 
+(defvar easysession-load-in-progress nil
+  "Session name (string) if a session is currently being loaded.
+This is an internal variable that is meant to be read-only. Do not modify it.
+This variable is used to indicate whether a session loading process is in
+progress.")
+
+(defvar easysession-save-in-progress nil
+  "Session name (string) if a session is currently being saved.
+This is an internal variable that is meant to be read-only. Do not modify it.
+This variable is used to indicate whether a session saving process is in
+progress.")
+
+(defvar easysession-confirm-new-session t
+  "Non-nil prompts the user for confirmation when creating a new session.")
+
+(defvar easysession-save-pretty-print nil
+  "Non-nil means session data is pretty-printed when written to disk.
+When it is nil, session data is saved in a more compact form that is harder for
+humans to read but takes less space.
+This option only changes how the session file looks, not what information is
+stored.")
+
 ;;; Internal variables
 
 (defvar easysession--debug nil)
@@ -693,21 +715,6 @@ If nil, the first session is loaded without restoring frame sizes or positions."
 
 (defvar easysession--managed-major-modes nil
   "Alist of (MODE . PROPS) for managed major modes.")
-
-(defvar easysession-load-in-progress nil
-  "Session name (string) if a session is currently being loaded.
-This is an internal variable that is meant to be read-only. Do not modify it.
-This variable is used to indicate whether a session loading process is in
-progress.")
-
-(defvar easysession-save-in-progress nil
-  "Session name (string) if a session is currently being saved.
-This is an internal variable that is meant to be read-only. Do not modify it.
-This variable is used to indicate whether a session saving process is in
-progress.")
-
-(defvar easysession-confirm-new-session t
-  "Non-nil prompts the user for confirmation when creating a new session.")
 
 (defvar uniquify-buffer-name-style)
 
@@ -1943,21 +1950,36 @@ This operation only affects in-memory state. Session data on disk is preserved."
   (setq easysession--current-session-name nil)
   (setq easysession--session-loaded nil))
 
-;;;###autoload
+(defcustom easysession-edit-read-only t
+  "Non-nil means session buffers opened with `easysession-edit` are read-only."
+  :type 'boolean
+  :group 'easysession)
+
 (defun easysession-edit (session-name)
-  "Edit a session.
+  "Edit a session in `emacs-lisp-mode`.
 If SESSION-NAME is nil, defaults to the current session.
-Signal an error if the session file does not exist."
+Signal an error if the session file does not exist.
+Returns the buffer visiting the session file.
+The buffer is read-only if `easysession-edit-read-only` is non-nil."
   (interactive
    (list (easysession--prompt-session-name
           "Edit session: "
           nil
           nil
           easysession--current-session-name)))
-  (let ((session-file (easysession-get-session-file-path session-name)))
+  (let* ((session-file (easysession-get-session-file-path session-name))
+         (buffer-before (get-file-buffer session-file)))
     (unless (file-regular-p session-file)
       (user-error "Session file does not exist: %s" session-file))
-    (find-file session-file)))
+    (find-file session-file)
+
+    (unless buffer-before
+      (let ((buffer (get-file-buffer session-file)))
+        (with-current-buffer buffer
+          (lisp-mode)
+          (when easysession-edit-read-only
+            (read-only-mode 1))
+          (current-buffer))))))
 
 ;;;###autoload
 (defun easysession-load-including-geometry (&optional session-name)
@@ -2113,6 +2135,10 @@ SESSION-NAME is the name of the session."
                 (let ((coding-system-for-write 'utf-8-emacs)
                       (write-region-annotate-functions nil)
                       (write-region-post-annotation-function nil))
+                  (when easysession-save-pretty-print
+                    (if (fboundp 'elisp-autofmt-buffer)
+                        (elisp-autofmt-buffer)
+                      (pp-buffer)))
                   (write-region (point-min) (point-max) session-file nil 'silent)
                   nil))
 

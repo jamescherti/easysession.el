@@ -55,6 +55,8 @@ Author: [James Cherti](https://www.jamescherti.com/)
 
 * Bug fix: Prevent `easysession-save` from adding indirect buffers to the list of base buffers
 
+* Add `easysession-save-pretty-print` variable to control pretty-printing of session data when saving. When non-nil, session files are written in a human-readable format.
+
 * Introduce `easysession-setup` and `easysession-setup-load-session` to simplify EasySession configuration in both normal and daemon modes.
 
 ## 1.1.7
