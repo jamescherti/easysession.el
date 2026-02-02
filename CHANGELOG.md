@@ -53,6 +53,8 @@ Author: [James Cherti](https://www.jamescherti.com/)
 
 * Fix conflict between easysession buffer renaming and uniquify. Avoid an ordering issue where easysession renames buffers while uniquify is managing their names, which could result in inconsistent uniquify-managed state or unexpected buffer names.
 
+* Bug fix: Prevent `easysession-save` from adding indirect buffers to the list of base buffers
+
 * Introduce `easysession-setup` and `easysession-setup-load-session` to simplify EasySession configuration in both normal and daemon modes.
 
 ## 1.1.7

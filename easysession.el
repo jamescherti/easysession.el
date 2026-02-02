@@ -1239,7 +1239,8 @@ accordingly, ensuring backward compatibility with legacy session files."
         (let ((original-buffer (get-file-buffer buffer-path))
               buffer)
           (if (buffer-live-p original-buffer)
-              (setq buffer original-buffer)
+              (setq buffer (or (buffer-base-buffer original-buffer)
+                               original-buffer))
             (let ((new-buffer (let ((find-file-hook
                                      (seq-difference
                                       find-file-hook
@@ -1257,17 +1258,18 @@ accordingly, ensuring backward compatibility with legacy session files."
               ;; buffer and not a clone
               (setq buffer (or (buffer-base-buffer new-buffer) new-buffer))))
 
-          (if (not (buffer-live-p buffer))
-              (easysession--warning "Failed to restore the buffer '%s': %s"
-                                    buffer-name buffer-path)
-            ;;; Ensure that buffer name is buffer-name
-            (let ((uniquify-buffer-name-style nil)) ; Disable uniquify
-              (easysession--ensure-buffer-name buffer buffer-name))
+          (unless (buffer-base-buffer buffer)
+            (if (not (buffer-live-p buffer))
+                (easysession--warning "Failed to restore the buffer '%s': %s"
+                                      buffer-name buffer-path)
+              ;; Ensure that buffer name is buffer-name
+              (let ((uniquify-buffer-name-style nil)) ; Disable uniquify
+                (easysession--ensure-buffer-name buffer buffer-name))
 
-            ;; Restore buffer narrowing if present
-            (when new-format-p
-              (easysession--restore-buffer-state buffer
-                                                 buffer-info))))))))
+              ;; Restore buffer narrowing if present
+              (when new-format-p
+                (easysession--restore-buffer-state buffer
+                                                   buffer-info)))))))))
 
 (defun easysession--handler-load-indirect-buffers (session-data)
   "Load indirect buffers from the SESSION-DATA variable."
@@ -1309,19 +1311,20 @@ If BUFFER is a live base buffer associated with a path, return an alist with the
 buffer name, buffer path, and narrowing information.
 
 If BUFFER is not a base buffer or has no associated path, return nil."
-  (with-current-buffer buffer
-    (let ((path (if (derived-mode-p 'dired-mode)
-                    default-directory
-                  (buffer-file-name)))
-          (uniquify-base-name (and (fboundp 'uniquify-buffer-base-name)
-                                   (uniquify-buffer-base-name))))
-      (when path
-        ;; File visiting buffer and base buffers (not carbon copies)
-        `((buffer-name . ,(buffer-name))
-          (uniquify-base-name . ,uniquify-base-name)
-          (buffer-path . ,path)
-          (narrowing-bounds . ,(easysession--buffer-narrowing-bounds
-                                buffer)))))))
+  (unless (buffer-base-buffer buffer)
+    (with-current-buffer buffer
+      (let ((path (if (derived-mode-p 'dired-mode)
+                      default-directory
+                    (buffer-file-name)))
+            (uniquify-base-name (and (fboundp 'uniquify-buffer-base-name)
+                                     (uniquify-buffer-base-name))))
+        (when path
+          ;; File visiting buffer and base buffers (not carbon copies)
+          `((buffer-name . ,(buffer-name))
+            (uniquify-base-name . ,uniquify-base-name)
+            (buffer-path . ,path)
+            (narrowing-bounds . ,(easysession--buffer-narrowing-bounds
+                                  buffer))))))))
 
 (defun easysession--handler-save-file-editing-buffers (buffers)
   "Collect and categorize file editing buffers from the provided list.
