@@ -1555,7 +1555,6 @@ data."
      ,key
      (let ((result (funcall ,handler-func buffers)))
        (when result
-         ;; TODO Check if buffers and remaining buffers exist
          (push (cons 'key ,key) result)))))
 
 (defmacro easysession-define-handler (key load-handler-func save-handler-func)
@@ -2114,18 +2113,9 @@ SESSION-NAME is the name of the session."
                  (print-length nil)
                  (print-level nil)
                  (float-output-format nil)
-                 ;; TODO: Fix issues with org-agenda
                  (quote-sexp (easysession--serialize-to-quoted-sexp session-data))
-                 ;; (quote (car quote-sexp))
                  (print-quoted t))
             (let* ((serialized-data (prin1-to-string (cdr quote-sexp))))
-              ;; NOTE Causes a an issue. It forces the session file to begin with '(
-              ;; which prevents the `read' function from correctly interpreting the
-              ;; file structure.
-              ;;
-              ;; (when (eq quote 'must)
-              ;;   (setq serialized-data (concat "'" serialized-data)))
-
               (with-temp-buffer
                 (insert serialized-data)
                 (let ((coding-system-for-write 'utf-8-emacs)
