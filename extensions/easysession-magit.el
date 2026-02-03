@@ -76,7 +76,7 @@
   (let ((directory (alist-get 'default-directory state)))
     (when directory
       (require 'vc)
-      (eq (vc-responsible-backend directory) 'Git))))
+      (eq (vc-responsible-backend directory t) 'Git))))
 
 ;;;###autoload
 (define-minor-mode easysession-magit-mode
