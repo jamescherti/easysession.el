@@ -59,6 +59,8 @@ Author: [James Cherti](https://www.jamescherti.com/)
 
 * Introduce `easysession-setup` and `easysession-setup-load-session` to simplify EasySession configuration in both normal and daemon modes.
 
+* Load indirect buffers for all buffers, not only file-visiting and Dired buffers.
+
 ## 1.1.7
 
 * Fix #48: Prevent clearing `file-name-handler-alist` during execution

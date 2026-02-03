@@ -703,14 +703,14 @@ If nil, the first session is loaded without restoring frame sizes or positions."
 
 (defvar easysession--builtin-load-handlers
   '(easysession--handler-load-file-editing-buffers
-    easysession--handler-load-indirect-buffers
-    easysession--handler-load-managed-major-modes)
+    easysession--handler-load-managed-major-modes
+    easysession--handler-load-indirect-buffers)
   "Internal variable.")
 
 (defvar easysession--builtin-save-handlers
   '(easysession--handler-save-file-editing-buffers
-    easysession--handler-save-indirect-buffers
-    easysession--handler-save-managed-major-modes)
+    easysession--handler-save-managed-major-modes
+    easysession--handler-save-indirect-buffers)
   "Internal variable.")
 
 (defvar easysession--managed-major-modes nil
@@ -849,11 +849,8 @@ Return nil if BUF is not an indirect buffer or if the base buffer cannot be
 determined."
   (when (buffer-live-p indirect-buffer)
     (let ((base-buffer (buffer-base-buffer indirect-buffer)))
-      (when (and (buffer-live-p base-buffer) ; Indirect buffer?
-                 ;; The base has to be a file visiting buffer
-                 (or (buffer-file-name base-buffer)
-                     (with-current-buffer base-buffer
-                       (derived-mode-p 'dired-mode))))
+      (when (and base-buffer ; Indirect buffer?
+                 (buffer-live-p base-buffer))
         (let ((base-buffer-name (buffer-name base-buffer))
               (indirect-buffer-name (buffer-name indirect-buffer)))
           (when (and base-buffer-name
@@ -994,7 +991,6 @@ When LOAD-GEOMETRY is non-nil, load the frame geometry."
 
 (defun easysession--ensure-buffer-name (buffer name)
   "Ensure that BUFFER name is NAME."
-  (message "ENSURE BUFFER NAME: %s -> %s" buffer name)
   (when (not (string= (buffer-name buffer) name))
     (with-current-buffer buffer
       (rename-buffer name t))))
@@ -1452,13 +1448,13 @@ HANDLER-FN is the function to be removed."
 
 (defun easysession-get-save-handlers ()
   "Return a list of all built-in and user-defined save handlers."
-  (append easysession--builtin-save-handlers
-          easysession--save-handlers))
+  (append easysession--save-handlers
+          easysession--builtin-save-handlers))
 
 (defun easysession-get-load-handlers ()
   "Return a list of all built-in and user-defined load handlers."
-  (append easysession--builtin-load-handlers
-          easysession--load-handlers))
+  (append easysession--load-handlers
+          easysession--builtin-load-handlers))
 
 (defun easysession-add-managed-major-mode (mode &rest props)
   "Add a managed major mode.
