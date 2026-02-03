@@ -1717,11 +1717,12 @@ The returned list contains live buffers only."
                       (and
                        (buffer-live-p base-buffer)
 
-                       ;; Is the indirect buffer visible?
-                       (easysession--buffer-is-visible buffer)
+                       (or
+                        ;; Is the indirect buffer visible?
+                        (easysession--buffer-is-visible buffer)
 
-                       ;; Is the base buffer visible?
-                       (easysession--buffer-is-visible base-buffer)))
+                        ;; Is the base buffer visible?
+                        (easysession--buffer-is-visible base-buffer))))
 
                      ;; Normal buffers
                      (t
