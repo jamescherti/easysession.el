@@ -1944,6 +1944,7 @@ This operation only affects in-memory state. Session data on disk is preserved."
              easysession--session-loaded)
     (easysession-save))
 
+  (setq easysession--daemon-session-loaded nil)
   (setq easysession--current-session-name nil)
   (setq easysession--session-loaded nil))
 
