@@ -100,7 +100,6 @@ To install **easysession** from MELPA:
   (global-set-key (kbd "C-c ss") #'easysession-save) ; Save session
   (global-set-key (kbd "C-c sL") #'easysession-switch-to-and-restore-geometry)
   (global-set-key (kbd "C-c sr") #'easysession-rename)
-  (global-set-key (kbd "C-c sR") #'easysession-reset)
   (global-set-key (kbd "C-c su") #'easysession-unload)
   (global-set-key (kbd "C-c sd") #'easysession-delete)
 
