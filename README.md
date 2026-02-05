@@ -82,6 +82,12 @@ To install **easysession** from MELPA:
   :custom
   (easysession-save-interval (* 10 60))  ; Save every 10 minutes
 
+  ;; Save the current session when using `easysession-switch-to'
+  (easysession-switch-to-save-session t)
+
+  ;; Do not exclude the current session when switching sessions
+  (easysession-switch-to-exclude-current nil)
+
   ;; Display the active session name in the mode-line lighter.
   (easysession-save-mode-lighter-show-session-name t)
 
