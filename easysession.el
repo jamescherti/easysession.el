@@ -1651,7 +1651,7 @@ daemon mode, allowing correct restoration when a new frame is created."
       (easysession-save))
     (setq easysession--session-loaded nil)))
 
-(defun easysession--daemon-load ()
+(defun easysession--ensure-daemon-session ()
   "Load an EasySession session when Emacs is running in daemon mode.
 After loading, `easysession--daemon-session-loaded' is set to t to prevent
 multiple loads during the same daemon session."
@@ -1678,9 +1678,13 @@ This function prepares `easysession' for automatic loading and saving of frames,
 buffers, and session data."
   (when easysession-setup-load-session
     (if (daemonp)
-        (add-hook 'server-after-make-frame-hook
-                  #'easysession--daemon-load
-                  easysession-setup-add-hook-depth)
+        (progn
+          (add-hook 'server-after-make-frame-hook
+                    #'easysession--ensure-daemon-session
+                    easysession-setup-add-hook-depth)
+
+          (when (frame-parameter nil 'client)
+            (easysession--ensure-daemon-session)))
       (add-hook 'emacs-startup-hook
                 (when easysession-setup-load-session-including-geometry
                   #'easysession-load-including-geometry
