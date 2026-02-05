@@ -53,6 +53,8 @@ Author: [James Cherti](https://www.jamescherti.com/)
 
 * Fix conflict between easysession buffer renaming and uniquify. Avoid an ordering issue where easysession renames buffers while uniquify is managing their names, which could result in inconsistent uniquify-managed state or unexpected buffer names.
 
+* Enhance `easysession-reset` safety by targeting only non-file buffers and unmodified file-visiting buffers.
+
 * Bug fix: Prevent `easysession-save` from adding indirect buffers to the list of base buffers
 
 * Add `easysession-save-pretty-print` variable to control pretty-printing of session data when saving. When non-nil, session files are written in a human-readable format.

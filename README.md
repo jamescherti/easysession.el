@@ -100,6 +100,7 @@ To install **easysession** from MELPA:
   (global-set-key (kbd "C-c ss") #'easysession-save) ; Save session
   (global-set-key (kbd "C-c sL") #'easysession-switch-to-and-restore-geometry)
   (global-set-key (kbd "C-c sr") #'easysession-rename)
+  (global-set-key (kbd "C-c sR") #'easysession-reset)
   (global-set-key (kbd "C-c su") #'easysession-unload)
   (global-set-key (kbd "C-c sd") #'easysession-delete)
 
@@ -145,19 +146,6 @@ To activate `easysession-magit-mode`, add the following to your Emacs configurat
 It is recommended to use the following functions:
 - `easysession-switch-to` to switch to another session,
 - `easysession-save` to save the current session as the current name or another name.
-
-To facilitate session management, consider using the following key mappings:
-``` emacs-lisp
-;; Main keybindings
-(global-set-key (kbd "C-c sl") 'easysession-switch-to)  ; Load
-(global-set-key (kbd "C-c ss") 'easysession-save)  ; Save
-
-;; Other keybindings
-(global-set-key (kbd "C-c sL") 'easysession-switch-to-and-restore-geometry)
-(global-set-key (kbd "C-c sd") 'easysession-delete)
-(global-set-key (kbd "C-c sr") 'easysession-rename)
-(global-set-key (kbd "C-c sR") 'easysession-reset)
-```
 
 ## Customization
 

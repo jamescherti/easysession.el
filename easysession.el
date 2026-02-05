@@ -1738,11 +1738,16 @@ The returned list contains live buffers only."
   (run-hooks 'easysession-before-reset-hook)
 
   ;; Kill all buffers
-  (mapc #'kill-buffer (cl-remove-if
-                       (lambda (buffer)
-                         (or (string= (buffer-name buffer) "*scratch*")
-                             (string= (buffer-name buffer) "*Messages*")))
-                       (buffer-list)))
+  (let ((protected-names '("*scratch*" "*Messages*")))
+    (mapc (lambda (buffer)
+            (let ((name (buffer-name buffer))
+                  (file (buffer-file-name buffer)))
+              (when (and (not (member name protected-names))
+                         (not (string-prefix-p " " name))
+                         (or (not file)
+                             (not (buffer-modified-p buffer))))
+                (kill-buffer buffer))))
+          (buffer-list)))
 
   ;; Delete frames
   (delete-other-frames)
