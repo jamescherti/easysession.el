@@ -1676,12 +1676,11 @@ Hook priorities are controlled by `easysession-setup-add-hook-depth'.
 
 This function prepares `easysession' for automatic loading and saving of frames,
 buffers, and session data."
-  (if (daemonp)
-      (when easysession-setup-load-session
+  (when easysession-setup-load-session
+    (if (daemonp)
         (add-hook 'server-after-make-frame-hook
                   #'easysession--daemon-load
-                  easysession-setup-add-hook-depth))
-    (when easysession-setup-load-session
+                  easysession-setup-add-hook-depth)
       (add-hook 'emacs-startup-hook
                 (when easysession-setup-load-session-including-geometry
                   #'easysession-load-including-geometry

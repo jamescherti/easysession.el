@@ -113,9 +113,6 @@ To install **easysession** from MELPA:
   (easysession-setup))
 ```
 
-Note that:
-- The author added 102 and 103 to `add-hook` in the code snippet above to ensure that the session is loaded after all other packages. (Using the depth 102 and 103 is useful for those using [minimal-emacs.d](https://github.com/jamescherti/minimal-emacs.d), where some optimizations restore `file-name-handler-alist` at depth 101 during `emacs-startup-hook`.)
-
 ## Extensions
 
 ### Extension: easysession-scratch (Persist and restore the scratch buffer)
