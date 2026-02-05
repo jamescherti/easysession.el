@@ -104,15 +104,14 @@ To install **easysession** from MELPA:
   (global-set-key (kbd "C-c su") #'easysession-unload)
   (global-set-key (kbd "C-c sd") #'easysession-delete)
 
-  ;; Make `easysession-setup' load the session automatically.
-  ;; Nil: session is not loaded automatically; the user can load it manually.
+  ;; non-nil: Make `easysession-setup' load the session automatically.
+  ;; (nil: session is not loaded automatically; the user can load it manually.)
   (setq easysession-setup-load-session t)
 
   ;; The `easysession-setup' function adds hooks:
   ;; - To enable automatic session loading during `emacs-startup-hook', or
   ;;   `server-after-make-frame-hook' when running in daemon mode.
-  ;; - To automatically save the session at regular intervals, and when Emacs
-  ;;   exits.
+  ;; - To save the session at regular intervals, and when Emacs exits.
   (easysession-setup))
 ```
 
