@@ -79,7 +79,6 @@ To install **easysession** from MELPA:
 (use-package easysession
   :ensure t
   :demand t
-
   :custom
   (easysession-save-interval (* 10 60))  ; Save every 10 minutes
 
@@ -105,7 +104,7 @@ To install **easysession** from MELPA:
   (global-set-key (kbd "C-c su") #'easysession-unload)
   (global-set-key (kbd "C-c sd") #'easysession-delete)
 
-  ;; Non-nil: `easysession-setup' loads the session automatically.
+  ;; Make `easysession-setup' load the session automatically.
   ;; Nil: session is not loaded automatically; the user can load it manually.
   (setq easysession-setup-load-session t)
 
