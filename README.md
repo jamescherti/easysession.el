@@ -108,10 +108,6 @@ To install **easysession** from MELPA:
   ;; Nil: session is not loaded automatically; the user can load it manually.
   (setq easysession-setup-load-session t)
 
-  ;; Priority depth used when `easysession-setup' adds `easysession' hooks.
-  ;; 102 ensures that the session is loaded after all other packages.
-  (setq easysession-setup-add-hook-depth 102)
-
   ;; The `easysession-setup' function adds hooks:
   ;; - To enable automatic session loading during `emacs-startup-hook', or
   ;;   `server-after-make-frame-hook' when running in daemon mode.
