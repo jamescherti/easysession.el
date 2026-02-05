@@ -1683,7 +1683,9 @@ buffers, and session data."
                     #'easysession--ensure-daemon-session
                     easysession-setup-add-hook-depth)
 
-          (when (frame-parameter nil 'client)
+          (when (seq-some (lambda (frame)
+                            (frame-parameter frame 'client))
+                          (frame-list))
             (easysession--ensure-daemon-session)))
       (add-hook 'emacs-startup-hook
                 (when easysession-setup-load-session-including-geometry
