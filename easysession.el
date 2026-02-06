@@ -1663,6 +1663,31 @@ multiple loads during the same daemon session."
     (setq easysession--daemon-session-loaded t)))
 
 ;;;###autoload
+(defun easysession-save-sesssion-and-close-frames ()
+  "Save the session and close all frames without stopping the Emacs daemon.
+
+Useful in daemon mode, this simulates quitting Emacs: buffers are saved, the
+EasySession state is saved, and all frames except the initial terminal frame are
+closed.
+
+From the perspective of EasySession, this is functionally equivalent to an
+application shutdown: the session is fully saved and unloaded. When a new frame
+is later initialized by the Emacs daemon, EasySession restores the state as if
+the process had been freshly started."
+  (interactive)
+  (when (yes-or-no-p "[easysession] Save session and close all frames? ")
+    (save-some-buffers)
+    (easysession-unload)
+    ;; Close all frames
+    (dolist (frame (frame-list))
+      (when (and (frame-live-p frame)
+                 (or (not (daemonp))
+                     (not (string-equal (terminal-name (frame-terminal frame))
+                                        "initial_terminal"))))
+        (ignore-errors
+          (delete-frame frame t))))))
+
+;;;###autoload
 (defun easysession-setup ()
   "Initialize `easysession' for session persistence.
 

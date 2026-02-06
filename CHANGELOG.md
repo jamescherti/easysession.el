@@ -63,6 +63,8 @@ Author: [James Cherti](https://www.jamescherti.com/)
 
 * Load indirect buffers for all buffers, not only file-visiting and Dired buffers.
 
+* Add the `easysession-save-and-close-all-frames` function to save the session and close all frames without terminating the Emacs daemon.
+
 ## 1.1.7
 
 * Fix #48: Prevent clearing `file-name-handler-alist` during execution

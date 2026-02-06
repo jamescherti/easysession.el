@@ -56,6 +56,7 @@ If this package enhances your workflow, please show your support by **⭐ starri
     - [How to reduce the number of buffers in my session, regularly](#how-to-reduce-the-number-of-buffers-in-my-session-regularly)
     - [How to start afresh after loading too many buffers](#how-to-start-afresh-after-loading-too-many-buffers)
     - [How to persist and restore text scale?](#how-to-persist-and-restore-text-scale)
+    - [Saving the Session and Closing Frames Without Quitting `emacs --daemon`](#saving-the-session-and-closing-frames-without-quitting-emacs---daemon)
     - [How does the author use easysession?](#how-does-the-author-use-easysession)
     - [What does 'EasySession supports restoring indirect buffers' mean?](#what-does-easysession-supports-restoring-indirect-buffers-mean)
     - [What does EasySession offer that desktop.el doesn't?](#what-does-easysession-offer-that-desktopel-doesnt)
@@ -343,6 +344,26 @@ Optionally, the `easysession-reset` function can be configured to automatically 
 ### How to persist and restore text scale?
 
 The [persist-text-scale.el @GitHub](https://github.com/jamescherti/persist-text-scale.el) Emacs package provides `persist-text-scale-mode`, which ensures that all adjustments made with `text-scale-increase` and `text-scale-decrease` are persisted and restored across sessions. As a result, the text size in each buffer remains consistent, even after restarting Emacs. This package also facilitates grouping buffers into categories, allowing buffers within the same category to share a consistent text scale. This ensures uniform font sizes when adjusting text scaling.
+
+### Saving the Session and Closing Frames Without Quitting `emacs --daemon`
+
+**Note:** This is intended for environments using `emacs --daemon` or `emacs --fg-daemon`, where the Emacs process persists independently of client frames.
+
+EasySession operates effectively when Emacs runs in daemon mode. The `easysession-save-session-and-close-frames` function implements a controlled routine to simulate a termination without stopping the Emacs daemon:
+
+```elisp
+(defun my-easysession-save-buffers-kill-emacs ()
+  "Handle quitting Emacs with daemon-aware frame management."
+  (if (daemonp)
+      (easysession-save-sesssion-and-close-frames)
+    (save-buffers-kill-emacs)))
+
+(global-set-key (kbd "C-q") #'my-easysession-save-buffers-kill-emacs)
+```
+
+The `easysession-save-sesssion-and-close-frames` function persists modified buffers, saves the EasySession state, and deletes all active frames. (The Emacs daemon's internal terminal frame is preserved to ensure the daemon remains resident.)
+
+From the perspective of EasySession, this is functionally equivalent to an application shutdown: the session is fully saved and unloaded. When a new frame is later initialized by the Emacs daemon, EasySession restores the state as if the process had been freshly started.
 
 ### How does the author use easysession?
 
