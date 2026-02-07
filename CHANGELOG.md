@@ -61,6 +61,8 @@ Author: [James Cherti](https://www.jamescherti.com/)
 
 * Introduce `easysession-setup` and `easysession-setup-load-session` to simplify EasySession configuration in both normal and daemon modes.
 
+* Add easysession-setup-load-predicate: A predicate to determine whether the `easysession-load` function load should occur.
+
 * Load indirect buffers for all buffers, not only file-visiting and Dired buffers.
 
 * Add the `easysession-save-and-close-all-frames` function to save the session and close all frames without terminating the Emacs daemon.

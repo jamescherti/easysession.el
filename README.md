@@ -354,11 +354,15 @@ EasySession operates effectively when Emacs runs in daemon mode. The `easysessio
 ```elisp
 (defun my-easysession-save-buffers-kill-emacs ()
   "Handle quitting Emacs with daemon-aware frame management."
+  (interactive)
   (if (daemonp)
       (easysession-save-sesssion-and-close-frames)
     (save-buffers-kill-emacs)))
 
 (global-set-key (kbd "C-q") #'my-easysession-save-buffers-kill-emacs)
+
+(when (daemonp)
+  (global-set-key (kbd "C-x C-c") #'my-easysession-save-buffers-kill-emacs))
 ```
 
 The `easysession-save-sesssion-and-close-frames` function persists modified buffers, saves the EasySession state, and deletes all active frames. (The Emacs daemon's internal terminal frame is preserved to ensure the daemon remains resident.)

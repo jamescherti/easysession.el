@@ -264,6 +264,8 @@ sessions."
                (list (format "%s[" easysession-save-mode-lighter)
                      (propertize easysession--current-session-name
                                  'face 'easysession-mode-line-session-name-face)
+                     (unless easysession--session-loaded
+                       " <NOT LOADED>")
                      "]")
              easysession-save-mode-lighter)))
   "Mode line lighter specification for displaying the current session name.
@@ -390,6 +392,21 @@ For more details, see the `frameset-restore' docstring."
                  (function :tag "Function to determine cleanup actions"))
   :group 'easysession)
 
+(defcustom easysession-edit-read-only t
+  "Non-nil means session buffers opened with `easysession-edit` are read-only."
+  :type 'boolean
+  :group 'easysession)
+
+(defcustom easysession-exclude-from-find-file-hook '(recentf-track-opened-file)
+  "List of hooks to be excluded from `find-file-hook'.
+When EasySession restores a file editing buffer using `find-file-noselect', the
+functions in this list are skipped and not executed by `find-file-hook'. This
+provides control over which hooks should be bypassed during the file restoration
+process, ensuring that certain actions (e.g., tracking opened files) are not
+triggered in this context."
+  :type '(repeat symbol)
+  :group 'easysession)
+
 (defvar easysession-frameset-restore-geometry nil
   "If non-nil, `easysession-load' restores frame position and size.
 
@@ -401,16 +418,6 @@ Set this variable to t only if you want `easysession-load' or
 
 By default, this variable is nil, meaning `easysession-load' does not restore
 geometry.")
-
-(defcustom easysession-exclude-from-find-file-hook '(recentf-track-opened-file)
-  "List of hooks to be excluded from `find-file-hook'.
-When EasySession restores a file editing buffer using `find-file-noselect', the
-functions in this list are skipped and not executed by `find-file-hook'. This
-provides control over which hooks should be bypassed during the file restoration
-process, ensuring that certain actions (e.g., tracking opened files) are not
-triggered in this context."
-  :type '(repeat symbol)
-  :group 'easysession)
 
 (defvar easysession-load-in-progress nil
   "Session name (string) if a session is currently being loaded.
@@ -433,6 +440,34 @@ When it is nil, session data is saved in a more compact form that is harder for
 humans to read but takes less space.
 This option only changes how the session file looks, not what information is
 stored.")
+
+(defvar easysession-setup-add-hook-depth 102
+  "Priority depth used when `easysession-setup' adds `easysession' hooks.
+Higher values ensure that `easysession' hooks run after most other startup or
+frame hooks.
+
+The default value of 102 ensures that the session loads after all other
+packages. Setting the depth to 102 is useful for users of minimal-emacs.d, where
+certain optimizations restore `file-name-handler-alist' at depth 101 during
+`emacs-startup-hook'.")
+
+(defvar easysession-setup-load-session t
+  "Non-nil means `easysession-setup' automatically loads the session.
+Nil means the session is not loaded automatically; the user can load it
+manually.")
+
+(defvar easysession-setup-load-session-including-geometry t
+  "Non-nil means the `easysession-setup' session restores frame geometry.
+If nil, the first session is loaded without restoring frame sizes or positions.")
+
+(defvar easysession-setup-load-predicate nil
+  "Predicate to determine whether `easysession-setup' loads the session.
+When nil, the session loads without additional checks. If assigned a function,
+the function is called without arguments; the session restoration proceeds only
+if the return value is non-nil.
+
+This variable allows restricting session restoration to specific environments,
+such as graphical frames.")
 
 ;;; Internal variables
 
@@ -681,25 +716,6 @@ the session, which can later be restored by the corresponding load handlers.")
 Each entry must be a string matching `buffer-name'. Buffers whose
 names appear in this list are persisted and restored regardless
 of their visibility.")
-
-(defvar easysession-setup-add-hook-depth 102
-  "Priority depth used when `easysession-setup' adds `easysession' hooks.
-Higher values ensure that `easysession' hooks run after most other startup or
-frame hooks.
-
-The default value of 102 ensures that the session loads after all other
-packages. Setting the depth to 102 is useful for users of minimal-emacs.d, where
-certain optimizations restore `file-name-handler-alist' at depth 101 during
-`emacs-startup-hook'.")
-
-(defvar easysession-setup-load-session t
-  "Non-nil means `easysession-setup' automatically loads the session.
-Nil means the session is not loaded automatically; the user can load it
-manually.")
-
-(defvar easysession-setup-load-session-including-geometry t
-  "Non-nil means the `easysession-setup' session restores frame geometry.
-If nil, the first session is loaded without restoring frame sizes or positions.")
 
 (defvar easysession--builtin-load-handlers
   '(easysession--handler-load-file-editing-buffers
@@ -1032,7 +1048,8 @@ termination when used from `kill-emacs-query-functions'."
       (when (and (> (length (frame-list)) 0)
                  easysession--current-session-name
                  easysession--session-loaded)
-        (if (funcall easysession-save-mode-predicate)
+        (if (and easysession-save-mode-predicate
+                 (funcall easysession-save-mode-predicate))
             (easysession-save)
           (when easysession--debug
             (easysession--message
@@ -1061,6 +1078,8 @@ The session name is displayed only when a session is actively loaded."
              'help-echo (format "Current session: %s"
                                 easysession--current-session-name)
              'mouse-face 'mode-line-highlight)
+            (unless easysession--session-loaded
+              " <NOT LOADED>")
             easysession-mode-line-misc-info-suffix)))
 
 (defun easysession--get-scratch-buffer-create ()
@@ -1188,6 +1207,49 @@ QUOTE may be `may' (value may be quoted),
 
    (t
     (cons 'may "Unprintable entity"))))
+
+(defvar easysession--daemon-session-loaded nil
+  "Non-nil if an EasySession session has already been loaded in daemon mode.
+This variable prevents multiple session loads when Emacs is running as a daemon.
+It is set to t after the first successful session load and should not be
+manually modified under normal operation.")
+
+(defun easysession--persist-session-on-frame-delete-maybe (frame)
+  "Save the current session when a client frame is deleted in daemon mode.
+FRAME designates the frame scheduled for deletion.
+
+This ensures the session is saved before the last client frame is closed in
+daemon mode, allowing correct restoration when a new frame is created."
+  (when (and easysession--current-session-name
+             easysession--session-loaded
+             (daemonp)
+             (frame-live-p frame)
+             ;; The number 2 accounts for both the initial daemon frame and the
+             ;; client frame
+             (= (length (seq-filter
+                         (lambda (frame)
+                           (not (equal (terminal-name (frame-terminal frame))
+                                       "initial_terminal")))
+                         (frame-list))) 1))
+    (setq easysession--daemon-session-loaded nil)
+    (easysession-unload)))
+
+(defun easysession--setup-load-session ()
+  "Load an EasySession session.
+After loading in daemon mode, `easysession--daemon-session-loaded' is set to t
+to prevent multiple loads during the same daemon session."
+  (when (or (not easysession-setup-load-predicate)
+            (funcall easysession-setup-load-predicate))
+    (if (daemonp)
+        (unless easysession--daemon-session-loaded
+          (if easysession-setup-load-session-including-geometry
+              (easysession-load-including-geometry)
+            (easysession-load))
+
+          (setq easysession--daemon-session-loaded t))
+      (when easysession-setup-load-session-including-geometry
+        #'easysession-load-including-geometry
+        #'easysession-load))))
 
 ;;; Internal functions: handlers
 
@@ -1623,44 +1685,30 @@ Returns a list:
 
 ;;; Autoloaded functions
 
-(defvar easysession--daemon-session-loaded nil
-  "Non-nil if an EasySession session has already been loaded in daemon mode.
-This variable prevents multiple session loads when Emacs is running as a daemon.
-It is set to t after the first successful session load and should not be
-manually modified under normal operation.")
+;;;###autoload
+(defun easysession-save-sesssion-and-close-frames ()
+  "Save the session and close all frames without stopping the Emacs daemon.
 
-(defun easysession--persist-session-on-frame-delete-maybe (frame)
-  "Save the current session when a client frame is deleted in daemon mode.
-FRAME designates the frame scheduled for deletion.
+Useful in daemon mode, this simulates quitting Emacs: buffers are saved, the
+EasySession state is saved, and all frames except the initial terminal frame are
+closed.
 
-This ensures the session is saved before the last client frame is closed in
-daemon mode, allowing correct restoration when a new frame is created."
-  (when (and easysession--current-session-name
-             easysession--session-loaded
-             (daemonp)
-             (frame-live-p frame)
-             ;; The number 2 accounts for both the initial daemon frame and the
-             ;; client frame
-             (= (length (seq-filter
-                         (lambda (frame)
-                           (not (equal (terminal-name (frame-terminal frame))
-                                       "initial_terminal")))
-                         (frame-list))) 1))
-    (setq easysession--daemon-session-loaded nil)
-    (with-selected-frame frame
-      (easysession-save))
-    (setq easysession--session-loaded nil)))
-
-(defun easysession--ensure-daemon-session ()
-  "Load an EasySession session when Emacs is running in daemon mode.
-After loading, `easysession--daemon-session-loaded' is set to t to prevent
-multiple loads during the same daemon session."
-  (unless easysession--daemon-session-loaded
-    (if easysession-setup-load-session-including-geometry
-        (easysession-load-including-geometry)
-      (easysession-load))
-
-    (setq easysession--daemon-session-loaded t)))
+From the perspective of EasySession, this is functionally equivalent to an
+application shutdown: the session is fully saved and unloaded. When a new frame
+is later initialized by the Emacs daemon, EasySession restores the state as if
+the process had been freshly started."
+  (interactive)
+  (when (yes-or-no-p "[easysession] Save session and close all frames? ")
+    (save-some-buffers)
+    (easysession-unload)
+    ;; Close all frames
+    (dolist (frame (frame-list))
+      (when (and (frame-live-p frame)
+                 (or (not (daemonp))
+                     (not (string-equal (terminal-name (frame-terminal frame))
+                                        "initial_terminal"))))
+        (ignore-errors
+          (delete-frame frame t))))))
 
 ;;;###autoload
 (defun easysession-save-sesssion-and-close-frames ()
@@ -1703,22 +1751,22 @@ This function prepares `easysession' for automatic loading and saving of frames,
 buffers, and session data."
   (when easysession-setup-load-session
     (if (daemonp)
+        ;; Dameon mode
         (progn
-          (add-hook 'server-after-make-frame-hook
-                    #'easysession--ensure-daemon-session
-                    easysession-setup-add-hook-depth)
-
           (when (seq-some (lambda (frame)
                             (frame-parameter frame 'client))
                           (frame-list))
-            (easysession--ensure-daemon-session)))
+            (easysession--setup-load-session))
+
+          (add-hook 'server-after-make-frame-hook
+                    #'easysession--setup-load-session
+                    easysession-setup-add-hook-depth))
+      ;; Graphical mode
       (add-hook 'emacs-startup-hook
-                (when easysession-setup-load-session-including-geometry
-                  #'easysession-load-including-geometry
-                  #'easysession-load)
+                #'easysession--setup-load-session
                 easysession-setup-add-hook-depth)))
 
-  ;; Automatically save the current session every `easysession-save-interval'
+  ;; Save the current session every `easysession-save-interval'
   (add-hook 'emacs-startup-hook #'easysession-save-mode
             easysession-setup-add-hook-depth))
 
@@ -1975,19 +2023,15 @@ resetting the current session identifier and load flag.
 
 This operation only affects in-memory state. Session data on disk is preserved."
   (interactive)
-  (when (and easysession--current-session-name
-             easysession--session-loaded)
-    (easysession-save))
+  (unwind-protect
+      (when (and easysession--current-session-name
+                 easysession--session-loaded)
+        (easysession-save))
+    (setq easysession--daemon-session-loaded nil)
+    (setq easysession--current-session-name nil)
+    (setq easysession--session-loaded nil)))
 
-  (setq easysession--daemon-session-loaded nil)
-  (setq easysession--current-session-name nil)
-  (setq easysession--session-loaded nil))
-
-(defcustom easysession-edit-read-only t
-  "Non-nil means session buffers opened with `easysession-edit` are read-only."
-  :type 'boolean
-  :group 'easysession)
-
+;;;###autoload
 (defun easysession-edit (session-name)
   "Edit a session in `emacs-lisp-mode`.
 If SESSION-NAME is nil, defaults to the current session.
@@ -2179,7 +2223,6 @@ SESSION-NAME is the name of the session."
 (make-obsolete 'easysession-save-as 'easysession-save "1.1.7")
 
 ;;;###autoload
-
 (defun easysession-switch-to (session-name)
   "Load a session without altering the frame's size or position.
 SESSION-NAME is the session name.
