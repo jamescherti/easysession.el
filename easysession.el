@@ -484,6 +484,9 @@ such as graphical frames.")
     (buffer-list . :never)
     (buffer-predicate . :never)
     (buried-buffer-list . :never)
+    ;; Don't save the 'client' parameter to avoid that a subsequent
+    ;; `save-buffers-kill-terminal' in a non-client session barks at
+    ;; the user (Emacs Bug#29067).
     (client . :never)
     (delete-before . :never)
     (font . :never)
@@ -573,10 +576,7 @@ such as graphical frames.")
 
     ;; Ensures frames are positioned only after the window manager maps them,
     ;; helping avoid small shifts in geometry.
-    ;; Let the user configure this with:
-    ;;   (add-to-list 'default-frame-alist '(wait-for-wm . t))
-
-    ;; Do not restore wait-for-wm. Let the user configure it.
+    ;; (Do not restore wait-for-wm. Let the user configure it.)
     (wait-for-wm . :never)
 
     ;; Restore the frame title
@@ -592,9 +592,11 @@ such as graphical frames.")
     ;; (visibility . :never)
 
     ;; Third party package (Fixes #22)
+    ;; TODO remove (Fixed by serialization function)
     (lsp-ui-doc-buffer . :never)
 
     ;; Third party package (Fixes #32)
+    ;; TODO remove (Fixed by serialization function)
     (dv-preview-last . :never))
   "Alist of frame parameters to keep.")
 
@@ -790,7 +792,7 @@ replaces or adds the corresponding parameter in the resulting alist.
 
 The returned alist can be used to control which frame parameters are
 saved by EasySession."
-  (let ((result (copy-tree frameset-filter-alist)))
+  (let ((result (copy-alist frameset-filter-alist)))
     (dolist (pair overwrite-alist)
       (setq result (assq-delete-all (car pair) result))
       (push pair result))
@@ -931,6 +933,9 @@ Return nil if no session is loaded."
     (easysession--ensure-session-name-valid session-name)
     (expand-file-name session-name easysession-directory)))
 
+;; (defvar easysession--frame-parameters-filters nil)
+;; (defvar easysession--frame-parameters-filters-including-geo nil)
+
 (defun easysession--save-frameset (session-name
                                    &optional save-geometry)
   "Create and return a frameset for the current Emacs session.
@@ -941,6 +946,13 @@ geometry-related parameters are excluded.
 
 The frameset is generated only when at least one live frame exists. Return nil
 when no frames are available for persistence."
+  ;; TODO implement this
+  ;; (setq easysession--frame-parameters-filters
+  ;;       (easysession--init-frame-parameters-filters
+  ;;        easysession--overwrite-frameset-filter-alist))
+  ;; (setq easysession--frame-parameters-filters-including-geo
+  ;;       (easysession--init-frame-parameters-filters
+  ;;        easysession--overwrite-frameset-filter-include-geometry-alist))
   (let ((modified-filter-alist
          (if save-geometry
              ;; Include geometry
@@ -1247,9 +1259,9 @@ to prevent multiple loads during the same daemon session."
             (easysession-load))
 
           (setq easysession--daemon-session-loaded t))
-      (when easysession-setup-load-session-including-geometry
-        #'easysession-load-including-geometry
-        #'easysession-load))))
+      (if easysession-setup-load-session-including-geometry
+          (easysession-load-including-geometry)
+        (easysession-load)))))
 
 ;;; Internal functions: handlers
 
