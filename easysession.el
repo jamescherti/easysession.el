@@ -2190,23 +2190,22 @@ SESSION-NAME is the name of the session."
                  (float-output-format nil)
                  (quote-sexp (easysession--serialize-to-quoted-sexp session-data))
                  (print-quoted t))
-            (let* ((serialized-data (prin1-to-string (cdr quote-sexp))))
-              (with-temp-buffer
-                (insert serialized-data)
-                (let ((coding-system-for-write 'utf-8-emacs)
-                      (write-region-annotate-functions nil)
-                      (write-region-post-annotation-function nil))
-                  (when easysession-save-pretty-print
-                    (if (fboundp 'elisp-autofmt-buffer)
-                        (elisp-autofmt-buffer)
-                      (pp-buffer)))
-                  (write-region (point-min) (point-max) session-file nil 'silent)
-                  nil))
+            (with-temp-buffer
+              (prin1 (cdr quote-sexp) (current-buffer))
+              (let ((coding-system-for-write 'utf-8-emacs)
+                    (write-region-annotate-functions nil)
+                    (write-region-post-annotation-function nil))
+                (when easysession-save-pretty-print
+                  (if (fboundp 'elisp-autofmt-buffer)
+                      (elisp-autofmt-buffer)
+                    (pp-buffer)))
+                (write-region (point-min) (point-max) session-file nil 'silent)
+                nil))
 
-              (when (called-interactively-p 'any)
-                (if (string= session-name easysession--current-session-name)
-                    (easysession--message "Session saved: %s" session-name)
-                  (easysession--message "Session saved as: %s" session-name)))))
+            (when (called-interactively-p 'any)
+              (if (string= session-name easysession--current-session-name)
+                  (easysession--message "Session saved: %s" session-name)
+                (easysession--message "Session saved as: %s" session-name))))
 
           (run-hooks 'easysession-after-save-hook)))
     (setq easysession-save-in-progress nil)))
