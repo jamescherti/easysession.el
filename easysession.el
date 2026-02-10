@@ -602,7 +602,7 @@ such as graphical frames.")
     ;; This sets the icon displayed by the OS.
     (icon-type . :never)
 
-    ;; hese are graphics performance settings (fixing tearing/flickering). They
+    ;; These are graphics performance settings (fixing tearing/flickering). They
     ;; depend on the current machine and OS graphics stack. You definitely do
     ;; not want to restore these from an old file.
     (inhibit-double-buffering . :never)
@@ -631,11 +631,18 @@ such as graphical frames.")
     ;; the text editor session.
     (screen-gamma . :never)
 
-    ;; Restore the frame title.
     ;; Keep it commented: While you can generate titles dynamically, saving the
     ;; title is often harmless. However, if your init.el sets a strict
     ;; frame-title-format, you could actually uncomment this too. But generally,
     ;; keeping it is safer to preserve context like "Project X - Emacs".
+    ;;
+    ;; Argument for :never: If your init.el uses frame-title-format to
+    ;; dynamically show the current buffer and file path, restoring a static
+    ;; string from a session file might temporarily override your dynamic title
+    ;; until the next refresh.
+    ;;
+    ;; Argument for keeping it: If you manually rename frames to keep track of
+    ;; different projects, you'll lose those names if you don't persist this.
     ;; (title . :never)
 
     ;; Keep it commented: This controls if a frame is "always on top" (above) or
