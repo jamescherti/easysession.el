@@ -1703,7 +1703,7 @@ Returns a list:
 ;;; Autoloaded functions
 
 ;;;###autoload
-(defun easysession-save-sesssion-and-close-frames ()
+(defun easysession-save-session-and-close-frames ()
   "Save the session and close all frames without stopping the Emacs daemon.
 
 Useful in daemon mode, this simulates quitting Emacs: buffers are saved, the
