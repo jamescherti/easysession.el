@@ -1,19 +1,30 @@
 # easysession - Changelog
 
-URL: https://github.com/jamescherti/easysession.el
-Author: [James Cherti](https://www.jamescherti.com/)
+**URL:** https://github.com/jamescherti/easysession.el
+
+**Author:** [James Cherti](https://www.jamescherti.com/)
 
 ## WIP
 
-* easysession-save: Serialization now reliably produces `(QUOTE . SEXP)` pairs, preserving the exact structure of saved values. This ensures correct quoting of complex Emacs Lisp objects, including structs (`#s(...)`) and other otherwise unreadable or unloadable entities (`#>`), preventing errors when restoring sessions.
+* `easysession-save`: Serialization now reliably produces `(QUOTE . SEXP)` pairs, preserving the exact structure of saved values. This ensures correct quoting of complex Emacs Lisp objects, including structs (`#s(...)`) and other otherwise unreadable or unloadable entities (`#>`), preventing errors when restoring sessions.
+
+* Make easysession-save more memory efficient.
+
+* Bug fix: Prevent `easysession-save` from adding indirect buffers to the list of base buffers.
+
+* Refactored `easysession-load` to use direct buffer-stream deserialization rather than string-based evaluation, reducing memory overhead and computational pressure when restoring large session files.
+
+* Add easysession-setup-load-predicate: A predicate to determine whether the `easysession-load` function load should occur.
+
+* Convert warnings to errors in `easysession-load`, `easysession-delete` for missing sessions.
+
+* Add interactive session selection prompts to `easysession-load` and `easysession-save`.  Make `easysession-save-as` obsolete in favor of `easysession-save`.
 
 * Fix frameset restoration in Emacs daemon mode: Avoid cleaning up the initial daemon frame during frameset restoration by disabling frame cleanup when running under a daemon with a single frame.
 
 * Save the current session when a client frame is deleted in daemon mode, ensuring the session is preserved before the last frame closes and enabling complete restoration when a new frame is subsequently created.
 
 * Added the `easysession-visible-buffer-list` function, allowing session persistence and restoration to be limited to buffers that are currently visible in windows or associated with visible tab-bar tabs.
-
-* Refactored `easysession-load` to use direct buffer-stream deserialization rather than string-based evaluation, reducing memory overhead and computational pressure when restoring large session files.
 
 * Enhanced session buffer restoration logic (`easysession--handler-load-file-editing-buffers` and `easysession--handler-load-indirect-buffers`) to improve robustness and structural clarity.
 
@@ -33,15 +44,11 @@ Author: [James Cherti](https://www.jamescherti.com/)
 
 * Support the `desktop-dont-save` frame parameter.
 
-* Convert warnings to errors in `easysession-load`, `easysession-delete` for missing sessions
-
 * Contribution by Herman He (@hermanhel on GitHub): Added support for persisting and restoring the narrowing state of both base and indirect buffers.
 
 * Track successful session loads and prevent auto-save from writing if the session has not been loaded.
 
 * Add the following to the session file: comment, file-format-version, and mtime.
-
-* Add interactive session selection prompts to `easysession-load` and `easysession-save`.  Make `easysession-save-as` obsolete in favor of `easysession-save`
 
 * Add `easysession-unload`, which saves the active session and then clears all in-memory session state.
 
@@ -55,13 +62,13 @@ Author: [James Cherti](https://www.jamescherti.com/)
 
 * Enhance `easysession-reset` safety by targeting only non-file buffers and unmodified file-visiting buffers.
 
-* Bug fix: Prevent `easysession-save` from adding indirect buffers to the list of base buffers
-
 * Add `easysession-save-pretty-print` variable to control pretty-printing of session data when saving. When non-nil, session files are written in a human-readable format.
 
 * Introduce `easysession-setup` and `easysession-setup-load-session` to simplify EasySession configuration in both normal and daemon modes.
 
-* Add easysession-setup-load-predicate: A predicate to determine whether the `easysession-load` function load should occur.
+* Ensure `easysession-save-mode` cancels the timer before creating a new one.
+
+* Ensure the mode-line indicator updates immediately.
 
 * Load indirect buffers for all buffers, not only file-visiting and Dired buffers.
 
