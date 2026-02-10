@@ -482,8 +482,7 @@ such as graphical frames.")
 ;; Overrides `frameset-filter-alist' while preserving its keys,
 ;; but replaces their values with the ones specified in the following alist:
 (defvar easysession--overwrite-frameset-filter-alist
-  '(
-    ;; Already excluded by frameset-persistent-filter-alist
+  '(;; Already excluded by frameset-persistent-filter-alist
     (background-color . :never)
     (buffer-list . :never)
     (buffer-predicate . :never)
@@ -496,9 +495,12 @@ such as graphical frames.")
     (name . :never)
     (parent-id . :never)
     (window-id . :never)
+
+    ;; Font
     (font . :never)
     (font-backend . :never)
     (GUI:font . :never)
+    (font-parameter . :never)
 
     ;; Don't save the 'client' parameter to avoid that a subsequent
     ;; `save-buffers-kill-terminal' in a non-client session barks at
@@ -522,85 +524,133 @@ such as graphical frames.")
     (width . :never)
 
     ;; Window-manager mutable flags: leave commented out
-    ;; TODO Testing without these parameters
-    ;; (skip-taskbar . :never)
-    ;; (sticky . :never)
-    ;; (shaded . :never)
-    ;; (undecorated . :never)
-    ;; (border-width . :never)
+    ;; Uncommenting these ensures that the Window Manager (WM) decides how to
+    ;; place the new frame (decorated, sticky, etc.) based on current rules,
+    ;; rather than restoring old state which might confuse the WM.
+    (skip-taskbar . :never)
+    (sticky . :never)
+    (shaded . :never)
+    (undecorated . :never)
+    (override-redirect . :never)
 
-    ;; Pixel Precision (Affect the geometry, but let the user configure them)
-    ;; TODO Testing without these parameters
-    (frameset--text-pixel-height . :never)
-    (frameset--text-pixel-width . :never)
-    ;; (child-frame-border-width . :never)
-    ;; (bottom-divider-width . :never)
-    ;; (right-divider-width . :never)
+    ;; Window-manager: Ensures frames are positioned only after the window
+    ;; manager maps them, helping avoid small shifts in geometry.
+    ;; (Do not restore wait-for-wm. Let the user configure it.)
+    (wait-for-wm . :never)
 
-    ;; Let the user configure the scroll bars, tool-bar, and menu-bar
-    ;; TODO Testing without these parameters
-    ;; (vertical-scroll-bars . :never)
-    ;; (horizontal-scroll-bars . :never)
+    ;; UI Chrome (Scroll bars, Tool bars, Menu bars)
+    ;; To prevent the session from overriding your init.el settings (e.g., if
+    ;; you disabled scrollbars in your config, loading a session shouldn't bring
+    ;; them back).
+    (vertical-scroll-bars . :never)
+    (horizontal-scroll-bars . :never)
+    (scroll-bar-width . :never)
+    (scroll-bar-height . :never)
+    (tool-bar-position . :never)
+    (tool-bar-lines . :never)
+    (menu-bar-lines . :never)
 
-    ;; (tool-bar-position . :never)
     ;; (no-special-glyphs . :never)
 
-    ;; Fonts, fringes, toolbars, scrollbars: leave commented out
-    ;; (scroll-bar-width . :never)
-    ;; (scroll-bar-height . :never)
-    ;; (internal-border-width . :never)
-    ;; (left-fringe . :never)
-    ;; (right-fringe . :never)
-    ;; (menu-bar-lines . :never)
-    ;; (tool-bar-lines . :never)
+    ;; Layout & Borders (Fringes, Dividers)
+    ;; These define the "inner geometry" of the frame. If you change your font
+    ;; size or fringe settings in your config, you don't want old session data
+    ;; to force the old sizes back.
+    (left-fringe . :never)
+    (right-fringe . :never)
     (line-spacing . :never)
-    ;; (parent-id . :never)
+    (internal-border-width . :never)
+    (child-frame-border-width . :never) ; Geometry for child frames (popups)
+    (border-width . :never)
+    (bottom-divider-width . :never)
+    (right-divider-width . :never)
+
+    ;; Pixel Precision (Affect the geometry, but let the user configure them)
+    (frameset--text-pixel-height . :never)
+    (frameset--text-pixel-width . :never)
 
     ;; Other exclusions
-    ;; TODO Commented out. Testing the effect.
     (scroll-bar-background . :never)
     (scroll-bar-foreground . :never)
-    ;; (override-redirect . :never)
-    ;; (auto-lower . :never)  ; control focus behavior
-    ;; (auto-raise . :never)  ; control focus behavior
     (background-mode . :never)  ; Affects theme/light/dark mode
     (border-color . :never)
-    ;; (child-frame-border-width . :never)
     (cursor-color . :never)
-    ;; (cursor-type . :never)
-    ;; (display-type . :never)
-    ;; (environment . :never)
-    ;; (font-parameter . :never)
-    ;; (icon-type . :never)
-    ;; (inhibit-double-buffering . :never)
-    ;; (minibuffer . :never)
     (mouse-color . :never)
-    ;; (no-accept-focus . :never)
-    ;; (no-focus-on-map . :never)
 
     ;; On macOS, this controls whether the window title bar looks dark or light.
     (ns-appearance . :never)
 
-    ;; (outer-window-id . :never)
-    ;; (screen-gamma . :never)
-    ;; (use-frame-synchronization . :never)
+    ;; These control whether a frame automatically moves to the bottom or top of
+    ;; the window stack when it loses/gains focus. This is a window manager
+    ;; interaction preference. Restoring this overrides your OS/WM preferences.
+    (auto-lower . :never)  ; control focus behavior
+    (auto-raise . :never)  ; control focus behavior
 
-    ;; Ensures frames are positioned only after the window manager maps them,
-    ;; helping avoid small shifts in geometry.
-    ;; (Do not restore wait-for-wm. Let the user configure it.)
-    ;; TODO Commented out. Testing the effect.
-    (wait-for-wm . :never)
+    ;; This is a visual preference that belongs in your init.el. You don't want
+    ;; a session saved 3 months ago to revert your cursor style.
+    (cursor-type . :never)
 
-    ;; Restore the frame title
+    ;; This describes the physical display (e.g., color, grayscale, mono). This
+    ;; is determined by the hardware you are currently running on.
+    (display-type . :never)
+
+    ;; This saves the system environment variables (like DISPLAY, XAUTHORITY,
+    ;; SSH_AUTH_SOCK) active at the time of the save.
+    (environment . :never)
+
+    ;; TODO
+    ;; This sets the icon displayed by the OS.
+    (icon-type . :never)
+
+    ;; hese are graphics performance settings (fixing tearing/flickering). They
+    ;; depend on the current machine and OS graphics stack. You definitely do
+    ;; not want to restore these from an old file.
+    (inhibit-double-buffering . :never)
+
+    ;; This controls whether the frame has its own minibuffer or shares one.
+    (minibuffer . :never)
+
+    ;; These are often used for "utility" windows (like a dashboard or tooltip).
+    ;; If you restore a regular editing frame that accidentally got tagged with
+    ;; this, you will have a "ghost" window.
+    (no-accept-focus . :never)
+    (no-focus-on-map . :never)
+
+    ;; This is the OS-level window ID. It is unique to every single window
+    ;; instance. It is impossible to "restore" this as the OS assigns new IDs to
+    ;; new windows.
+    (outer-window-id . :never)
+
+    ;; This parameter controls the X Synchronization Extension (XSync) protocol
+    ;; to prevent visual tearing during resizing; it is a hardware-dependent
+    ;; runtime negotiation between Emacs and the Window Manager that should be
+    ;; auto-detected on startup, not forced by an old session file.
+    (use-frame-synchronization . :never)
+
+    ;; Hardware color correction. This belongs to the monitor profile/OS, not
+    ;; the text editor session.
+    (screen-gamma . :never)
+
+    ;; Restore the frame title.
+    ;; Keep it commented: While you can generate titles dynamically, saving the
+    ;; title is often harmless. However, if your init.el sets a strict
+    ;; frame-title-format, you could actually uncomment this too. But generally,
+    ;; keeping it is safer to preserve context like "Project X - Emacs".
     ;; (title . :never)
 
-    ;; Restore z-group parameter, which controls stacking or z-order
-    ;; grouping of frames in Emacs, which affects how frames are layered
-    ;; relative to each other on the screen.
+    ;; Keep it commented: This controls if a frame is "always on top" (above) or
+    ;; "always on bottom" (below). If your session relies on a specific window
+    ;; layout (e.g., a reference window always floating above code), you need
+    ;; this parameter to preserve that relationship.
     ;; (z-group . :never)
 
     ;; Fixes #24: Restoring a saved session does not restore all frames It was
     ;;            caused by: (visibility . :never).
+    ;;
+    ;; Keep this commented, because it is CRITICAL: this must be restored. It
+    ;; tells Emacs if the frame was minimized (iconified) or visible. If you
+    ;; exclude this, you might restore frames that are invisible or in a
+    ;; confused state.
     ;; (visibility . :never)
     )
   "EasySession overrides to prevent restoration of frame geometry.")
