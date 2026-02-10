@@ -196,9 +196,17 @@ activated when `easysession-save-mode' is enabled."
   :group 'easysession)
 
 ;; Mode line
+
 (defface easysession-mode-line-session-name-face
   '((t :inherit font-lock-constant-face :weight bold))
   "Face used in the mode-line to indicate the current session.")
+
+(defun easysession--update-modeline-misc-info (value)
+  "Update the mode line with VALUE."
+  (setq mode-line-misc-info (assq-delete-all 'easysession-mode-line-misc-info
+                                             mode-line-misc-info))
+  (add-to-list 'mode-line-misc-info `(easysession-mode-line-misc-info
+                                      ,value)))
 
 (defcustom easysession-mode-line-misc-info-format
   '(:eval (easysession--mode-line-session-name-format))
@@ -207,11 +215,7 @@ activated when `easysession-save-mode' is enabled."
   :group 'easysession
   :set (lambda (symbol value)
          (set symbol value)
-         (setq mode-line-misc-info
-               (assq-delete-all 'easysession-mode-line-misc-info
-                                mode-line-misc-info))
-         (add-to-list 'mode-line-misc-info `(easysession-mode-line-misc-info
-                                             ,value))))
+         (easysession--update-modeline-misc-info value)))
 (put 'easysession-mode-line-misc-info-format 'risky-local-variable t)
 
 (defcustom easysession-mode-line-misc-info nil
@@ -220,12 +224,12 @@ activated when `easysession-save-mode' is enabled."
   :group 'easysession
   :set (lambda (symbol value)
          (set symbol value)
-         (setq mode-line-misc-info
-               (assq-delete-all
-                'easysession-mode-line-misc-info mode-line-misc-info))
-         (add-to-list 'mode-line-misc-info
-                      `(easysession-mode-line-misc-info
-                        easysession-mode-line-misc-info-format))))
+         (if value
+             (easysession--update-modeline-misc-info
+              easysession-mode-line-misc-info-format)
+           (setq mode-line-misc-info
+                 (assq-delete-all 'easysession-mode-line-misc-info
+                                  mode-line-misc-info)))))
 
 (defvar easysession-mode-line-misc-info-prefix " [EasySession:"
   "Prefix string displayed before the session name in the mode line.")
@@ -1741,6 +1745,9 @@ Hook priorities are controlled by `easysession-setup-add-hook-depth'.
 
 This function prepares `easysession' for automatic loading and saving of frames,
 buffers, and session data."
+  (easysession--update-modeline-misc-info
+   easysession-mode-line-misc-info-format)
+
   (when easysession-setup-load-session
     (if (daemonp)
         ;; Dameon mode
@@ -2310,6 +2317,9 @@ accordingly."
   :group 'easysession
   (if easysession-save-mode
       (progn
+        (easysession--update-modeline-misc-info
+         easysession-mode-line-misc-info-format)
+
         (when (daemonp)
           ;; This ensures the session is saved before the last client frame is
           ;; closed in daemon mode, allowing correct restoration when a new
