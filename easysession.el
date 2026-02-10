@@ -2317,11 +2317,15 @@ accordingly."
           (add-hook 'delete-frame-functions
                     #'easysession--persist-session-on-frame-delete-maybe))
 
-        (when (and easysession-save-interval
-                   (null easysession--timer))
+        (when easysession--timer
+          (cancel-timer easysession--timer)
+          (setq easysession--timer nil))
+
+        (when easysession-save-interval
           (setq easysession--timer (run-with-timer easysession-save-interval
                                                    easysession-save-interval
                                                    #'easysession--auto-save)))
+
         ;; `kill-emacs-query-functions' is preferable to `kill-emacs-hook' for
         ;; saving frames, as it is called before frames are closed.
         ;; In contrast, `kill-emacs-hook' is invoked after the frames are
