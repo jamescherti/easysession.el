@@ -4,6 +4,12 @@
 
 **Author:** [James Cherti](https://www.jamescherti.com/)
 
+## WIP
+
+- Update the auto-save timer dynamically when `easysession-save-interval` changes by centralizing the timer logic into `easysession--update-timer`. This ensures the timer is correctly cancelled and restarted based on the current mode state. A `:set` function was added to `easysession-save-interval` so that modifying the variable immediately updates the running timer without requiring a restart of the mode.
+
+- Check that the session path is not an existing file before attempting to create the session directory.
+
 ## 1.2.0
 
 * `easysession-save`: Serialization now reliably produces `(QUOTE . SEXP)` pairs, preserving the exact structure of saved values. This ensures correct quoting of complex Emacs Lisp objects, including structs (`#s(...)`) and other otherwise unreadable or unloadable entities (`#>`), preventing errors when restoring sessions.
