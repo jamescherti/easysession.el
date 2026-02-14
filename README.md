@@ -428,6 +428,8 @@ Other packages focus more on managing activities rather than full session manage
 
 ### Testimonials from users
 
+- [spartanOrk](https://www.reddit.com/r/emacs/comments/1r47s44/comment/o5eg7uc/): "I use it and I love it and thank you ❤️"
+- [RaxelPepi on Reddit](https://www.reddit.com/r/emacs/comments/1r47s44/comment/o5dpsbv/): "Ty for the hard work, this program is crucial to my Emacs and the least I can do is say thanks!"
 - [emreyolcu on GitHub](https://github.com/jamescherti/easysession.el/pull/50#issuecomment-3752409317): "Thanks for developing EasySession! I've looked for a long time for a session management package that did everything I wanted, and EasySession is close to perfect for me."
 - [tdavey on Reddit](https://www.reddit.com/r/emacs/comments/1lalerg/comment/mxxv7xc/): "Let me simply say that I love this package. It was easy to learn; the docs are very good. It is actively maintained. The author is indefatigable. Easysession works superbly with tab-bar-mode and tab-line-mode, both of which are essential to my workflow. The fact that it can restore indirect buffer clones is huge."
 - [UnitaryInverse on Reddit](https://www.reddit.com/r/emacs/comments/1jah0e4/comment/mho5kqj/): "I have started using easysession more and more on my Spacemacs setup and it great! I can have a “lab notes” setup, a coding/simulation setup (I’m a physicist), a course planning setup for the courses I teach, and a personal setup all in one. Each one with custom windows setup so I spend SO MUCH less time splitting and moving windows. What a great package."
