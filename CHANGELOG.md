@@ -6,7 +6,11 @@
 
 ## WIP
 
-* Add the `easysession-kill-all-buffers` function to kill all buffers except for internal system buffers and modified files.
+- Update the auto-save timer dynamically when `easysession-save-interval` changes by centralizing the timer logic into `easysession--update-timer`. This ensures the timer is correctly cancelled and restarted based on the current mode state. A `:set` function was added to `easysession-save-interval` so that modifying the variable immediately updates the running timer without requiring a restart of the mode.
+
+- Check that the session path is not an existing file before attempting to create the session directory.
+
+- Add the `easysession-kill-all-buffers` function to kill all buffers except for internal system buffers and modified files.
 
 ## 1.2.0
 

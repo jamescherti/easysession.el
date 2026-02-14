@@ -187,13 +187,32 @@ saved:`, etc."
   :type 'boolean
   :group 'easysession)
 
+(defvar easysession--timer nil)
+
+(defun easysession--update-timer ()
+  "Update the auto-save timer based on `easysession-save-interval'."
+  ;; Always cancel the existing timer to prevent duplicates/leaks
+  (when (timerp easysession--timer)
+    (cancel-timer easysession--timer)
+    (setq easysession--timer nil))
+
+  ;; Only start the timer if the mode is actually enabled
+  (when (and (bound-and-true-p easysession-save-mode)
+             easysession-save-interval)
+    (setq easysession--timer (run-with-timer easysession-save-interval
+                                             easysession-save-interval
+                                             #'easysession--auto-save))))
+
 (defcustom easysession-save-interval nil
   "The interval between automatic session saves.
 If set to nil, it disables timer-based autosaving. Automatic session saves are
 activated when `easysession-save-mode' is enabled."
   :type '(choice (const :tag "Disabled" nil)
                  (integer :tag "Seconds"))
-  :group 'easysession)
+  :group 'easysession
+  :set (lambda (sym val)
+         (set-default sym val)
+         (easysession--update-timer)))
 
 ;; Mode line
 
@@ -476,8 +495,6 @@ such as graphical frames.")
 ;;; Internal variables
 
 (defvar easysession--debug nil)
-
-(defvar easysession--timer nil)
 
 ;; Overrides `frameset-filter-alist' while preserving its keys,
 ;; but replaces their values with the ones specified in the following alist:
@@ -2261,8 +2278,12 @@ SESSION-NAME is the name of the session."
             "EasySession session file - https://github.com/jamescherti/easysession.el")
            session-data)
 
-          (unless (file-directory-p session-dir)
-            (make-directory session-dir :parents))
+          (cond ((file-exists-p session-dir)
+                 (unless (file-directory-p session-dir)
+                   (error "Cannot create session directory: '%s' is a file"
+                          session-dir)))
+                (t
+                 (make-directory session-dir :parents)))
 
           (let* ((print-escape-newlines t)
                  (print-length nil)
@@ -2400,14 +2421,7 @@ accordingly."
           (add-hook 'delete-frame-functions
                     #'easysession--persist-session-on-frame-delete-maybe))
 
-        (when easysession--timer
-          (cancel-timer easysession--timer)
-          (setq easysession--timer nil))
-
-        (when easysession-save-interval
-          (setq easysession--timer (run-with-timer easysession-save-interval
-                                                   easysession-save-interval
-                                                   #'easysession--auto-save)))
+        (easysession--update-timer)
 
         ;; `kill-emacs-query-functions' is preferable to `kill-emacs-hook' for
         ;; saving frames, as it is called before frames are closed.
