@@ -57,7 +57,7 @@ If this package enhances your workflow, please show your support by **⭐ starri
     - [How to start afresh after loading too many buffers](#how-to-start-afresh-after-loading-too-many-buffers)
     - [How to persist and restore text scale?](#how-to-persist-and-restore-text-scale)
     - [How to kill all buffers when changing a session?](#how-to-kill-all-buffers-when-changing-a-session)
-    - [Saving the Session and Closing Frames Without Quitting `emacs --daemon`](#saving-the-session-and-closing-frames-without-quitting-emacs---daemon)
+    - [How to save the session and close frames without quitting `emacs --daemon`](#how-to-save-the-session-and-close-frames-without-quitting-emacs---daemon)
     - [How does the author use easysession?](#how-does-the-author-use-easysession)
     - [What does 'EasySession supports restoring indirect buffers' mean?](#what-does-easysession-supports-restoring-indirect-buffers-mean)
     - [What does EasySession offer that desktop.el doesn't?](#what-does-easysession-offer-that-desktopel-doesnt)
@@ -360,7 +360,7 @@ To do this, register a function in `easysession-before-load-hook` that invokes `
 (add-hook 'easysession-before-load-hook #'my-easysession-kill-all-buffers)
 ```
 
-### Saving the Session and Closing Frames Without Quitting `emacs --daemon`
+### How to save the session and close frames without quitting `emacs --daemon`
 
 **Note:** This is intended for environments using `emacs --daemon` or `emacs --fg-daemon`, where the Emacs process persists independently of client frames.
 
