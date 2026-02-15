@@ -1824,7 +1824,7 @@ buffers, and session data."
 
   (when easysession-setup-load-session
     (if (daemonp)
-        ;; Dameon mode
+        ;; Daemon mode
         (progn
           (when (seq-some (lambda (frame)
                             (frame-parameter frame 'client))
