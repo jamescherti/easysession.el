@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2024-2026 James Cherti | https://www.jamescherti.com/contact/
 
-;; Author: James Cherti
+;; Author: James Cherti <https://www.jamescherti.com/contact/>
 ;; URL: https://github.com/jamescherti/easysession.el
 ;; Keywords: convenience
 ;; SPDX-License-Identifier: GPL-3.0-or-later
