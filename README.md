@@ -53,12 +53,12 @@ If this package enhances your workflow, please show your support by **⭐ starri
     - [How to make EasySession kill all buffers, frames, and windows before loading a session?](#how-to-make-easysession-kill-all-buffers-frames-and-windows-before-loading-a-session)
     - [How to create custom load and save handlers for non-file-visiting buffers](#how-to-create-custom-load-and-save-handlers-for-non-file-visiting-buffers)
   - [Frequently asked questions](#frequently-asked-questions)
-    - [How to reduce the number of buffers in my session, regularly](#how-to-reduce-the-number-of-buffers-in-my-session-regularly)
     - [How to start afresh after loading too many buffers](#how-to-start-afresh-after-loading-too-many-buffers)
-    - [How to persist and restore text scale?](#how-to-persist-and-restore-text-scale)
     - [How to kill all buffers when changing a session?](#how-to-kill-all-buffers-when-changing-a-session)
     - [How to save the session and close frames without quitting `emacs --daemon`](#how-to-save-the-session-and-close-frames-without-quitting-emacs---daemon)
+    - [How to persist and restore text scale?](#how-to-persist-and-restore-text-scale)
     - [How does the author use easysession?](#how-does-the-author-use-easysession)
+    - [How to reduce the number of buffers in my session, regularly](#how-to-reduce-the-number-of-buffers-in-my-session-regularly)
     - [What does 'EasySession supports restoring indirect buffers' mean?](#what-does-easysession-supports-restoring-indirect-buffers-mean)
     - [What does EasySession offer that desktop.el doesn't?](#what-does-easysession-offer-that-desktopel-doesnt)
     - [Why not just improve and submit patches to desktop.el?](#why-not-just-improve-and-submit-patches-to-desktopel)
@@ -327,10 +327,6 @@ The code above enables EasySession to go beyond the default handlers, which supp
 
 ## Frequently asked questions
 
-### How to reduce the number of buffers in my session, regularly
-
-If your Emacs session tends to accumulate buffers over time, and you would like Emacs to automatically clean up unused and inactive ones, the author recommends trying the [buffer-terminator](https://github.com/jamescherti/buffer-terminator.el) package. This package safely and automatically kills inactive buffers, helping maintain a cleaner workspace and potentially improving Emacs performance by reducing the number of active modes, timers, and background processes associated with open buffers.
-
 ### How to start afresh after loading too many buffers
 
 To reset EasySession by killing all buffers, frames, and windows, effectively simulating a fresh Emacs start, use `M-x easysession-reset`.
@@ -341,10 +337,6 @@ Optionally, the `easysession-reset` function can be configured to automatically 
 (add-hook 'easysession-before-reset-hook #'(lambda()
                                              (save-some-buffers t)))
 ```
-
-### How to persist and restore text scale?
-
-The [persist-text-scale.el @GitHub](https://github.com/jamescherti/persist-text-scale.el) Emacs package provides `persist-text-scale-mode`, which ensures that all adjustments made with `text-scale-increase` and `text-scale-decrease` are persisted and restored across sessions. As a result, the text size in each buffer remains consistent, even after restarting Emacs. This package also facilitates grouping buffers into categories, allowing buffers within the same category to share a consistent text scale. This ensures uniform font sizes when adjusting text scaling.
 
 ### How to kill all buffers when changing a session?
 
@@ -359,6 +351,10 @@ To do this, register a function in `easysession-before-load-hook` that invokes `
 
 (add-hook 'easysession-before-load-hook #'my-easysession-kill-all-buffers)
 ```
+
+Even though `easysession-kill-all-buffers` does not terminate internal or system buffers, it still removes all open user buffers. If any of these buffers are part of the new session being loaded, they will need to be reopened and reinitialized. This can lead to unnecessary disk I/O, slower session loading, and loss of in-memory buffer state.
+
+A safer and more efficient alternative is to use the [buffer-terminator](https://github.com/jamescherti/buffer-terminator.el) Emacs package. It allows precise control over which buffers should be closed when switching sessions, while leaving others intact if they are likely to be reused.
 
 ### How to save the session and close frames without quitting `emacs --daemon`
 
@@ -384,9 +380,17 @@ The `easysession-save-sesssion-and-close-frames` function persists modified buff
 
 From the perspective of EasySession, this is functionally equivalent to an application shutdown: the session is fully saved and unloaded. When a new frame is later initialized by the Emacs daemon, EasySession restores the state as if the process had been freshly started.
 
+### How to persist and restore text scale?
+
+The [persist-text-scale](https://github.com/jamescherti/persist-text-scale.el) Emacs package provides `persist-text-scale-mode`, which ensures that all adjustments made with `text-scale-increase` and `text-scale-decrease` are persisted and restored across sessions. As a result, the text size in each buffer remains consistent, even after restarting Emacs. This package also facilitates grouping buffers into categories, allowing buffers within the same category to share a consistent text scale. This ensures uniform font sizes when adjusting text scaling.
+
 ### How does the author use easysession?
 
 The author uses easysession by setting up each session to represent a distinct project or a specific "view" on a particular project, including various tabs (built-in tab-bar), window splits, dired buffers, and file buffers. This organization allows for the creation of dedicated environments for different tasks or aspects of a project, such as development, debugging, specific issue, and documentation. The author switches between projects and views of the same projects multiple times a day, and easysession helps significantly by allowing quick transitions between them.
+
+### How to reduce the number of buffers in my session, regularly
+
+If your Emacs session tends to accumulate buffers over time, and you would like Emacs to automatically clean up unused and inactive ones, the author recommends trying the [buffer-terminator](https://github.com/jamescherti/buffer-terminator.el) package. This package safely and automatically kills inactive buffers, helping maintain a cleaner workspace and potentially improving Emacs performance by reducing the number of active modes, timers, and background processes associated with open buffers.
 
 ### What does 'EasySession supports restoring indirect buffers' mean?
 
