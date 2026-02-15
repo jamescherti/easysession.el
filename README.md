@@ -47,7 +47,7 @@ If this package enhances your workflow, please show your support by **⭐ starri
     - [How to persist and restore global variables?](#how-to-persist-and-restore-global-variables)
     - [How to make the current session name appear in the mode-line?](#how-to-make-the-current-session-name-appear-in-the-mode-line)
     - [How to create an empty session setup](#how-to-create-an-empty-session-setup)
-    - [Preventing EasySession from Saving When Switching Sessions](#preventing-easysession-from-saving-when-switching-sessions)
+    - [How to prevent EasySession from saving when switching sessions](#how-to-prevent-easysession-from-saving-when-switching-sessions)
     - [How to configure easysession-save-mode to automatically save only the "main" session and let me manually save others?](#how-to-configure-easysession-save-mode-to-automatically-save-only-the-main-session-and-let-me-manually-save-others)
     - [Passing the session name to Emacs via an environment variable](#passing-the-session-name-to-emacs-via-an-environment-variable)
     - [How to make EasySession kill all buffers, frames, and windows before loading a session?](#how-to-make-easysession-kill-all-buffers-frames-and-windows-before-loading-a-session)
@@ -213,7 +213,7 @@ To set up a minimal environment when easysession creates a new session, you can 
 
 NOTE: The `easysession-new-session-hook` functions are called when the user switches to a non-existent session using the `easysession-switch-to` function.
 
-### Preventing EasySession from Saving When Switching Sessions
+### How to prevent EasySession from saving when switching sessions
 
 By default, the `easysession-switch-to` function saves the current session before switching to another session.
 
