@@ -12,6 +12,8 @@
 
 - Add the `easysession-kill-all-buffers` function to kill all buffers except for internal system buffers and modified files.
 
+- Ensure errors in `easysession--auto-save` are ignored since this `easysession--auto-save' is part of `kill-emacs-query-functions`. Returning nil would prevent Emacs from exiting.
+
 ## 1.2.0
 
 * `easysession-save`: Serialization now reliably produces `(QUOTE . SEXP)` pairs, preserving the exact structure of saved values. This ensures correct quoting of complex Emacs Lisp objects, including structs (`#s(...)`) and other otherwise unreadable or unloadable entities (`#>`), preventing errors when restoring sessions.

@@ -1139,24 +1139,16 @@ is loaded, a session name is defined, and at least one frame exists.
 The function always returns non-nil so that it does not inhibit Emacs
 termination when used from `kill-emacs-query-functions'."
   ;; Auto save when there is at least one frame and a session has been loaded
-  (unwind-protect
-      (when (and (> (length (frame-list)) 0)
+  (condition-case err
+      (when (and (> (length (easysession--frame-list)) 0)
                  easysession--current-session-name
-                 easysession--session-loaded)
-        (if (and easysession-save-mode-predicate
-                 (funcall easysession-save-mode-predicate))
-            (easysession-save)
-          (when easysession--debug
-            (easysession--message
-             (concat
-              "[DEBUG] Auto-save ignored: `easysession-save-mode-predicate' "
-              "returned nil.")))))
-    ;; Always return t, since this `easysession--auto-save' is part of
-    ;; `kill-emacs-query-functions'. Returning nil would prevent Emacs from
-    ;; exiting.
-    t)
-  ;; The second one is important.
-  ;;
+                 easysession--session-loaded
+                 (or (not easysession-save-mode-predicate)
+                     (funcall easysession-save-mode-predicate)))
+        (easysession-save))
+    (error
+     (easysession--warning "Auto-save failed: %s" (error-message-string err))))
+
   ;; Always return t, since this `easysession--auto-save' is part of
   ;; `kill-emacs-query-functions'. Returning nil would prevent Emacs from
   ;; exiting.
@@ -1321,11 +1313,7 @@ daemon mode, allowing correct restoration when a new frame is created."
              (frame-live-p frame)
              ;; The number 2 accounts for both the initial daemon frame and the
              ;; client frame
-             (= (length (seq-filter
-                         (lambda (frame)
-                           (not (equal (terminal-name (frame-terminal frame))
-                                       "initial_terminal")))
-                         (frame-list))) 1))
+             (= (length (easysession--frame-list)) 1))
     (setq easysession--daemon-session-loaded nil)
     (easysession-unload)))
 
@@ -1345,6 +1333,14 @@ to prevent multiple loads during the same daemon session."
       (if easysession-setup-load-session-including-geometry
           (easysession-load-including-geometry)
         (easysession-load)))))
+
+(defun easysession--frame-list ()
+  "Return a list of frames, excluding the initial terminal."
+  (seq-filter
+   (lambda (frame)
+     (not (equal (terminal-name (frame-terminal frame))
+                 "initial_terminal")))
+   (frame-list)))
 
 ;;; Internal functions: handlers
 
