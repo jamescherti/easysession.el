@@ -4,6 +4,10 @@
 
 **Author:** [James Cherti](https://www.jamescherti.com/)
 
+## WIP
+
+* Add the `easysession-kill-all-buffers` function to kill all buffers except for internal system buffers and modified files.
+
 ## 1.2.0
 
 * `easysession-save`: Serialization now reliably produces `(QUOTE . SEXP)` pairs, preserving the exact structure of saved values. This ensures correct quoting of complex Emacs Lisp objects, including structs (`#s(...)`) and other otherwise unreadable or unloadable entities (`#>`), preventing errors when restoring sessions.

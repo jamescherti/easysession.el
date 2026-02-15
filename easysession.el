@@ -1866,6 +1866,31 @@ The returned list contains live buffers only."
     visible-buffers))
 
 ;;;###autoload
+(defun easysession-kill-all-buffers ()
+  "Kill all buffers, except special buffers."
+  (mapc (lambda (buffer)
+          (when (buffer-live-p buffer)
+            (let* ((name (buffer-name buffer))
+                   (base (buffer-base-buffer buffer))
+                   (file (buffer-file-name (if base
+                                               base
+                                             buffer))))
+              (when (and
+                     ;; Special Buffer Checks
+                     (not (or (string-prefix-p " " name)
+                              (and (string-prefix-p "*" name)
+                                   (string-suffix-p "*" name))
+                              (with-current-buffer buffer
+                                (derived-mode-p 'special-mode))
+                              (minibufferp buffer)))
+
+                     ;; Safety Check (Don't kill modified files)
+                     (or (not file)
+                         (not (buffer-modified-p buffer))))
+                (kill-buffer buffer)))))
+        (buffer-list)))
+
+;;;###autoload
 (defun easysession-reset ()
   "Kill all buffers and close all frames, tabs, and windows."
   (interactive)
@@ -1873,16 +1898,7 @@ The returned list contains live buffers only."
   (run-hooks 'easysession-before-reset-hook)
 
   ;; Kill all buffers
-  (let ((protected-names '("*scratch*" "*Messages*")))
-    (mapc (lambda (buffer)
-            (let ((name (buffer-name buffer))
-                  (file (buffer-file-name buffer)))
-              (when (and (not (member name protected-names))
-                         (not (string-prefix-p " " name))
-                         (or (not file)
-                             (not (buffer-modified-p buffer))))
-                (kill-buffer buffer))))
-          (buffer-list)))
+  (easysession-kill-all-buffers)
 
   ;; Delete frames
   (delete-other-frames)

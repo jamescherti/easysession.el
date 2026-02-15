@@ -56,6 +56,7 @@ If this package enhances your workflow, please show your support by **⭐ starri
     - [How to reduce the number of buffers in my session, regularly](#how-to-reduce-the-number-of-buffers-in-my-session-regularly)
     - [How to start afresh after loading too many buffers](#how-to-start-afresh-after-loading-too-many-buffers)
     - [How to persist and restore text scale?](#how-to-persist-and-restore-text-scale)
+    - [How to kill all buffers when changing a session?](#how-to-kill-all-buffers-when-changing-a-session)
     - [Saving the Session and Closing Frames Without Quitting `emacs --daemon`](#saving-the-session-and-closing-frames-without-quitting-emacs---daemon)
     - [How does the author use easysession?](#how-does-the-author-use-easysession)
     - [What does 'EasySession supports restoring indirect buffers' mean?](#what-does-easysession-supports-restoring-indirect-buffers-mean)
@@ -344,6 +345,20 @@ Optionally, the `easysession-reset` function can be configured to automatically 
 ### How to persist and restore text scale?
 
 The [persist-text-scale.el @GitHub](https://github.com/jamescherti/persist-text-scale.el) Emacs package provides `persist-text-scale-mode`, which ensures that all adjustments made with `text-scale-increase` and `text-scale-decrease` are persisted and restored across sessions. As a result, the text size in each buffer remains consistent, even after restarting Emacs. This package also facilitates grouping buffers into categories, allowing buffers within the same category to share a consistent text scale. This ensures uniform font sizes when adjusting text scaling.
+
+### How to kill all buffers when changing a session?
+
+By default, EasySession keeps existing buffers open when you switch sessions. If you prefer to start with a clean environment for each session, you can configure the package to kill all buffers before loading the new context.
+
+To do this, register a function in `easysession-before-load-hook` that invokes `easysession-kill-all-buffers`:
+
+```elisp
+(defun my-easysession-kill-all-buffers ()
+  "Kill all buffers before switching sessions."
+  (easysession-kill-all-buffers))
+
+(add-hook 'easysession-before-load-hook #'my-easysession-kill-all-buffers)
+```
 
 ### Saving the Session and Closing Frames Without Quitting `emacs --daemon`
 
