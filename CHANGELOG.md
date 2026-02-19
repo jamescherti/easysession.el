@@ -6,13 +6,15 @@
 
 ## WIP
 
-- Update the auto-save timer dynamically when `easysession-save-interval` changes by centralizing the timer logic into `easysession--update-timer`. This ensures the timer is correctly cancelled and restarted based on the current mode state. A `:set` function was added to `easysession-save-interval` so that modifying the variable immediately updates the running timer without requiring a restart of the mode.
+* Update the auto-save timer dynamically when `easysession-save-interval` changes by centralizing the timer logic into `easysession--update-timer`. This ensures the timer is correctly cancelled and restarted based on the current mode state. A `:set` function was added to `easysession-save-interval` so that modifying the variable immediately updates the running timer without requiring a restart of the mode.
 
-- Check that the session path is not an existing file before attempting to create the session directory.
+* Check that the session path is not an existing file before attempting to create the session directory.
 
-- Add the `easysession-kill-all-buffers` function to kill all buffers except for internal system buffers and modified files.
+* Add the `easysession-kill-all-buffers` function to kill all buffers except for internal system buffers and modified files.
 
-- Ensure errors in `easysession--auto-save` are ignored since this `easysession--auto-save' is part of `kill-emacs-query-functions`. Returning nil would prevent Emacs from exiting.
+* Ensure errors in `easysession--auto-save` are ignored since this `easysession--auto-save' is part of `kill-emacs-query-functions`. Returning nil would prevent Emacs from exiting.
+
+* Fix `redisplay-skip-fontification-on-input` support: Ensure buffers are fully fontified, preventing deferred or partial syntax highlighting.
 
 ## 1.2.0
 

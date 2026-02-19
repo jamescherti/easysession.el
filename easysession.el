@@ -2031,69 +2031,104 @@ loads the current session if set, or defaults to the \"main\" session."
   (setq easysession-load-in-progress nil)
   (setq easysession--session-loaded nil)
   (unwind-protect
-      (condition-case err
-          (progn
-            (let* ((session-name (or session-name
-                                     easysession--current-session-name
-                                     ;; The default session loaded when none is
-                                     ;; specified is 'main'.
-                                     "main"))
-                   (session-file (easysession--session-file session-name))
-                   ;; (uniquify-buffer-name-style nil)
-                   )  ; Disable uniquify
-              (setq easysession-load-in-progress session-name)
+      (progn
+        (let* ((session-name (or session-name
+                                 easysession--current-session-name
+                                 ;; The default session loaded when none is
+                                 ;; specified is 'main'.
+                                 "main"))
+               (session-file (easysession--session-file session-name))
+               ;; (uniquify-buffer-name-style nil)
+               )  ; Disable uniquify
+          (setq easysession-load-in-progress session-name)
 
-              (if (not session-file)
-                  (easysession-set-current-session-name session-name)
-                ;; Load and evaluate session
-                (let ((session-data
-                       (let ((coding-system-for-read 'utf-8-emacs)
-                             (file-coding-system-alist nil))
-                         (with-temp-buffer
-                           (insert-file-contents session-file)
+          (if (not session-file)
+              (easysession-set-current-session-name session-name)
+            ;; Load and evaluate session
+            (condition-case err
+                (progn
+                  (let ((session-data
+                         (let ((coding-system-for-read 'utf-8-emacs)
+                               (file-coding-system-alist nil))
+                           (with-temp-buffer
+                             (insert-file-contents session-file)
 
-                           (when (= (buffer-size) 0)
-                             (error
-                              "[easysession] %s: Failed to read session information from %s"
-                              session-name
-                              session-file))
+                             (when (= (buffer-size) 0)
+                               (error
+                                "[easysession] %s: Failed to read session information from %s"
+                                session-name
+                                session-file))
 
-                           (goto-char (point-min))
-                           (read (current-buffer))))))
+                             (goto-char (point-min))
+                             (read (current-buffer))))))
 
-                  ;; Load buffers first because the cursor, window-start, or
-                  ;; hscroll might be altered by packages such as saveplace.
-                  ;; This will allow the frameset to modify the cursor later on.
-                  (run-hooks 'easysession-before-load-hook)
+                    ;; Load buffers first because the cursor, window-start, or
+                    ;; hscroll might be altered by packages such as saveplace.
+                    ;; This will allow the frameset to modify the cursor later on.
+                    (run-hooks 'easysession-before-load-hook)
 
-                  (dolist (handler (easysession-get-load-handlers))
-                    (when handler
-                      (cond
-                       ((and (symbolp handler)
-                             (fboundp handler))
-                        (funcall handler session-data))
+                    (dolist (handler (easysession-get-load-handlers))
+                      (when handler
+                        (cond
+                         ((and (symbolp handler)
+                               (fboundp handler))
+                          (funcall handler session-data))
 
-                       (t
-                        (error
-                         "[easysession] The following load handler is not a defined function: %s"
-                         handler)))))
+                         (t
+                          (error
+                           "[easysession] The following load handler is not a defined function: %s"
+                           handler)))))
 
-                  ;; Load the frame set
-                  (easysession--load-frameset
-                   session-data
-                   (bound-and-true-p easysession-frameset-restore-geometry))
+                    ;; Load the frame set
+                    (easysession--load-frameset
+                     session-data
+                     (bound-and-true-p easysession-frameset-restore-geometry))
 
-                  (when (called-interactively-p 'any)
-                    (easysession--message "Session loaded: %s" session-name))
+                    (when (called-interactively-p 'any)
+                      (easysession--message "Session loaded: %s" session-name))
 
-                  (easysession-set-current-session-name session-name)
+                    (easysession-set-current-session-name session-name)
 
-                  (setq easysession--session-loaded t)
+                    (setq easysession--session-loaded t)
 
-                  (run-hooks 'easysession-after-load-hook)))))
-        (error
-         (error "[easysession] easysession-load error: %s"
-                (error-message-string err))))
+                    (run-hooks 'easysession-after-load-hook)))
+              (error
+               (error "[easysession] easysession-load error: %s"
+                      (error-message-string err))))
+
+            ;; Fixes the issue preventing `font-lock-mode' from fontifying
+            ;; restored buffers, causing the text to remain unfontified
+            ;; until the user presses a key.
+            (when (bound-and-true-p redisplay-skip-fontification-on-input)
+              (let ((session-buf (current-buffer)))
+                (run-with-idle-timer
+                 0 nil
+                 (lambda ()
+                   (when (buffer-live-p session-buf)
+                     (with-current-buffer session-buf
+                       (condition-case err
+                           (when (and (bound-and-true-p font-lock-mode)
+                                      ;; For maximum safety during a session
+                                      ;; load, check `font-lock-set-defaults'.
+                                      ;; This variable guarantees that the
+                                      ;; font-lock machinery has actually
+                                      ;; finished configuring its keywords and
+                                      ;; syntax tables for the current buffer.
+                                      (bound-and-true-p font-lock-set-defaults))
+                             (save-restriction
+                               (widen)
+                               (cond
+                                ((and (fboundp 'font-lock-flush)
+                                      (fboundp 'font-lock-ensure))
+                                 (font-lock-flush)
+                                 (font-lock-ensure))
+
+                                ((fboundp 'jit-lock-fontify-now)
+                                 (jit-lock-fontify-now)))))
+                         (error
+                          (easysession--warning
+                           "easysession-load font lock: %s"
+                           (error-message-string err)))))))))))))
     ;; Unwind protect
     (setq easysession-load-in-progress nil)))
 
