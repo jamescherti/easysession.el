@@ -2089,12 +2089,13 @@ loads the current session if set, or defaults to the \"main\" session."
 
                     (easysession-set-current-session-name session-name)
 
-                    (setq easysession--session-loaded t)
-
-                    (run-hooks 'easysession-after-load-hook)))
+                    (setq easysession--session-loaded t)))
               (error
                (error "[easysession] easysession-load error: %s"
                       (error-message-string err))))
+
+            (when easysession--session-loaded
+              (run-hooks 'easysession-after-load-hook))
 
             ;; Fixes the issue preventing `font-lock-mode' from fontifying
             ;; restored buffers, causing the text to remain unfontified
