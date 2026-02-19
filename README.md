@@ -1,4 +1,4 @@
-# easysession.el: Easily persist and restore Emacs file buffers, Magit buffers, scratch, Dired, narrowing, indirect buffers (clones), windows, and tab-bar configurations; a robust desktop.el replacement that allows switching sessions and fully supports GUI and daemon modes
+# easysession.el: Easily persist and restore Emacs file buffers, Magit buffers, scratch, Dired, narrowing, indirect buffers (clones), windows, and tab-bar configurations; a robust desktop.el replacement that allows switching sessions
 ![Build Status](https://github.com/jamescherti/easysession.el/actions/workflows/ci.yml/badge.svg)
 [![MELPA](https://melpa.org/packages/easysession-badge.svg)](https://melpa.org/#/easysession)
 [![MELPA Stable](https://stable.melpa.org/packages/easysession-badge.svg)](https://stable.melpa.org/#/easysession)
@@ -36,7 +36,7 @@ If this package enhances your workflow, please show your support by **⭐ starri
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
 ## Table of Contents
 
-- [easysession.el: Easily persist and restore Emacs file buffers, Magit buffers, scratch, Dired, narrowing, indirect buffers (clones), windows, and tab-bar configurations; a robust desktop.el replacement that allows switching sessions and fully supports GUI and daemon modes](#easysessionel-easily-persist-and-restore-emacs-file-buffers-magit-buffers-scratch-dired-narrowing-indirect-buffers-clones-windows-and-tab-bar-configurations-a-robust-desktopel-replacement-that-allows-switching-sessions-and-fully-supports-gui-and-daemon-modes)
+- [easysession.el: Easily persist and restore Emacs file buffers, Magit buffers, scratch, Dired, narrowing, indirect buffers (clones), windows, and tab-bar configurations; a robust desktop.el replacement that allows switching sessions](#easysessionel-easily-persist-and-restore-emacs-file-buffers-magit-buffers-scratch-dired-narrowing-indirect-buffers-clones-windows-and-tab-bar-configurations-a-robust-desktopel-replacement-that-allows-switching-sessions)
   - [Installation](#installation)
   - [Extensions](#extensions)
     - [Extension: easysession-scratch (Persist and restore the scratch buffer)](#extension-easysession-scratch-persist-and-restore-the-scratch-buffer)
@@ -456,6 +456,30 @@ Other packages focus more on managing activities rather than full session manage
 - [Hungariantoast on Reddit](https://www.reddit.com/r/emacs/comments/1i93ly5/comment/m980q04/): "I have a single raylib-experiments repository that I have been writing a bunch of separate, miniature gamedev projects in. This package has made the process of creating, managing, and restoring each of those little coding sessions such a breeze. Thanks for writing it."
 - [ghoseb on GitHub](https://github.com/jamescherti/easysession.el/issues/21): "Thanks a lot for your amazing packages! Easysession works great 🎉"
 - Mijail Guillemard (Email): "Thanks a lot for easysession.el, it is definitely more useful than other desktop*.el packages. The workflow I now have with Emacs has drastically improved with easysession."
+- [tdavey on Reddit](https://www.reddit.com/r/emacs/comments/1r47s44/comment/o639qyo/):
+  ```
+  Easysession is essential to my workflow. I rely heavily on tab-bar mode and
+  tab-line mode to organize my work, e.g., one tab-bar tab per project. My typical
+  Emacs session includes ~20 tab-bar tabs and ~70 buffers.
+
+  Upon restarting Emacs, Easysession restores everything, and I mean everything.
+  Many of my buffers are indirect clones. Easysession restores them. And many of
+  these clones are narrowed, for zooming in on a section of code or an Org-mode
+  tree. Easysession restores the narrowed state too.
+
+  This is huge. I know of no other desktop package for Emacs that restores
+  indirect buffers AND their narrowed state.
+
+  Easysession can also restore earmuff buffers, like Magit status, the Org Agenda,
+  and *Packages*, as long your init files initialize them first. I load
+  easysession at the end of my Emacs start-up to make sure that Easysession will
+  put everything I need in their designated tabs, including the special earmuff
+  buffers
+
+  Mr. Cherti, thanks so much for this package and its continuing development. In
+  my opinion it should replace the native desktop.el and be included in Emacs
+  itself...
+  ```
 
 ## License
 
