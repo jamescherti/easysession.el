@@ -29,9 +29,9 @@ If this package enhances your workflow, please show your support by **⭐ starri
 * Clear visibility of the active session through modeline integration or a lighter.
 * Built-in predicate to determine whether the current session qualifies for automatic saving.
 * Save and unload the currently loaded session using `easysession-unload`.
-* Optional **scratch buffer persistence** via the `easysession-scratch` extension, preserving notes and experiments across restarts.
-* Optional **Magit state restoration** via the `easysession-magit` extension, keeping version control workflows intact.
 * Exact restoration of **narrowed regions** in both base and indirect buffers, ensuring each buffer reopens with the same visible scope as when it was saved.
+* Optional **scratch buffer persistence** via the **extensions/easysession-scratch.el** extension, preserving notes and experiments across restarts.
+* Optional **Magit state restoration** via the **extensions/easysession-magit.el** extension, keeping version control workflows intact.
 
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
 ## Table of Contents
