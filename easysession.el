@@ -496,7 +496,7 @@ such as graphical frames.")
 
 ;;; Internal variables
 
-(defvar easysession--debug nil)
+(defvar easysession-debug nil)
 
 ;; Overrides `frameset-filter-alist' while preserving its keys,
 ;; but replaces their values with the ones specified in the following alist:
@@ -2109,29 +2109,29 @@ loads the current session if set, or defaults to the \"main\" session."
                  (lambda ()
                    (when (buffer-live-p session-buf)
                      (with-current-buffer session-buf
-                       (condition-case err
-                           (when (and (bound-and-true-p font-lock-mode)
-                                      ;; For maximum safety during a session
-                                      ;; load, check `font-lock-set-defaults'.
-                                      ;; This variable guarantees that the
-                                      ;; font-lock machinery has actually
-                                      ;; finished configuring its keywords and
-                                      ;; syntax tables for the current buffer.
-                                      (bound-and-true-p font-lock-set-defaults))
-                             (save-restriction
-                               (widen)
+                       (when (and (bound-and-true-p font-lock-mode)
+                                  ;; For maximum safety during a session
+                                  ;; load, check `font-lock-set-defaults'.
+                                  ;; This variable guarantees that the
+                                  ;; font-lock machinery has actually
+                                  ;; finished configuring its keywords and
+                                  ;; syntax tables for the current buffer.
+                                  (bound-and-true-p font-lock-set-defaults))
+                         (save-restriction
+                           (widen)
+
+                           (condition-case err
                                (cond
-                                ((and (fboundp 'font-lock-flush)
-                                      (fboundp 'font-lock-ensure))
-                                 (font-lock-flush)
-                                 (font-lock-ensure))
+                                ((and (fboundp 'font-lock-flush))
+                                 (font-lock-flush))
 
                                 ((fboundp 'jit-lock-fontify-now)
-                                 (jit-lock-fontify-now)))))
-                         (error
-                          (easysession--warning
-                           "easysession-load font lock: %s"
-                           (error-message-string err)))))))))))))
+                                 (jit-lock-fontify-now)))
+                             (error
+                              (when easysession-debug
+                                (easysession--warning
+                                 "easysession-load font lock: %s"
+                                 (error-message-string err))))))))))))))))
     ;; Unwind protect
     (setq easysession-load-in-progress nil)))
 
