@@ -42,6 +42,7 @@ If this package enhances your workflow, please show your support by **⭐ starri
     - [Extension: easysession-scratch (Persist and restore the scratch buffer)](#extension-easysession-scratch-persist-and-restore-the-scratch-buffer)
     - [Extension: easysession-magit (Persist and restore Magit buffers)](#extension-easysession-magit-persist-and-restore-magit-buffers)
   - [Usage](#usage)
+    - [Testimonials from users](#testimonials-from-users)
   - [Customization](#customization)
     - [How to only persist and restore visible buffers](#how-to-only-persist-and-restore-visible-buffers)
     - [How to persist and restore global variables?](#how-to-persist-and-restore-global-variables)
@@ -52,7 +53,6 @@ If this package enhances your workflow, please show your support by **⭐ starri
     - [Passing the session name to Emacs via an environment variable](#passing-the-session-name-to-emacs-via-an-environment-variable)
     - [How to make EasySession kill all buffers, frames, and windows before loading a session?](#how-to-make-easysession-kill-all-buffers-frames-and-windows-before-loading-a-session)
     - [How to create custom load and save handlers for non-file-visiting buffers](#how-to-create-custom-load-and-save-handlers-for-non-file-visiting-buffers)
-  - [Frequently asked questions](#frequently-asked-questions)
     - [How to start afresh after loading too many buffers](#how-to-start-afresh-after-loading-too-many-buffers)
     - [How to kill all buffers when changing a session?](#how-to-kill-all-buffers-when-changing-a-session)
     - [How to save the session and close frames without quitting `emacs --daemon`](#how-to-save-the-session-and-close-frames-without-quitting-emacs---daemon)
@@ -63,7 +63,6 @@ If this package enhances your workflow, please show your support by **⭐ starri
     - [What does EasySession offer that desktop.el doesn't?](#what-does-easysession-offer-that-desktopel-doesnt)
     - [Why not just improve and submit patches to desktop.el?](#why-not-just-improve-and-submit-patches-to-desktopel)
     - [Why not use one of the other third-party session packages?](#why-not-use-one-of-the-other-third-party-session-packages)
-    - [Testimonials from users](#testimonials-from-users)
   - [License](#license)
   - [Links](#links)
 
@@ -149,6 +148,42 @@ It is recommended to use the following functions:
 - `easysession-switch-to` to switch to another session,
 - `easysession-save` to save the current session as the current name or another name.
 
+### Testimonials from users
+
+- [spartanOrk](https://www.reddit.com/r/emacs/comments/1r47s44/comment/o5eg7uc/): "I use it and I love it and thank you ❤️"
+- [RaxelPepi on Reddit](https://www.reddit.com/r/emacs/comments/1r47s44/comment/o5dpsbv/): "Ty for the hard work, this program is crucial to my Emacs and the least I can do is say thanks!"
+- [emreyolcu on GitHub](https://github.com/jamescherti/easysession.el/pull/50#issuecomment-3752409317): "Thanks for developing EasySession! I've looked for a long time for a session management package that did everything I wanted, and EasySession is close to perfect for me."
+- [tdavey on Reddit](https://www.reddit.com/r/emacs/comments/1lalerg/comment/mxxv7xc/): "Let me simply say that I love this package. It was easy to learn; the docs are very good. It is actively maintained. The author is indefatigable. Easysession works superbly with tab-bar-mode and tab-line-mode, both of which are essential to my workflow. The fact that it can restore indirect buffer clones is huge."
+- [UnitaryInverse on Reddit](https://www.reddit.com/r/emacs/comments/1jah0e4/comment/mho5kqj/): "I have started using easysession more and more on my Spacemacs setup and it great! I can have a “lab notes” setup, a coding/simulation setup (I’m a physicist), a course planning setup for the courses I teach, and a personal setup all in one. Each one with custom windows setup so I spend SO MUCH less time splitting and moving windows. What a great package."
+- [ghostlou1043 on GitHub](https://github.com/jamescherti/easysession.el/issues/52#issuecomment-3830343008): "Thank you for writing such a useful Emacs package. I think many people will use daemons more because of this package."
+- [Hungariantoast on Reddit](https://www.reddit.com/r/emacs/comments/1i93ly5/comment/m980q04/): "I have a single raylib-experiments repository that I have been writing a bunch of separate, miniature gamedev projects in. This package has made the process of creating, managing, and restoring each of those little coding sessions such a breeze. Thanks for writing it."
+- [ghoseb on GitHub](https://github.com/jamescherti/easysession.el/issues/21): "Thanks a lot for your amazing packages! Easysession works great 🎉"
+- Mijail Guillemard (Email): "Thanks a lot for easysession.el, it is definitely more useful than other desktop*.el packages. The workflow I now have with Emacs has drastically improved with easysession."
+- [tdavey on Reddit](https://www.reddit.com/r/emacs/comments/1r47s44/comment/o639qyo/):
+  ```
+  Easysession is essential to my workflow. I rely heavily on tab-bar mode and
+  tab-line mode to organize my work, e.g., one tab-bar tab per project. My typical
+  Emacs session includes ~20 tab-bar tabs and ~70 buffers.
+
+  Upon restarting Emacs, Easysession restores everything, and I mean everything.
+  Many of my buffers are indirect clones. Easysession restores them. And many of
+  these clones are narrowed, for zooming in on a section of code or an Org-mode
+  tree. Easysession restores the narrowed state too.
+
+  This is huge. I know of no other desktop package for Emacs that restores
+  indirect buffers AND their narrowed state.
+
+  Easysession can also restore earmuff buffers, like Magit status, the Org Agenda,
+  and *Packages*, as long your init files initialize them first. I load
+  easysession at the end of my Emacs start-up to make sure that Easysession will
+  put everything I need in their designated tabs, including the special earmuff
+  buffers
+
+  Mr. Cherti, thanks so much for this package and its continuing development. In
+  my opinion it should replace the native desktop.el and be included in Emacs
+  itself...
+  ```
+
 ## Customization
 
 ### How to only persist and restore visible buffers
@@ -201,14 +236,7 @@ You can display the current session name in the mode line by setting the followi
 To set up a minimal environment when easysession creates a new session, you can define a function that closes all other tabs, deletes all other windows, and switches to the scratch buffer. The following Emacs Lisp code demonstrates how to achieve this:
 
 ``` emacs-lisp
-(defun my-empty-easysession ()
-  "Set up a minimal environment when easysession creates a new session."
-  (when (and (boundp 'tab-bar-mode) tab-bar-mode)
-    (tab-bar-close-other-tabs))
-  (delete-other-windows)
-  (scratch-buffer))
-
-(add-hook 'easysession-new-session-hook #'my-empty-easysession)
+(add-hook 'easysession-new-session-hook #'easysession-reset)
 ```
 
 NOTE: The `easysession-new-session-hook` functions are called when the user switches to a non-existent session using the `easysession-switch-to` function.
@@ -270,11 +298,10 @@ This Elisp code adds a function to the `emacs-startup-hook` that automatically r
 
 Here is how to configure EasySession to kill all buffers, frames, and windows before loading a session:
 ``` emacs-lisp
+;; Make EasySession kill all buffers, frames, and windows before loading a
+;; session
 (add-hook 'easysession-before-load-hook #'easysession-reset)
-(add-hook 'easysession-new-session-hook #'easysession-reset)
 ```
-
-NOTE: The `easysession-new-session-hook` functions are called when the user switches to a non-existent session using the `easysession-switch-to` function.
 
 Optionally, the `easysession-reset` function can be configured to automatically save all buffers without prompting the user:
 ```elisp
@@ -325,18 +352,9 @@ Here is a simple example to persist and restore the scratch buffer:
 
 The code above enables EasySession to go beyond the default handlers, which support regular and indirect buffers, by also persisting and restoring the `*scratch*` buffer.
 
-## Frequently asked questions
-
 ### How to start afresh after loading too many buffers
 
 To reset EasySession by killing all buffers, frames, and windows, effectively simulating a fresh Emacs start, use `M-x easysession-reset`.
-
-Optionally, the `easysession-reset` function can be configured to automatically save all buffers without prompting the user:
-```elisp
-;; Automatically save all buffers without prompting the user
-(add-hook 'easysession-before-reset-hook #'(lambda()
-                                             (save-some-buffers t)))
-```
 
 ### How to kill all buffers when changing a session?
 
@@ -404,6 +422,8 @@ EasySession can persist and restore all original and indirect buffers exactly as
 
 ### What does EasySession offer that desktop.el doesn't?
 
+Easysession.el provides a reliable and modern alternative to desktop.el.
+
 While desktop.el is a foundational session management tool for Emacs, it has several limitations:
 - It primarily saves Emacs' state on exit and restores it on startup, making it difficult to switch between different session files during an editing session.
 - desktop.el does not restores buffer narrowing, which is the restriction of a buffer to display and edit only a specific portion of its contents.
@@ -444,42 +464,6 @@ Other packages focus more on managing activities rather than full session manage
 - Both EasySession and Activities are customizable. In EasySession, users can define custom handlers to manage non-file-backed buffers, allowing the creation of specialized functions for restoring them. In Activities, bookmarks can be used to achieve similar customizations.
 - EasySession persists and restores all frames and tabs. Activities, by design, operates differently: Its scope is limited to a single frame (without referencing tabs) or to a single tab when `tab-bar-mode` is active; it does not span multiple frames or tabs. Each buffer is managed through its major mode's bookmark handler, which handles details such as indirect buffers and narrowing.
 - Activities is fundamentally limited to bookmarkable buffers by design, whereas EasySession is architected for extensibility and can reliably support arbitrary buffer types. (e.g., EasySession supports Magit buffers through the easysession-magit extension.)
-
-### Testimonials from users
-
-- [spartanOrk](https://www.reddit.com/r/emacs/comments/1r47s44/comment/o5eg7uc/): "I use it and I love it and thank you ❤️"
-- [RaxelPepi on Reddit](https://www.reddit.com/r/emacs/comments/1r47s44/comment/o5dpsbv/): "Ty for the hard work, this program is crucial to my Emacs and the least I can do is say thanks!"
-- [emreyolcu on GitHub](https://github.com/jamescherti/easysession.el/pull/50#issuecomment-3752409317): "Thanks for developing EasySession! I've looked for a long time for a session management package that did everything I wanted, and EasySession is close to perfect for me."
-- [tdavey on Reddit](https://www.reddit.com/r/emacs/comments/1lalerg/comment/mxxv7xc/): "Let me simply say that I love this package. It was easy to learn; the docs are very good. It is actively maintained. The author is indefatigable. Easysession works superbly with tab-bar-mode and tab-line-mode, both of which are essential to my workflow. The fact that it can restore indirect buffer clones is huge."
-- [UnitaryInverse on Reddit](https://www.reddit.com/r/emacs/comments/1jah0e4/comment/mho5kqj/): "I have started using easysession more and more on my Spacemacs setup and it great! I can have a “lab notes” setup, a coding/simulation setup (I’m a physicist), a course planning setup for the courses I teach, and a personal setup all in one. Each one with custom windows setup so I spend SO MUCH less time splitting and moving windows. What a great package."
-- [ghostlou1043 on GitHub](https://github.com/jamescherti/easysession.el/issues/52#issuecomment-3830343008): "Thank you for writing such a useful Emacs package. I think many people will use daemons more because of this package."
-- [Hungariantoast on Reddit](https://www.reddit.com/r/emacs/comments/1i93ly5/comment/m980q04/): "I have a single raylib-experiments repository that I have been writing a bunch of separate, miniature gamedev projects in. This package has made the process of creating, managing, and restoring each of those little coding sessions such a breeze. Thanks for writing it."
-- [ghoseb on GitHub](https://github.com/jamescherti/easysession.el/issues/21): "Thanks a lot for your amazing packages! Easysession works great 🎉"
-- Mijail Guillemard (Email): "Thanks a lot for easysession.el, it is definitely more useful than other desktop*.el packages. The workflow I now have with Emacs has drastically improved with easysession."
-- [tdavey on Reddit](https://www.reddit.com/r/emacs/comments/1r47s44/comment/o639qyo/):
-  ```
-  Easysession is essential to my workflow. I rely heavily on tab-bar mode and
-  tab-line mode to organize my work, e.g., one tab-bar tab per project. My typical
-  Emacs session includes ~20 tab-bar tabs and ~70 buffers.
-
-  Upon restarting Emacs, Easysession restores everything, and I mean everything.
-  Many of my buffers are indirect clones. Easysession restores them. And many of
-  these clones are narrowed, for zooming in on a section of code or an Org-mode
-  tree. Easysession restores the narrowed state too.
-
-  This is huge. I know of no other desktop package for Emacs that restores
-  indirect buffers AND their narrowed state.
-
-  Easysession can also restore earmuff buffers, like Magit status, the Org Agenda,
-  and *Packages*, as long your init files initialize them first. I load
-  easysession at the end of my Emacs start-up to make sure that Easysession will
-  put everything I need in their designated tabs, including the special earmuff
-  buffers
-
-  Mr. Cherti, thanks so much for this package and its continuing development. In
-  my opinion it should replace the native desktop.el and be included in Emacs
-  itself...
-  ```
 
 ## License
 
