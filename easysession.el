@@ -1124,13 +1124,6 @@ Also checks if `easysession-dont-save' is set to t."
                  (equal (terminal-name (frame-terminal frame))
                         "initial_terminal")))))
 
-(defun easysession--session-file (session-name)
-  "Check if a session with the given SESSION-NAME exists.
-Returns the session file if the session file exists, nil otherwise."
-  (let ((file-name (easysession-get-session-file-path session-name)))
-    (when (file-exists-p file-name)
-      file-name)))
-
 (defun easysession--auto-save ()
   "Automatically save the current session when permitted.
 
@@ -1987,13 +1980,19 @@ SESSION-NAMES is a string or a list of session names."
 
   (let ((session-files (mapcar
                         (lambda (name)
-                          (cons name (easysession--session-file name)))
+                          (let ((session-file
+                                 (easysession-get-session-file-path name)))
+                            (cons name
+                                  (when (file-exists-p session-file)
+                                    session-file))))
                         session-names)))
     (dolist (entry session-files)
-      (unless (cdr entry)
-        (user-error
-         "[easysession] The session '%s' cannot be deleted because it doesn't exist"
-         (car entry))))
+      (let ((session-name (car entry))
+            (session-file (cdr entry)))
+        (unless session-file
+          (user-error
+           "[easysession] The session '%s' cannot be deleted because it doesn't exist"
+           session-name))))
 
     (when (and (called-interactively-p 'any)
                (> (length session-names) 1)
@@ -2002,6 +2001,16 @@ SESSION-NAMES is a string or a list of session names."
                  (format "[easysession] Delete the sessions %s? "
                          (string-join session-names ", ")))))
       (user-error "[easysession] Deletion aborted"))
+
+    (dolist (entry session-files)
+      (let ((session-name (car entry)))
+        (when (and easysession--session-loaded
+                   (string= session-name easysession--current-session-name))
+          ;; We're deleting the current session
+          (when (yes-or-no-p (format "Delete the current session %s? "
+                                     session-name))
+            ;; TODO Add option to reset if the current session is deleted
+            (easysession-unload)))))
 
     (dolist (entry session-files)
       (let* ((file (cdr entry))
@@ -2015,6 +2024,45 @@ SESSION-NAMES is a string or a list of session names."
        "Deleted session%s: %s"
        (if (> (length session-names) 1) "s" "")
        (string-join session-names ", ")))))
+
+(defun easysession--ensure-font-lock ()
+  "Make sure the buffer has been fontified."
+  ;; Fixes the issue preventing `font-lock-mode' from fontifying
+  ;; restored buffers, causing the text to remain unfontified
+  ;; until the user presses a key.
+  (when (bound-and-true-p redisplay-skip-fontification-on-input)
+    (let ((session-buf (current-buffer)))
+      (run-with-idle-timer
+       0 nil
+       (lambda ()
+         (when (buffer-live-p session-buf)
+           (with-current-buffer session-buf
+             (when (and (bound-and-true-p font-lock-mode)
+                        ;; For maximum safety during a session
+                        ;; load, check `font-lock-set-defaults'.
+                        ;; This variable guarantees that the
+                        ;; font-lock machinery has actually
+                        ;; finished configuring its keywords and
+                        ;; syntax tables for the current buffer.
+                        (bound-and-true-p font-lock-set-defaults))
+               (save-restriction
+                 (widen)
+
+                 (condition-case err
+                     (cond
+                      ((and (fboundp 'font-lock-flush)
+                            (fboundp 'font-lock-ensure))
+                       (font-lock-flush)
+                       (ignore-errors
+                         (font-lock-ensure)))
+
+                      ((fboundp 'jit-lock-fontify-now)
+                       (jit-lock-fontify-now)))
+                   (error
+                    (when (bound-and-true-p easysession-debug)
+                      (easysession--warning
+                       "easysession-load font lock: %s"
+                       (error-message-string err))))))))))))))
 
 ;;;###autoload
 (defun easysession-load (&optional session-name)
@@ -2031,7 +2079,6 @@ loads the current session if set, or defaults to the \"main\" session."
           (and easysession-switch-to-exclude-current
                easysession--session-loaded))))
   (setq easysession-load-in-progress nil)
-  (setq easysession--session-loaded nil)
   (unwind-protect
       (progn
         (let* ((session-name (or session-name
@@ -2039,47 +2086,60 @@ loads the current session if set, or defaults to the \"main\" session."
                                  ;; The default session loaded when none is
                                  ;; specified is 'main'.
                                  "main"))
-               (session-file (easysession--session-file session-name))
+               (load-handlers (easysession-get-load-handlers))
                ;; (uniquify-buffer-name-style nil)
-               )  ; Disable uniquify
+               (session-file
+                (let ((file-name (easysession-get-session-file-path
+                                  session-name)))
+                  (when (file-exists-p file-name)
+                    file-name))))
+          ;; Pre-validate handlers before proceeding
+          (dolist (handler load-handlers)
+            (when (and handler
+                       (not (and (symbolp handler)
+                                 (fboundp handler))))
+              (error
+               "[easysession] The following load handler is not a defined function: %s"
+               handler)))
+
           (setq easysession-load-in-progress session-name)
+          (setq easysession--session-loaded nil)
 
-          (if (not session-file)
-              (easysession-set-current-session-name session-name)
-            ;; Load and evaluate session
-            (condition-case err
-                (progn
-                  (let ((session-data
-                         (let ((coding-system-for-read 'utf-8-emacs)
-                               (file-coding-system-alist nil))
-                           (with-temp-buffer
-                             (insert-file-contents session-file)
+          (cond
+           ;; The session file does not exist. This is a new session.
+           ((not session-file)
+            ;; TODO: Use `easysession-new-session-hook' hook?
+            (easysession-set-current-session-name session-name)
+            (setq easysession--session-loaded t))
 
-                             (when (= (buffer-size) 0)
-                               (error
-                                "[easysession] %s: Failed to read session information from %s"
-                                session-name
-                                session-file))
+           ;; The session exists
+           (t
+            (let ((session-data
+                   (let ((coding-system-for-read 'utf-8-emacs)
+                         (file-coding-system-alist nil))
+                     (with-temp-buffer
+                       (insert-file-contents session-file)
+                       (goto-char (point-min))
 
-                             (goto-char (point-min))
-                             (read (current-buffer))))))
+                       (condition-case err
+                           (read (current-buffer))
+                         (error
+                          (error "[easysession] easysession-load error: %s: %s"
+                                 session-file
+                                 (error-message-string err))))))))
 
-                    ;; Load buffers first because the cursor, window-start, or
-                    ;; hscroll might be altered by packages such as saveplace.
-                    ;; This will allow the frameset to modify the cursor later on.
-                    (run-hooks 'easysession-before-load-hook)
+              ;; Load buffers first because the cursor, window-start, or
+              ;; hscroll might be altered by packages such as saveplace.
+              ;; This will allow the frameset to modify the cursor later on.
+              (run-hooks 'easysession-before-load-hook)
 
-                    (dolist (handler (easysession-get-load-handlers))
+              ;; Load and evaluate session
+              (condition-case err
+                  (progn
+                    ;; Call handlers
+                    (dolist (handler load-handlers)
                       (when handler
-                        (cond
-                         ((and (symbolp handler)
-                               (fboundp handler))
-                          (funcall handler session-data))
-
-                         (t
-                          (error
-                           "[easysession] The following load handler is not a defined function: %s"
-                           handler)))))
+                        (funcall handler session-data)))
 
                     ;; Load the frame set
                     (easysession--load-frameset
@@ -2090,48 +2150,17 @@ loads the current session if set, or defaults to the \"main\" session."
                       (easysession--message "Session loaded: %s" session-name))
 
                     (easysession-set-current-session-name session-name)
+                    (setq easysession--session-loaded t))
+                (error
+                 (error "[easysession] easysession-load error: %s"
+                        (error-message-string err)))))))
 
-                    (setq easysession--session-loaded t)))
-              (error
-               (error "[easysession] easysession-load error: %s"
-                      (error-message-string err))))
+          ;; These now run regardless of whether the session was new or
+          ;; existed
+          (when easysession--session-loaded
+            (run-hooks 'easysession-after-load-hook))
 
-            (when easysession--session-loaded
-              (run-hooks 'easysession-after-load-hook))
-
-            ;; Fixes the issue preventing `font-lock-mode' from fontifying
-            ;; restored buffers, causing the text to remain unfontified
-            ;; until the user presses a key.
-            (when (bound-and-true-p redisplay-skip-fontification-on-input)
-              (let ((session-buf (current-buffer)))
-                (run-with-idle-timer
-                 0 nil
-                 (lambda ()
-                   (when (buffer-live-p session-buf)
-                     (with-current-buffer session-buf
-                       (when (and (bound-and-true-p font-lock-mode)
-                                  ;; For maximum safety during a session
-                                  ;; load, check `font-lock-set-defaults'.
-                                  ;; This variable guarantees that the
-                                  ;; font-lock machinery has actually
-                                  ;; finished configuring its keywords and
-                                  ;; syntax tables for the current buffer.
-                                  (bound-and-true-p font-lock-set-defaults))
-                         (save-restriction
-                           (widen)
-
-                           (condition-case err
-                               (cond
-                                ((and (fboundp 'font-lock-flush))
-                                 (font-lock-flush))
-
-                                ((fboundp 'jit-lock-fontify-now)
-                                 (jit-lock-fontify-now)))
-                             (error
-                              (when easysession-debug
-                                (easysession--warning
-                                 "easysession-load font lock: %s"
-                                 (error-message-string err))))))))))))))))
+          (easysession--ensure-font-lock)))
     ;; Unwind protect
     (setq easysession-load-in-progress nil)))
 
@@ -2406,7 +2435,7 @@ accordingly."
                  (or (or (not easysession--session-loaded)
                          (not session-reloaded))
                      (yes-or-no-p
-                      (format "[easysession] Do you want to save the current session '%s' before reloading it?"
+                      (format "[easysession] Do you want to save the current session '%s' before reloading it? "
                               easysession--current-session-name))))
         (easysession-save easysession--current-session-name)
         (setq saved t))
