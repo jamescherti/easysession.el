@@ -1,4 +1,4 @@
-# easysession.el: Easily persist and restore Emacs file buffers, Magit buffers, scratch, Dired, narrowing, indirect buffers (clones), windows, and tab-bar configurations; a robust desktop.el replacement that allows switching sessions
+# easysession.el: Easily persist and restore Emacs file buffers, Magit buffers, scratch, Dired, narrowing, indirect buffers (clones), windows, and tab-bar configurations
 ![Build Status](https://github.com/jamescherti/easysession.el/actions/workflows/ci.yml/badge.svg)
 [![MELPA](https://melpa.org/packages/easysession-badge.svg)](https://melpa.org/#/easysession)
 [![MELPA Stable](https://stable.melpa.org/packages/easysession-badge.svg)](https://stable.melpa.org/#/easysession)
@@ -36,7 +36,7 @@ If this package enhances your workflow, please show your support by **⭐ starri
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
 ## Table of Contents
 
-- [easysession.el: Easily persist and restore Emacs file buffers, Magit buffers, scratch, Dired, narrowing, indirect buffers (clones), windows, and tab-bar configurations; a robust desktop.el replacement that allows switching sessions](#easysessionel-easily-persist-and-restore-emacs-file-buffers-magit-buffers-scratch-dired-narrowing-indirect-buffers-clones-windows-and-tab-bar-configurations-a-robust-desktopel-replacement-that-allows-switching-sessions)
+- [easysession.el: Easily persist and restore Emacs file buffers, Magit buffers, scratch, Dired, narrowing, indirect buffers (clones), windows, and tab-bar configurations](#easysessionel-easily-persist-and-restore-emacs-file-buffers-magit-buffers-scratch-dired-narrowing-indirect-buffers-clones-windows-and-tab-bar-configurations)
   - [Installation](#installation)
   - [Extensions](#extensions)
     - [Extension: easysession-scratch (Persist and restore the scratch buffer)](#extension-easysession-scratch-persist-and-restore-the-scratch-buffer)
