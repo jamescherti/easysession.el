@@ -16,6 +16,10 @@
 
 * Fix `redisplay-skip-fontification-on-input` support: Ensure buffers are fully fontified, preventing deferred or partial syntax highlighting.
 
+- Simplify the implementation of `easysession-load` to reduce code complexity. Extract the font lock restoration logic into a new dedicated helper function, `easysession--ensure-font-lock`. Add pre-validation for load handlers to ensure they are bound functions before execution.
+
+- Update `easysession-delete` to pre-validate that all selected session files exist before prompting the user or performing any destructive actions. Add logic to automatically unload the current session if it is among the sessions being deleted.
+
 ## 1.2.0
 
 * `easysession-save`: Serialization now reliably produces `(QUOTE . SEXP)` pairs, preserving the exact structure of saved values. This ensures correct quoting of complex Emacs Lisp objects, including structs (`#s(...)`) and other otherwise unreadable or unloadable entities (`#>`), preventing errors when restoring sessions.
