@@ -13,4 +13,5 @@ repos:
     hooks:
       - id: elisp-check-parens
       - id: elisp-check-byte-compile
+      - id: elisp-check-native-compile
       # - id: elisp-indent
