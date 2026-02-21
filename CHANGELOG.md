@@ -20,7 +20,9 @@
 
 * Update `easysession-delete` to pre-validate that all selected session files exist before prompting the user or performing any destructive actions. Add logic to automatically unload the current session if it is among the sessions being deleted.
 
-- `easysession-save`: Force window state deserialization in `tab-bar-mode`, correcting an issue where background tabs displayed outdated names after buffers were renamed by packages like uniquify.
+* `easysession-save`: Force window state deserialization in `tab-bar-mode`, correcting an issue where background tabs displayed outdated names after buffers were renamed by packages like uniquify.
+
+* Added variable `easysession-font-lock-fontify`, which ensures the buffer has been fontified.
 
 ## 1.2.0
 
