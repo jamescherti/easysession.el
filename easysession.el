@@ -494,6 +494,9 @@ if the return value is non-nil.
 This variable allows restricting session restoration to specific environments,
 such as graphical frames.")
 
+(defvar easysession-refresh-tab-bar nil
+  "Experimental feature.")
+
 ;;; Internal variables
 
 (defvar easysession-debug nil)
@@ -1337,6 +1340,39 @@ to prevent multiple loads during the same daemon session."
                  "initial_terminal")))
    (frame-list)))
 
+(defun easysession--refresh-tabs-all-frames ()
+  "Cycle through all tabs on all frames to force a state and name refresh.
+
+When Emacs buffers are renamed automatically by packages like uniquify,
+background tabs in `tab-bar-mode' often retain the old buffer names because they
+store window configurations as static data.
+
+This creates a confusing interface where the visible tab titles fail to match
+the actual active buffers. Cycling through all tabs across every frame forces
+Emacs to deserialize the window states and update its internal tracking
+information. Consequently, the workspace always displays accurate tab names,
+which prevents navigation errors and ensures the visual layout reflects the
+exact state of your open files."
+  (interactive)
+  (let ((inhibit-redisplay t))
+    ;; Iterate through every active frame in the Emacs session
+    (when (and (fboundp 'tab-bar--current-tab-index)
+               (fboundp 'tab-bar-select-tab)
+               (boundp 'tab-bar-tabs-function))
+      (dolist (frame (frame-list))
+        (with-selected-frame frame
+          (let ((original-index (tab-bar--current-tab-index))
+                (tab-count (length (funcall tab-bar-tabs-function))))
+            ;; Loop through every tab on the current frame to force
+            ;; deserialization
+            (dotimes (i tab-count)
+              (tab-bar-select-tab (1+ i)))
+            ;; Return to the originally selected tab for this specific frame
+            (when original-index
+              (tab-bar-select-tab (1+ original-index))))))
+      ;; Force the visual tab bar to redraw globally
+      (force-mode-line-update t))))
+
 ;;; Internal functions: handlers
 
 (defun easysession--restore-buffer-state (buffer buffer-info)
@@ -2087,7 +2123,6 @@ loads the current session if set, or defaults to the \"main\" session."
                                  ;; specified is 'main'.
                                  "main"))
                (load-handlers (easysession-get-load-handlers))
-               ;; (uniquify-buffer-name-style nil)
                (session-file
                 (let ((file-name (easysession-get-session-file-path
                                   session-name)))
@@ -2275,6 +2310,10 @@ SESSION-NAME is the name of the session."
       (progn
         (setq easysession-save-in-progress t)
         (run-hooks 'easysession-before-save-hook)
+        (when (bound-and-true-p tab-bar-mode)
+          (when easysession-refresh-tab-bar
+            (easysession--refresh-tabs-all-frames)))
+
         (let* ((session-name (if session-name
                                  session-name
                                easysession--current-session-name))

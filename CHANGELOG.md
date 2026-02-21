@@ -16,9 +16,11 @@
 
 * Fix `redisplay-skip-fontification-on-input` support: Ensure buffers are fully fontified, preventing deferred or partial syntax highlighting.
 
-- Simplify the implementation of `easysession-load` to reduce code complexity. Extract the font lock restoration logic into a new dedicated helper function, `easysession--ensure-font-lock`. Add pre-validation for load handlers to ensure they are bound functions before execution.
+* Simplify the implementation of `easysession-load` to reduce code complexity. Extract the font lock restoration logic into a new dedicated helper function, `easysession--ensure-font-lock`. Add pre-validation for load handlers to ensure they are bound functions before execution.
 
-- Update `easysession-delete` to pre-validate that all selected session files exist before prompting the user or performing any destructive actions. Add logic to automatically unload the current session if it is among the sessions being deleted.
+* Update `easysession-delete` to pre-validate that all selected session files exist before prompting the user or performing any destructive actions. Add logic to automatically unload the current session if it is among the sessions being deleted.
+
+- `easysession-save`: Force window state deserialization in `tab-bar-mode`, correcting an issue where background tabs displayed outdated names after buffers were renamed by packages like uniquify.
 
 ## 1.2.0
 
