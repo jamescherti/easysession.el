@@ -2110,8 +2110,8 @@ loads the current session if set, or defaults to the \"main\" session."
            ((not session-file)
             ;; TODO: Use `easysession-new-session-hook' hook?
             (easysession-set-current-session-name session-name)
-            (run-hooks 'easysession-new-session-hook)
-            (setq easysession--session-loaded t))
+            (setq easysession--session-loaded t)
+            (run-hooks 'easysession-new-session-hook))
 
            ;; The session exists
            (t
