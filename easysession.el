@@ -497,6 +497,13 @@ such as graphical frames.")
 (defvar easysession-refresh-tab-bar nil
   "Experimental feature.")
 
+(defvar easysession-fontify t
+  "When non-nil, force fontification of restored buffers.
+This variable addresses an issue where `font-lock-mode' fails to fontify
+buffers during session restoration when `redisplay-skip-fontification-on-input'
+is non-nil. Without this, text remains unfontified until the user provides
+input, such as pressing a key.")
+
 ;;; Internal variables
 
 (defvar easysession-debug nil)
@@ -2196,7 +2203,8 @@ loads the current session if set, or defaults to the \"main\" session."
           (when easysession--session-loaded
             (run-hooks 'easysession-after-load-hook))
 
-          (easysession--ensure-font-lock)))
+          (when easysession-fontify
+            (easysession--ensure-font-lock))))
     ;; Unwind protect
     (setq easysession-load-in-progress nil)))
 
