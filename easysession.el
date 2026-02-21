@@ -2109,6 +2109,7 @@ loads the current session if set, or defaults to the \"main\" session."
            ((not session-file)
             ;; TODO: Use `easysession-new-session-hook' hook?
             (easysession-set-current-session-name session-name)
+            (run-hooks 'easysession-new-session-hook)
             (setq easysession--session-loaded t))
 
            ;; The session exists
@@ -2445,11 +2446,8 @@ accordingly."
          (user-error "[easysession] Failed to load session '%s': %s"
                      session-name (error-message-string err))))
 
-      (easysession-set-current-session-name session-name)
-
       (when (and (not session-reloaded)
                  (not (file-exists-p new-session-file)))
-        (run-hooks 'easysession-new-session-hook)
         (easysession-save session-name)
         (setq new-session t))
 
