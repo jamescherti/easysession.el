@@ -198,6 +198,7 @@ saved:`, etc."
 
   ;; Only start the timer if the mode is actually enabled
   (when (and (bound-and-true-p easysession-save-mode)
+             (boundp 'easysession-save-interval)
              easysession-save-interval)
     (setq easysession--timer (run-with-timer easysession-save-interval
                                              easysession-save-interval
@@ -212,7 +213,8 @@ activated when `easysession-save-mode' is enabled."
   :group 'easysession
   :set (lambda (sym val)
          (set-default sym val)
-         (easysession--update-timer)))
+         (when (bound-and-true-p easysession-save-mode)
+           (easysession--update-timer))))
 
 ;; Mode line
 
