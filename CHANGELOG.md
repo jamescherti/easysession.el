@@ -22,7 +22,9 @@
 
 * `easysession-save`: Force window state deserialization in `tab-bar-mode`, correcting an issue where background tabs displayed outdated names after buffers were renamed by packages like uniquify.
 
-* Added variable `easysession-font-lock-fontify`, which ensures the buffer has been fontified.
+* Add the `easysession-font-lock-fontify` variable, which ensures the buffer has been fontified.
+
+* Add the `easysession-refresh-tab-bar` variable to force a state and name refresh of all tabs.
 
 ## 1.2.0
 

@@ -495,7 +495,14 @@ This variable allows restricting session restoration to specific environments,
 such as graphical frames.")
 
 (defvar easysession-refresh-tab-bar nil
-  "Experimental feature.")
+  "Non-nil means force a state and name refresh of all tabs.
+This is an experimental feature. When non-nil, EasySession cycles through all
+tabs on all frames before saving the session to ensure that tab names match the
+actual buffer names.
+Persisting a session with outdated tab names prevents those buffers from
+matching the restored tabs. This mismatch occurs when a buffer is renamed by
+`uniquify' or another package that does not notify the `tab-bar' of the change.
+By default, the `tab-bar' only updates a tab name after the user visits it.")
 
 (defvar easysession-fontify t
   "When non-nil, force fontification of restored buffers.
@@ -1373,7 +1380,7 @@ exact state of your open files."
       (ignore tab-bar-tab-post-select-functions)
       (ignore window-selection-change-functions)
       (ignore window-configuration-change-hook)
-      ;; Iterate through every active frame in the Emacs session
+      ;; Iterate through every active frame
       (dolist (frame (frame-list))
         (with-selected-frame frame
           (let ((original-index (tab-bar--current-tab-index))
@@ -2329,9 +2336,8 @@ SESSION-NAME is the name of the session."
       (progn
         (setq easysession-save-in-progress t)
         (run-hooks 'easysession-before-save-hook)
-        (when (bound-and-true-p tab-bar-mode)
-          (when easysession-refresh-tab-bar
-            (easysession--refresh-tabs-all-frames)))
+        (when easysession-refresh-tab-bar
+          (easysession--refresh-tabs-all-frames))
 
         (let* ((session-name (if session-name
                                  session-name
@@ -2341,8 +2347,7 @@ SESSION-NAME is the name of the session."
                (data-frameset-geometry (easysession--save-frameset
                                         session-name t))
                (session-data nil)
-               (session-dir (file-name-directory session-file))
-               (uniquify-buffer-name-style nil))  ; Disable uniquify
+               (session-dir (file-name-directory session-file)))
           ;; Frameset
           (push (cons "frameset" data-frameset) session-data)
           (push (cons "frameset-geo" data-frameset-geometry) session-data)
