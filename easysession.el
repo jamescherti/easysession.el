@@ -1361,24 +1361,32 @@ information. Consequently, the workspace always displays accurate tab names,
 which prevents navigation errors and ensures the visual layout reflects the
 exact state of your open files."
   (interactive)
-  (let ((inhibit-redisplay t))
-    ;; Iterate through every active frame in the Emacs session
-    (when (and (fboundp 'tab-bar--current-tab-index)
-               (fboundp 'tab-bar-select-tab)
-               (boundp 'tab-bar-tabs-function))
+  (when (and (fboundp 'tab-bar--current-tab-index)
+             (fboundp 'tab-bar-select-tab)
+             (boundp 'tab-bar-tabs-function)
+             (bound-and-true-p tab-bar-mode))
+    (let ((inhibit-redisplay t)
+          (inhibit-message t)
+          (window-configuration-change-hook nil)
+          (window-selection-change-functions nil)
+          (tab-bar-tab-post-select-functions nil))
+      ;; Iterate through every active frame in the Emacs session
       (dolist (frame (frame-list))
         (with-selected-frame frame
           (let ((original-index (tab-bar--current-tab-index))
                 (tab-count (length (funcall tab-bar-tabs-function))))
-            ;; Loop through every tab on the current frame to force
-            ;; deserialization
-            (dotimes (i tab-count)
-              (tab-bar-select-tab (1+ i)))
-            ;; Return to the originally selected tab for this specific frame
-            (when original-index
-              (tab-bar-select-tab (1+ original-index))))))
+            (when (> tab-count 1)
+              ;; Loop through every tab on the current frame to force
+              ;; deserialization
+              (dotimes (i tab-count)
+                (unless (eq i original-index)
+                  (tab-bar-select-tab (1+ i))))
+              ;; Return to the originally selected tab for this specific frame
+              (when original-index
+                (tab-bar-select-tab (1+ original-index)))))))
       ;; Force the visual tab bar to redraw globally
-      (force-mode-line-update t))))
+      ;; (force-mode-line-update t)
+      )))
 
 ;;; Internal functions: handlers
 
