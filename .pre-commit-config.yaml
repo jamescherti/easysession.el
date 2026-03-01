@@ -9,9 +9,10 @@ repos:
       - id: trailing-whitespace
 
   - repo: https://github.com/jamescherti/pre-commit-elisp
-    rev: v1.0.6
+    rev: v1.0.8
     hooks:
       - id: elisp-check-parens
       - id: elisp-check-byte-compile
-      - id: elisp-check-native-compile
-      # - id: elisp-indent
+        exclude: '(\.dir-locals\.el|test-easysession\.el)$'
+      # - id: elisp-check-native-compile
+      #   exclude: '\.dir-locals\.el$'

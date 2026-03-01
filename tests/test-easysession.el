@@ -110,9 +110,12 @@ session name before and after the switch."
     (error "Expected the initial session to be named 'main', but found '%s'"
            (easysession-get-session-name)))
 
+  (setq easysession--session-loaded t)
+
   ;; Switch to the test session
   (easysession-save)
-  (easysession-delete "test")
+  (ignore-errors
+    (easysession-delete "test"))
   (let ((easysession-confirm-new-session nil))
     (easysession-switch-to "test"))
 
