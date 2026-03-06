@@ -541,6 +541,8 @@ input, such as pressing a key.")
     (GUI:font . :never)
     (font-parameter . :never)
 
+    (margins . :never)
+
     ;; Don't save the 'client' parameter to avoid that a subsequent
     ;; `save-buffers-kill-terminal' in a non-client session barks at
     ;; the user (Emacs Bug#29067).

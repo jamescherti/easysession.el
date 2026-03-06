@@ -32,6 +32,8 @@
   * `auto-insert`: Set to nil to prevent interactive boilerplate prompts if a saved file is missing or empty.
   * `inhibit-message`: Set to t to suppress "Reading file..." logs in the echo area, ensuring a clean and flicker-free startup.
 
+* Disable persistence of margins to prevent layout artifacts when switching displays or toggling modes like olivetti, perfect-margin, or visual-fill-column.
+
 ## 1.2.0
 
 * `easysession-save`: Serialization now reliably produces `(QUOTE . SEXP)` pairs, preserving the exact structure of saved values. This ensures correct quoting of complex Emacs Lisp objects, including structs (`#s(...)`) and other otherwise unreadable or unloadable entities (`#>`), preventing errors when restoring sessions.
