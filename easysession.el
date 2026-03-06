@@ -422,7 +422,10 @@ For more details, see the `frameset-restore' docstring."
   :type 'boolean
   :group 'easysession)
 
-(defcustom easysession-exclude-from-find-file-hook '(recentf-track-opened-file)
+(defcustom easysession-exclude-from-find-file-hook
+  '(recentf-track-opened-file
+    save-place-find-file-hook
+    auto-revert-find-file-function)
   "List of hooks to be excluded from `find-file-hook'.
 When EasySession restores a file editing buffer using `find-file-noselect', the
 functions in this list are skipped and not executed by `find-file-hook'. This
@@ -1457,7 +1460,21 @@ accordingly, ensuring backward compatibility with legacy session files."
             (let ((new-buffer (let ((find-file-hook
                                      (seq-difference
                                       find-file-hook
-                                      easysession-exclude-from-find-file-hook)))
+                                      easysession-exclude-from-find-file-hook))
+                                    (inhibit-message t)
+                                    ;; Bind `auto-insert' to nil during buffer
+                                    ;; restoration. This prevents
+                                    ;; `auto-insert-mode' from halting the
+                                    ;; background session load with interactive
+                                    ;; prompts (or silently inserting
+                                    ;; boilerplate text) if a file from the
+                                    ;; saved session was deleted or truncated
+                                    ;; between sessions. It ensures session
+                                    ;; loading remains fast, non-interactive,
+                                    ;; and does not unintentionally mark
+                                    ;; restored buffers as modified.
+                                    (auto-insert nil))
+                                (ignore auto-insert)  ; Silence warning
                                 (condition-case err
                                     (find-file-noselect buffer-path t)
                                   (error

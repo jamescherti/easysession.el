@@ -26,6 +26,12 @@
 
 * Add the `easysession-refresh-tab-bar` variable to force a state and name refresh of all tabs.
 
+* Add new defaults to `easysession-exclude-from-find-file-hook`: `save-place-find-file-hook` and `auto-revert-find-file-function`. This prevents cursor jumping and unnecessary file tracking during restoration.
+
+* Change the following state variables during session loading:
+  * `auto-insert`: Set to nil to prevent interactive boilerplate prompts if a saved file is missing or empty.
+  * `inhibit-message`: Set to t to suppress "Reading file..." logs in the echo area, ensuring a clean and flicker-free startup.
+
 ## 1.2.0
 
 * `easysession-save`: Serialization now reliably produces `(QUOTE . SEXP)` pairs, preserving the exact structure of saved values. This ensures correct quoting of complex Emacs Lisp objects, including structs (`#s(...)`) and other otherwise unreadable or unloadable entities (`#>`), preventing errors when restoring sessions.
