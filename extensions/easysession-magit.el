@@ -33,7 +33,6 @@
 ;;; Code:
 
 (require 'easysession)
-(require 'cl-lib)
 
 (defgroup easysession-magit nil
   "Customization options for persisting Magit buffers."
