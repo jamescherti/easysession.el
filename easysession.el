@@ -1882,8 +1882,8 @@ the process had been freshly started."
 
 If Emacs is running as a daemon, add `easysession-load-including-geometry' to
 `server-after-make-frame-hook' so that session restoration occurs for each new
-frame. Otherwise, add it to `emacs-startup-hook' to restore the session at
-startup.
+frame. Otherwise, add it to `emacs-startup-hook' (or `elpaca-after-init-hook`
+if Elpaca is used) to restore the session at startup.
 
 Also enable `easysession-save-mode' on startup to automatically save sessions.
 Hook priorities are controlled by `easysession-setup-add-hook-depth'.
@@ -1893,26 +1893,31 @@ buffers, and session data."
   (easysession--update-modeline-misc-info
    easysession-mode-line-misc-info-format)
 
-  (when easysession-setup-load-session
-    (if (daemonp)
-        ;; Daemon mode
-        (progn
-          (when (seq-some (lambda (frame)
-                            (frame-parameter frame 'client))
-                          (frame-list))
-            (easysession--setup-load-session))
+  ;; Dynamically select the correct startup hook based on the package manager
+  (let ((startup-hook (if (boundp 'elpaca-after-init-hook)
+                          'elpaca-after-init-hook
+                        'emacs-startup-hook)))
 
-          (add-hook 'server-after-make-frame-hook
-                    #'easysession--setup-load-session
-                    easysession-setup-add-hook-depth))
-      ;; Graphical mode
-      (add-hook 'emacs-startup-hook
-                #'easysession--setup-load-session
-                easysession-setup-add-hook-depth)))
+    (when easysession-setup-load-session
+      (if (daemonp)
+          ;; Daemon mode
+          (progn
+            (when (seq-some (lambda (frame)
+                              (frame-parameter frame 'client))
+                            (frame-list))
+              (easysession--setup-load-session))
 
-  ;; Save the current session every `easysession-save-interval'
-  (add-hook 'emacs-startup-hook #'easysession-save-mode
-            easysession-setup-add-hook-depth))
+            (add-hook 'server-after-make-frame-hook
+                      #'easysession--setup-load-session
+                      easysession-setup-add-hook-depth))
+        ;; Graphical mode
+        (add-hook startup-hook
+                  #'easysession--setup-load-session
+                  easysession-setup-add-hook-depth)))
+
+    ;; Save the current session every `easysession-save-interval'
+    (add-hook startup-hook #'easysession-save-mode
+              easysession-setup-add-hook-depth)))
 
 ;;;###autoload
 (defun easysession-visible-buffer-list ()
