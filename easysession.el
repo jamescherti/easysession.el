@@ -69,7 +69,6 @@
 ;; Installation from MELPA:
 ;; ------------------------
 ;; (use-package easysession
-;;   :ensure t
 ;;   :custom
 ;;   (easysession-save-interval (* 10 60))  ; Save every 10 minutes
 ;;

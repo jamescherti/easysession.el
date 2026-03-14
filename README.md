@@ -78,7 +78,6 @@ To install **easysession** from MELPA:
 
 ``` emacs-lisp
 (use-package easysession
-  :ensure t
   :demand t
   :custom
   (easysession-save-interval (* 10 60))  ; Save every 10 minutes
