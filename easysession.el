@@ -1155,6 +1155,7 @@ is loaded, a session name is defined, and at least one frame exists.
 The function always returns non-nil so that it does not inhibit Emacs
 termination when used from `kill-emacs-query-functions'."
   (let ((inhibit-interaction t))
+    (ignore inhibit-interaction t)
     ;; Auto save when there is at least one frame and a session has been loaded
     (condition-case err
         (when (and (> (length (easysession--frame-list)) 0)
