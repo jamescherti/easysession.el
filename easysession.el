@@ -1164,7 +1164,7 @@ termination when used from `kill-emacs-query-functions'."
                        (funcall easysession-save-mode-predicate)))
           (easysession-save))
       (inhibited-interaction
-       (message (concat "[easysession] Warning: Auto save ignored because "
+       (message (concat "[easysession] Warning: Auto save skipped because "
                         "'easysession-save' attempted an "
                         "interactive prompt.")))
       (error
