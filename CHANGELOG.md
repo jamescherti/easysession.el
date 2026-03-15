@@ -36,6 +36,8 @@
 
 * Add support for the Elpaca package manager in `easysession-setup`. The function now dynamically detects Elpaca and uses `elpaca-after-init-hook` instead of `emacs-startup-hook`, ensuring that sessions are restored only after all asynchronous package installations have finished.
 
+* Auto save session: Inhibit interaction to prevent background session saves from blocking the user interface or causing Emacs to hang. This ensures that background tasks remain intrusive, allowing the editor to stay responsive even if a save handler attempts to initiate a user prompt.
+
 ## 1.2.0
 
 * `easysession-save`: Serialization now reliably produces `(QUOTE . SEXP)` pairs, preserving the exact structure of saved values. This ensures correct quoting of complex Emacs Lisp objects, including structs (`#s(...)`) and other otherwise unreadable or unloadable entities (`#>`), preventing errors when restoring sessions.
