@@ -1154,23 +1154,17 @@ is loaded, a session name is defined, and at least one frame exists.
 
 The function always returns non-nil so that it does not inhibit Emacs
 termination when used from `kill-emacs-query-functions'."
-  (let ((inhibit-interaction t))
-    (ignore inhibit-interaction t)
-    ;; Auto save when there is at least one frame and a session has been loaded
-    (condition-case err
-        (when (and (> (length (easysession--frame-list)) 0)
-                   easysession--current-session-name
-                   easysession--session-loaded
-                   (or (not easysession-save-mode-predicate)
-                       (funcall easysession-save-mode-predicate)))
-          (easysession-save))
-      (inhibited-interaction
-       (message (concat "[easysession] Warning: Auto save skipped because "
-                        "'easysession-save' attempted an "
-                        "interactive prompt.")))
-      (error
-       (easysession--warning "Auto-save failed: %s"
-                             (error-message-string err)))))
+  ;; Auto save when there is at least one frame and a session has been loaded
+  (condition-case err
+      (when (and (> (length (easysession--frame-list)) 0)
+                 easysession--current-session-name
+                 easysession--session-loaded
+                 (or (not easysession-save-mode-predicate)
+                     (funcall easysession-save-mode-predicate)))
+        (easysession-save))
+    (error
+     (easysession--warning "Auto-save failed: %s"
+                           (error-message-string err))))
 
   ;; Always return t, since this `easysession--auto-save' is part of
   ;; `kill-emacs-query-functions'. Returning nil would prevent Emacs from
