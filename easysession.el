@@ -1156,11 +1156,11 @@ The function always returns non-nil so that it does not inhibit Emacs
 termination when used from `kill-emacs-query-functions'."
   ;; Auto save when there is at least one frame and a session has been loaded
   (condition-case err
-      (when (and (> (length (easysession--frame-list)) 0)
-                 easysession--current-session-name
+      (when (and easysession--current-session-name
                  easysession--session-loaded
                  (or (not easysession-save-mode-predicate)
-                     (funcall easysession-save-mode-predicate)))
+                     (funcall easysession-save-mode-predicate))
+                 (> (length (easysession--frame-list)) 0))
         (easysession-save))
     (error
      (easysession--warning "Auto-save failed: %s"
