@@ -38,6 +38,8 @@
 
 * Auto save session: Inhibit interaction to prevent background session saves from blocking the user interface or causing Emacs to hang. This ensures that background tasks remain intrusive, allowing the editor to stay responsive even if a save handler attempts to initiate a user prompt.
 
+* Improve session persistence in daemon mode by calling `easysession-save` before the last active client frame closes. To support this, the `easysession--frame-list` function was modified to accurately track real user sessions by explicitly excluding the initial daemon terminal, child frames, tooltips, and hidden graphical frames, while correctly retaining minimized GUI frames and all terminal connections.
+
 ## 1.2.0
 
 * `easysession-save`: Serialization now reliably produces `(QUOTE . SEXP)` pairs, preserving the exact structure of saved values. This ensures correct quoting of complex Emacs Lisp objects, including structs (`#s(...)`) and other otherwise unreadable or unloadable entities (`#>`), preventing errors when restoring sessions.

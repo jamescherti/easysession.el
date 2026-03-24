@@ -1328,9 +1328,11 @@ daemon mode, allowing correct restoration when a new frame is created."
              easysession--session-loaded
              (daemonp)
              (frame-live-p frame)
-             ;; The number 2 accounts for both the initial daemon frame and the
-             ;; client frame
+             ;; Since easysession--frame-list filters out the initial daemon
+             ;; terminal and utility frames, a length of 1 means the frame
+             ;; currently being deleted is the last active client frame.
              (= (length (easysession--frame-list)) 1))
+    (easysession-save)
     (setq easysession--daemon-session-loaded nil)
     (easysession-unload)))
 
@@ -1352,11 +1354,38 @@ to prevent multiple loads during the same daemon session."
         (easysession-load)))))
 
 (defun easysession--frame-list ()
-  "Return a list of frames, excluding the initial terminal."
+  "Return a list of user frames, excluding utility and child frames."
   (seq-filter
    (lambda (frame)
-     (not (equal (terminal-name (frame-terminal frame))
-                 "initial_terminal")))
+     (and
+      ;; The daemon runs in the background on the "initial_terminal". This frame
+      ;; has no display and is never interacted with by the user. Excluding it
+      ;; ensures we only count actual emacsclient connections.
+      (not (equal (terminal-name (frame-terminal frame)) "initial_terminal"))
+
+      ;; Packages like Corfu, Posframe, or Company create child frames to
+      ;; display floating popups or menus. These are attached to a main user
+      ;; frame and should not be counted as independent sessions.
+      (not (frame-parent frame))
+
+      ;; Tooltips can sometimes be implemented as separate native frames
+      ;; depending on the OS and Emacs build. We ignore them to prevent a
+      ;; transient hover effect from interfering with the frame count.
+      (not (frame-parameter frame 'tooltip))
+
+      ;; This visibility check handles specific edge cases: `frame-visible-p'
+      ;; returns t (visible), 'icon (minimized), or nil (hidden).
+      ;;
+      ;; 1. It keeps minimized GUI frames because 'icon evaluates as true in
+      ;;    Elisp.
+      ;; 2. It excludes completely hidden GUI frames, which are sometimes kept
+      ;;    invisible in the background as caches by certain packages.
+      ;; 3. It unconditionally keeps terminal (TUI) frames via the second
+      ;;    condition. Terminal frames can report as invisible when the terminal
+      ;;    emulator is suspended or backgrounded, but they still represent real
+      ;;    connections.
+      (or (frame-visible-p frame)
+          (not (display-graphic-p frame)))))
    (frame-list)))
 
 (defun easysession--refresh-tabs-all-frames ()
