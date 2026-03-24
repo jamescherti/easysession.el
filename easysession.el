@@ -1332,8 +1332,6 @@ daemon mode, allowing correct restoration when a new frame is created."
              ;; terminal and utility frames, a length of 1 means the frame
              ;; currently being deleted is the last active client frame.
              (= (length (easysession--frame-list)) 1))
-    (easysession-save)
-    (setq easysession--daemon-session-loaded nil)
     (easysession-unload)))
 
 (defun easysession--setup-load-session ()
