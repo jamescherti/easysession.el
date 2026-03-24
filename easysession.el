@@ -2608,6 +2608,8 @@ accordingly."
     (when easysession--timer
       (cancel-timer easysession--timer)
       (setq easysession--timer nil))
+    (remove-hook 'delete-frame-functions
+                 #'easysession--persist-session-on-frame-delete-maybe)
     (remove-hook 'kill-emacs-hook #'easysession--auto-save)
     (remove-hook 'kill-emacs-query-functions #'easysession--auto-save)))
 
