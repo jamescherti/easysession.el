@@ -496,7 +496,7 @@ if the return value is non-nil.
 This variable allows restricting session restoration to specific environments,
 such as graphical frames.")
 
-(defvar easysession-refresh-tab-bar nil
+(defvar easysession-refresh-tab-bar t
   "Non-nil means force a state and name refresh of all tabs.
 This is an experimental feature. When non-nil, EasySession cycles through all
 tabs on all frames before saving the session to ensure that tab names match the
