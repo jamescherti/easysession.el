@@ -40,6 +40,8 @@
 
 * Improve session persistence in daemon mode by calling `easysession-save` before the last active client frame closes. To support this, the `easysession--frame-list` function was modified to accurately track real user sessions by explicitly excluding the initial daemon terminal, child frames, tooltips, and hidden graphical frames, while correctly retaining minimized GUI frames and all terminal connections.
 
+* Add support for saving and restoring explicitly set frame names with `M-x set-frame-name`. (Implement `easysession--frameset-filter-name-if-explicit` to conditionally save the `name` frame parameter and update `easysession--load-frameset` to pass custom filter alists to `frameset-restore`, ensuring custom rules are respected during session loading.)
+
 ## 1.2.0
 
 * `easysession-save`: Serialization now reliably produces `(QUOTE . SEXP)` pairs, preserving the exact structure of saved values. This ensures correct quoting of complex Emacs Lisp objects, including structs (`#s(...)`) and other otherwise unreadable or unloadable entities (`#>`), preventing errors when restoring sessions.

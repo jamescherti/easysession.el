@@ -416,7 +416,7 @@ For more details, see the `frameset-restore' docstring."
                  (function :tag "Function to determine cleanup actions"))
   :group 'easysession)
 
-(defcustom easysession-edit-read-only t
+(defcustom easysession-edit-read-only nil
   "Non-nil means session buffers opened with `easysession-edit` are read-only."
   :type 'boolean
   :group 'easysession)
@@ -530,9 +530,10 @@ input, such as pressing a key.")
     (parent-frame . :never)
     (mouse-wheel-frame . :never)
     (window-system . :never)
-    (name . :never)
     (parent-id . :never)
     (window-id . :never)
+
+    (name . easysession--frameset-filter-name-if-explicit)
 
     ;; Font
     (font . :never)
@@ -671,24 +672,20 @@ input, such as pressing a key.")
     ;; the text editor session.
     (screen-gamma . :never)
 
-    ;; Keep it commented: While you can generate titles dynamically, saving the
-    ;; title is often harmless. However, if your init.el sets a strict
-    ;; frame-title-format, you could actually uncomment this too. But generally,
-    ;; keeping it is safer to preserve context like "Project X - Emacs".
+    ;; While you can generate titles dynamically, saving the title is often
+    ;; harmless. If you manually rename frames to keep track of different
+    ;; projects, you'll lose those names if you don't persist this.
     ;;
-    ;; Argument for :never: If your init.el uses frame-title-format to
-    ;; dynamically show the current buffer and file path, restoring a static
-    ;; string from a session file might temporarily override your dynamic title
-    ;; until the next refresh.
-    ;;
-    ;; Argument for keeping it: If you manually rename frames to keep track of
-    ;; different projects, you'll lose those names if you don't persist this.
+    ;; Argument for :never: If init.el uses frame-title-format to dynamically
+    ;; show the current buffer and file path, restoring a static string from a
+    ;; session file might temporarily override your dynamic title until the next
+    ;; refresh.
     ;; (title . :never)
 
-    ;; Keep it commented: This controls if a frame is "always on top" (above) or
-    ;; "always on bottom" (below). If your session relies on a specific window
-    ;; layout (e.g., a reference window always floating above code), you need
-    ;; this parameter to preserve that relationship.
+    ;; This controls if a frame is "always on top" (above) or "always on bottom"
+    ;; (below). If your session relies on a specific window layout (e.g., a
+    ;; reference window always floating above code), you need this parameter to
+    ;; preserve that relationship.
     ;; (z-group . :never)
 
     ;; Fixes #24: Restoring a saved session does not restore all frames It was
@@ -843,6 +840,24 @@ of their visibility.")
 (defvar uniquify-buffer-name-style)
 
 ;;; Internal functions
+
+(defun easysession--frameset-filter-name-if-explicit (_current
+                                                      _filtered
+                                                      parameters
+                                                      _saving)
+  "Allow saving the frame name or title only if it was explicitly set.
+
+The filter checks PARAMETERS for the `explicit-name' flag, which is
+set by `set-frame-name'. This prevents EasySession from persisting
+automatically generated buffer names as static titles.
+
+The _CURRENT, _FILTERED, and _SAVING arguments are required by the
+`frameset-filter-alist' interface but are currently unused."
+  (and (listp parameters)
+       (let ((explicit (assq 'explicit-name parameters)))
+         (and explicit (cdr explicit)
+              ;; Return t
+              t))))
 
 (defun easysession--message (&rest args)
   "Display a message with '[easysession]' prepended.
@@ -1092,13 +1107,22 @@ When LOAD-GEOMETRY is non-nil, load the frame geometry."
                     "frameset-geo"
                   "frameset"))
            (data (when (assoc key session-data)
-                   (assoc-default key session-data))))
+                   (assoc-default key session-data)))
+           (modified-filter-alist
+            (if load-geometry
+                ;; Include geometry
+                (easysession--init-frame-parameters-filters
+                 easysession--overwrite-frameset-filter-include-geometry-alist)
+              ;; Exclude geometry
+              (easysession--init-frame-parameters-filters
+               easysession--overwrite-frameset-filter-alist))))
       (when (and (not data) load-geometry)
         (setq data (when (assoc "frameset" session-data)
                      (assoc-default "frameset" session-data))))
       (when data
         (frameset-restore
          data
+         :filters modified-filter-alist
          :reuse-frames easysession-frameset-restore-reuse-frames
          :cleanup-frames
          (if (eq easysession-frameset-restore-cleanup-frames t)

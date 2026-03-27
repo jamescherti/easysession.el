@@ -5,7 +5,7 @@
 ![License](https://img.shields.io/github/license/jamescherti/easysession.el)
 ![](https://jamescherti.com/misc/made-for-gnu-emacs.svg)
 
-The **easysession** Emacs package provides a comprehensive session management for Emacs. It is capable of persisting and restoring file-visiting buffers, indirect buffers (clones), buffer narrowing, Dired buffers, window configurations, the built-in tab-bar (including tabs, their buffers, and associated windows), as well as entire Emacs frames.
+The **easysession** Emacs package provides a comprehensive session management for Emacs. It is capable of persisting and restoring file-visiting buffers, indirect buffers (clones), buffer narrowing, Dired buffers, window configurations, the built-in tab-bar (including tabs, their buffers, and associated windows), as well as entire Emacs frames (frame name, size, position, etc.).
 
 With **easysession**, your Emacs setup is restored automatically when you restart. All files, Dired buffers, and window layouts come back as they were, so you can continue working right where you left off. While editing, you can also switch to another session, switch back, rename sessions, or delete them, giving you full control over multiple work environments.
 
@@ -157,6 +157,7 @@ It is recommended to use the following functions:
 - [ghostlou1043 on GitHub](https://github.com/jamescherti/easysession.el/issues/52#issuecomment-3830343008): "Thank you for writing such a useful Emacs package. I think many people will use daemons more because of this package."
 - [Hungariantoast on Reddit](https://www.reddit.com/r/emacs/comments/1i93ly5/comment/m980q04/): "I have a single raylib-experiments repository that I have been writing a bunch of separate, miniature gamedev projects in. This package has made the process of creating, managing, and restoring each of those little coding sessions such a breeze. Thanks for writing it."
 - [ghoseb on GitHub](https://github.com/jamescherti/easysession.el/issues/21): "Thanks a lot for your amazing packages! Easysession works great 🎉"
+- [hapst3r on GitHub](https://github.com/jamescherti/easysession.el/issues/58): "...thank you so much for this package. I am in the process of setting it up and I can foresee a huge productivity boost once I will have it setup."
 - Mijail Guillemard (Email): "Thanks a lot for easysession.el, it is definitely more useful than other desktop*.el packages. The workflow I now have with Emacs has drastically improved with easysession."
 - [tdavey on Reddit](https://www.reddit.com/r/emacs/comments/1r47s44/comment/o639qyo/):
   ```
@@ -431,6 +432,7 @@ While desktop.el is a foundational session management tool for Emacs, it has sev
 - The desktop.el package can be bulky and slow in operation.
 - The desktop.el package lacks support for saving and restoring indirect buffers (clones). Indirect buffers are secondary buffers that share the same content as an existing buffer but can have different point positions, narrowing, folds, and other buffer-local settings. This allows users to view and edit the same file or text content in multiple ways simultaneously without duplicating the actual data. There are third-party packages, such as desktop+, that extend desktop.el to restore indirect buffers. However, packages like desktop+ are still based on desktop.el and can cause the issues described above.
 - Although desktop.el can operate in daemon mode, users have occasionally encountered issues such as sessions failing to save automatically when the last client frame is closed, and unpredictable behavior when multiple frames are opened or closed. EasySession addresses these challenges by ensuring reliable session saving and restoration across all frames and client connections, delivering consistent and dependable session management in both interactive and daemon workflows.
+- In `desktop.el`, explicitly set frame names are typically lost because the default configuration filters out the `name` parameter to prevent freezing titles that should update dynamically. EasySession addresses this by implementing a conditional filtering mechanism. Rather than ignoring frame names unconditionally, it uses a custom filter function to inspect the `explicit-name` parameter of each frame. When a frame has been manually named using a command like `set-frame-name`, Emacs marks that name as explicit. EasySession detects this flag during the save process and ensures that the custom name is preserved in the session file.
 
 In contrast, easysession offers enhanced functionality:
 - It supports saving and loading various buffer types, including indirect buffers (clones), and buffer narrowing.
