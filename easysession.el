@@ -496,15 +496,15 @@ if the return value is non-nil.
 This variable allows restricting session restoration to specific environments,
 such as graphical frames.")
 
-(defvar easysession-refresh-tab-bar nil
-  "Non-nil means force a state and name refresh of all tabs.
-This is an experimental feature. When non-nil, EasySession cycles through all
-tabs on all frames before saving the session to ensure that tab names match the
-actual buffer names.
-Persisting a session with outdated tab names prevents those buffers from
-matching the restored tabs. This mismatch occurs when a buffer is renamed by
-`uniquify' or another package that does not notify the `tab-bar' of the change.
-By default, the `tab-bar' only updates a tab name after the user visits it.")
+;; (defvar easysession-refresh-tab-bar nil
+;;   "Non-nil means force a state and name refresh of all tabs.
+;; This is an experimental feature. When non-nil, EasySession cycles through all
+;; tabs on all frames before saving the session to ensure that tab names match the
+;; actual buffer names.
+;; Persisting a session with outdated tab names prevents those buffers from
+;; matching the restored tabs. This mismatch occurs when a buffer is renamed by
+;; `uniquify' or another package that does not notify the `tab-bar' of the change.
+;; By default, the `tab-bar' only updates a tab name after the user visits it.")
 
 (defvar easysession-fontify t
   "When non-nil, force fontification of restored buffers.
@@ -1423,8 +1423,8 @@ Emacs to deserialize the window states and update its internal tracking
 information. Consequently, the workspace always displays accurate tab names,
 which prevents navigation errors and ensures the visual layout reflects the
 exact state of your open files."
-  (interactive)
-  (when (and (fboundp 'tab-bar--current-tab-index)
+  (when (and (not (minibufferp))
+             (fboundp 'tab-bar--current-tab-index)
              (fboundp 'tab-bar-select-tab)
              (boundp 'tab-bar-tabs-function)
              (bound-and-true-p tab-bar-mode))
@@ -2423,8 +2423,8 @@ SESSION-NAME is the name of the session."
       (progn
         (setq easysession-save-in-progress t)
         (run-hooks 'easysession-before-save-hook)
-        (when easysession-refresh-tab-bar
-          (easysession--refresh-tabs-all-frames))
+        ;; (when easysession-refresh-tab-bar
+        ;;   (easysession--refresh-tabs-all-frames))
 
         (let* ((session-name (if session-name
                                  session-name
