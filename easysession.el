@@ -1452,15 +1452,16 @@ exact state of your open files."
               (let ((original-index (tab-bar--current-tab-index))
                     (tab-count (length (funcall tab-bar-tabs-function))))
                 (when (> tab-count 1)
-                  ;; Loop through every tab on the current frame to force
-                  ;; deserialization
-                  (dotimes (i tab-count)
-                    (unless (eq i original-index)
-                      (tab-bar-select-tab (1+ i))))
-                  ;; Return to the originally selected tab for this specific
-                  ;; frame
-                  (when original-index
-                    (tab-bar-select-tab (1+ original-index))))))))
+                  (unwind-protect
+                      ;; Loop through every tab on the current frame to force
+                      ;; deserialization
+                      (dotimes (i tab-count)
+                        (unless (eq i original-index)
+                          (tab-bar-select-tab (1+ i))))
+                    ;; Return to the originally selected tab for this specific
+                    ;; frame
+                    (when original-index
+                      (tab-bar-select-tab (1+ original-index)))))))))
         ;; Force the visual tab bar to redraw globally
         ;; (force-mode-line-update t)
         ))))
