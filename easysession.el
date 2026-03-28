@@ -1428,31 +1428,42 @@ exact state of your open files."
              (fboundp 'tab-bar-select-tab)
              (boundp 'tab-bar-tabs-function)
              (bound-and-true-p tab-bar-mode))
-    (let ((inhibit-redisplay t)
-          (inhibit-message t)
-          (window-configuration-change-hook nil)
-          (window-selection-change-functions nil)
-          (tab-bar-tab-post-select-functions nil))
-      (ignore tab-bar-tab-post-select-functions)
-      (ignore window-selection-change-functions)
-      (ignore window-configuration-change-hook)
-      ;; Iterate through every active frame
-      (dolist (frame (frame-list))
-        (with-selected-frame frame
-          (let ((original-index (tab-bar--current-tab-index))
-                (tab-count (length (funcall tab-bar-tabs-function))))
-            (when (> tab-count 1)
-              ;; Loop through every tab on the current frame to force
-              ;; deserialization
-              (dotimes (i tab-count)
-                (unless (eq i original-index)
-                  (tab-bar-select-tab (1+ i))))
-              ;; Return to the originally selected tab for this specific frame
-              (when original-index
-                (tab-bar-select-tab (1+ original-index)))))))
-      ;; Force the visual tab bar to redraw globally
-      ;; (force-mode-line-update t)
-      )))
+    ;; Prevent tab-bar-select-tab from leaking the current buffer context
+    (save-current-buffer
+      (let ((inhibit-redisplay t)
+            (inhibit-message t)
+            ;; Fix infinite loop
+            (window-state-change-hook nil)
+            (window-state-change-functions nil)
+            (buffer-list-update-hook nil)
+            (window-configuration-change-hook nil)
+            (window-selection-change-functions nil)
+            (tab-bar-tab-post-select-functions nil))
+        (ignore window-state-change-hook)
+        (ignore window-state-change-functions)
+        (ignore buffer-list-update-hook)
+        (ignore tab-bar-tab-post-select-functions)
+        (ignore window-selection-change-functions)
+        (ignore window-configuration-change-hook)
+        ;; Iterate through every active frame in the Emacs session
+        (dolist (frame (frame-list))
+          (with-selected-frame frame
+            (save-window-excursion
+              (let ((original-index (tab-bar--current-tab-index))
+                    (tab-count (length (funcall tab-bar-tabs-function))))
+                (when (> tab-count 1)
+                  ;; Loop through every tab on the current frame to force
+                  ;; deserialization
+                  (dotimes (i tab-count)
+                    (unless (eq i original-index)
+                      (tab-bar-select-tab (1+ i))))
+                  ;; Return to the originally selected tab for this specific
+                  ;; frame
+                  (when original-index
+                    (tab-bar-select-tab (1+ original-index))))))))
+        ;; Force the visual tab bar to redraw globally
+        ;; (force-mode-line-update t)
+        ))))
 
 ;;; Internal functions: handlers
 
