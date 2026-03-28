@@ -1237,7 +1237,7 @@ A buffer is considered visible if it is:
 Returns nil if the buffer is not displayed in a window or tab."
   (or
    ;; Windows
-   (get-buffer-window buffer 'visible)
+   (get-buffer-window buffer 0)
    ;; Tab-bar windows
    (and (bound-and-true-p tab-bar-mode)
         (fboundp 'tab-bar-get-buffer-tab)
