@@ -513,6 +513,9 @@ buffers during session restoration when `redisplay-skip-fontification-on-input'
 is non-nil. Without this, text remains unfontified until the user provides
 input, such as pressing a key.")
 
+(defvar easysession--auto-saving nil
+  "Internal flag bound to t while an auto-save is in progress.")
+
 ;;; Internal variables
 
 (defvar easysession-debug nil)
@@ -1185,8 +1188,8 @@ termination when used from `kill-emacs-query-functions'."
                  (or (not easysession-save-mode-predicate)
                      (funcall easysession-save-mode-predicate))
                  (> (length (easysession--frame-list)) 0))
-        ;; Pass 't' as the AUTO-SAVE argument to force the tab refresh
-        (easysession-save nil t))
+        (let ((easysession--auto-saving t))
+          (easysession-save)))
     (error
      (easysession--warning "Auto-save failed: %s"
                            (error-message-string err))))
@@ -1411,11 +1414,11 @@ to prevent multiple loads during the same daemon session."
           (not (display-graphic-p frame)))))
    (frame-list)))
 
-(defun easysession--refresh-tabs-all-frames (&optional force)
+(defun easysession--refresh-tabs-all-frames ()
   "Cycle through all tabs on all frames to force a state and name refresh.
 
-If FORCE is non-nil, the refresh executes even if the minibuffer is currently
-active.
+If the refresh is triggered by an auto-save, it executes even if the
+minibuffer is currently active.
 
 When Emacs buffers are renamed automatically by packages like uniquify,
 background tabs in `tab-bar-mode' often retain the old buffer names because they
@@ -1427,7 +1430,7 @@ Emacs to deserialize the window states and update its internal tracking
 information. Consequently, the workspace always displays accurate tab names,
 which prevents navigation errors and ensures the visual layout reflects the
 exact state of your open files."
-  (when (and (or force (not (active-minibuffer-window)))
+  (when (and (or easysession--auto-saving (not (active-minibuffer-window)))
              (fboundp 'tab-bar--current-tab-index)
              (fboundp 'tab-bar-select-tab)
              (boundp 'tab-bar-tabs-function)
@@ -2416,7 +2419,7 @@ accordingly."
     (easysession-switch-to session-name)))
 
 ;;;###autoload
-(defun easysession-save (&optional session-name auto-save)
+(defun easysession-save (&optional session-name)
   "Save the current session.
 SESSION-NAME is the name of the session.
 AUTO-SAVE is non-nil when the save is triggered by a background timer."
@@ -2437,7 +2440,7 @@ AUTO-SAVE is non-nil when the save is triggered by a background timer."
         (setq easysession-save-in-progress t)
         (run-hooks 'easysession-before-save-hook)
         (when easysession-refresh-tab-bar
-          (easysession--refresh-tabs-all-frames auto-save))
+          (easysession--refresh-tabs-all-frames))
 
         (let* ((session-name (if session-name
                                  session-name
