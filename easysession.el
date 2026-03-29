@@ -513,10 +513,10 @@ buffers during session restoration when `redisplay-skip-fontification-on-input'
 is non-nil. Without this, text remains unfontified until the user provides
 input, such as pressing a key.")
 
+;;; Internal variables
+
 (defvar easysession--auto-saving nil
   "Internal flag bound to t while an auto-save is in progress.")
-
-;;; Internal variables
 
 (defvar easysession-debug nil)
 
