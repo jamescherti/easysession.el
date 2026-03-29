@@ -496,15 +496,15 @@ if the return value is non-nil.
 This variable allows restricting session restoration to specific environments,
 such as graphical frames.")
 
-;; (defvar easysession-refresh-tab-bar nil
-;;   "Non-nil means force a state and name refresh of all tabs.
-;; This is an experimental feature. When non-nil, EasySession cycles through all
-;; tabs on all frames before saving the session to ensure that tab names match the
-;; actual buffer names.
-;; Persisting a session with outdated tab names prevents those buffers from
-;; matching the restored tabs. This mismatch occurs when a buffer is renamed by
-;; `uniquify' or another package that does not notify the `tab-bar' of the change.
-;; By default, the `tab-bar' only updates a tab name after the user visits it.")
+(defvar easysession-refresh-tab-bar nil
+  "Non-nil means force a state and name refresh of all tabs.
+This is an experimental feature. When non-nil, EasySession cycles through all
+tabs on all frames before saving the session to ensure that tab names match the
+actual buffer names.
+Persisting a session with outdated tab names prevents those buffers from
+matching the restored tabs. This mismatch occurs when a buffer is renamed by
+`uniquify' or another package that does not notify the `tab-bar' of the change.
+By default, the `tab-bar' only updates a tab name after the user visits it.")
 
 (defvar easysession-fontify t
   "When non-nil, force fontification of restored buffers.
@@ -1185,7 +1185,8 @@ termination when used from `kill-emacs-query-functions'."
                  (or (not easysession-save-mode-predicate)
                      (funcall easysession-save-mode-predicate))
                  (> (length (easysession--frame-list)) 0))
-        (easysession-save))
+        ;; Pass 't' as the AUTO-SAVE argument to force the tab refresh
+        (easysession-save nil t))
     (error
      (easysession--warning "Auto-save failed: %s"
                            (error-message-string err))))
@@ -1410,8 +1411,11 @@ to prevent multiple loads during the same daemon session."
           (not (display-graphic-p frame)))))
    (frame-list)))
 
-(defun easysession--refresh-tabs-all-frames ()
+(defun easysession--refresh-tabs-all-frames (&optional force)
   "Cycle through all tabs on all frames to force a state and name refresh.
+
+If FORCE is non-nil, the refresh executes even if the minibuffer is currently
+active.
 
 When Emacs buffers are renamed automatically by packages like uniquify,
 background tabs in `tab-bar-mode' often retain the old buffer names because they
@@ -1423,48 +1427,56 @@ Emacs to deserialize the window states and update its internal tracking
 information. Consequently, the workspace always displays accurate tab names,
 which prevents navigation errors and ensures the visual layout reflects the
 exact state of your open files."
-  (when (and (not (minibufferp))
+  (when (and (or force (not (active-minibuffer-window)))
              (fboundp 'tab-bar--current-tab-index)
              (fboundp 'tab-bar-select-tab)
              (boundp 'tab-bar-tabs-function)
              (bound-and-true-p tab-bar-mode))
-    ;; Prevent tab-bar-select-tab from leaking the current buffer context
     (save-current-buffer
       (let ((inhibit-redisplay t)
             (inhibit-message t)
-            ;; Fix infinite loop
-            (window-state-change-hook nil)
-            (window-state-change-functions nil)
+            ;; Core window and buffer sandbox
             (buffer-list-update-hook nil)
+            (window-buffer-change-functions nil)
             (window-configuration-change-hook nil)
+            (window-state-change-functions nil)
+            (window-size-change-functions nil)
             (window-selection-change-functions nil)
-            (tab-bar-tab-post-select-functions nil))
-        (ignore window-state-change-hook)
-        (ignore window-state-change-functions)
+            (window-state-change-hook nil)
+            (tab-bar-tab-post-select-functions nil)
+            ;; Tab-bar specific background overrides
+            (read-minibuffer-restore-windows nil)
+            (tab-bar-history-mode nil)
+            (tab-bar-select-restore-windows nil)
+            (window-restore-killed-buffer-windows nil)
+            (tab-bar-select-restore-context nil))
+        (ignore read-minibuffer-restore-windows)
+        (ignore tab-bar-history-mode)
+        (ignore tab-bar-select-restore-windows)
+        (ignore window-restore-killed-buffer-windows)
+        (ignore tab-bar-select-restore-context)
         (ignore buffer-list-update-hook)
-        (ignore tab-bar-tab-post-select-functions)
-        (ignore window-selection-change-functions)
+        (ignore window-buffer-change-functions)
         (ignore window-configuration-change-hook)
-        ;; Iterate through every active frame in the Emacs session
+        (ignore window-state-change-functions)
+        (ignore window-size-change-functions)
+        (ignore window-selection-change-functions)
+        (ignore window-state-change-hook)
+        (ignore tab-bar-tab-post-select-functions)
+
         (dolist (frame (frame-list))
           (with-selected-frame frame
             (save-window-excursion
-              (let ((original-index (tab-bar--current-tab-index))
-                    (tab-count (length (funcall tab-bar-tabs-function))))
+              (let* ((tabs (funcall tab-bar-tabs-function frame))
+                     (original-index (tab-bar--current-tab-index tabs frame))
+                     (tab-count (length tabs)))
                 (when (> tab-count 1)
                   (unwind-protect
-                      ;; Loop through every tab on the current frame to force
-                      ;; deserialization
-                      (dotimes (i tab-count)
-                        (unless (eq i original-index)
-                          (tab-bar-select-tab (1+ i))))
-                    ;; Return to the originally selected tab for this specific
-                    ;; frame
+                      (dotimes (index tab-count)
+                        (unless (eq index original-index)
+                          (tab-bar-select-tab (1+ index))))
                     (when original-index
-                      (tab-bar-select-tab (1+ original-index)))))))))
-        ;; Force the visual tab bar to redraw globally
-        ;; (force-mode-line-update t)
-        ))))
+                      (tab-bar-select-tab (1+ original-index)))))))))))))
 
 ;;; Internal functions: handlers
 
@@ -2404,9 +2416,10 @@ accordingly."
     (easysession-switch-to session-name)))
 
 ;;;###autoload
-(defun easysession-save (&optional session-name)
+(defun easysession-save (&optional session-name auto-save)
   "Save the current session.
-SESSION-NAME is the name of the session."
+SESSION-NAME is the name of the session.
+AUTO-SAVE is non-nil when the save is triggered by a background timer."
   (interactive
    (list (easysession--prompt-session-name
           "Save session as: "
@@ -2423,8 +2436,8 @@ SESSION-NAME is the name of the session."
       (progn
         (setq easysession-save-in-progress t)
         (run-hooks 'easysession-before-save-hook)
-        ;; (when easysession-refresh-tab-bar
-        ;;   (easysession--refresh-tabs-all-frames))
+        (when easysession-refresh-tab-bar
+          (easysession--refresh-tabs-all-frames auto-save))
 
         (let* ((session-name (if session-name
                                  session-name
