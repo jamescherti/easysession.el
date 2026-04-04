@@ -1523,7 +1523,8 @@ The loader detects the representation dynamically and restores buffers
 accordingly, ensuring backward compatibility with legacy session files."
   (dolist (buffer-info (or (assoc-default "path-buffers" session-data)
                            (assoc-default "buffers" session-data)))
-    (let* ((new-format-p (and (consp buffer-info)
+    (let* ((uniquify-buffer-name-style nil)
+           (new-format-p (and (consp buffer-info)
                               (consp (car buffer-info))))
            (buffer-name (if new-format-p
                             (alist-get 'buffer-name buffer-info)
@@ -1573,8 +1574,7 @@ accordingly, ensuring backward compatibility with legacy session files."
                 (easysession--warning "Failed to restore the buffer '%s': %s"
                                       buffer-name buffer-path)
               ;; Ensure that buffer name is buffer-name
-              (let ((uniquify-buffer-name-style nil)) ; Disable uniquify
-                (easysession--ensure-buffer-name buffer buffer-name))
+              (easysession--ensure-buffer-name buffer buffer-name)
 
               ;; Restore buffer narrowing if present
               (when new-format-p
@@ -1585,7 +1585,8 @@ accordingly, ensuring backward compatibility with legacy session files."
   "Load indirect buffers from the SESSION-DATA variable."
   (dolist (item (assoc-default "indirect-buffers" session-data))
     (let ((indirect-buffer-name (alist-get 'indirect-buffer-name item))
-          (base-buffer-name (alist-get 'base-buffer-name item)))
+          (base-buffer-name (alist-get 'base-buffer-name item))
+          (uniquify-buffer-name-style nil))
       (when (and indirect-buffer-name
                  base-buffer-name)
         (let ((base-buffer (get-buffer base-buffer-name))
@@ -1603,9 +1604,8 @@ accordingly, ensuring backward compatibility with legacy session files."
                        "Failed to restore the indirect buffer/clone: %s"
                        indirect-buffer-name)
                     ;; Restore indirect buffer
-                    (let ((uniquify-buffer-name-style nil)) ; Disable uniquify
-                      (easysession--ensure-buffer-name indirect-buffer
-                                                       indirect-buffer-name))
+                    (easysession--ensure-buffer-name indirect-buffer
+                                                     indirect-buffer-name)
 
                     ;; Restore buffer narrowing if present
                     (easysession--restore-buffer-state indirect-buffer item)))
