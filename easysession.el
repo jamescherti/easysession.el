@@ -506,7 +506,7 @@ matching the restored tabs. This mismatch occurs when a buffer is renamed by
 `uniquify' or another package that does not notify the `tab-bar' of the change.
 By default, the `tab-bar' only updates a tab name after the user visits it.")
 
-(defvar easysession-fontify t
+(defvar easysession-fontify nil
   "When non-nil, force fontification of restored buffers.
 This variable addresses an issue where `font-lock-mode' fails to fontify
 buffers during session restoration when `redisplay-skip-fontification-on-input'
