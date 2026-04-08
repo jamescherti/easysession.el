@@ -2208,24 +2208,21 @@ SESSION-NAMES is a string or a list of session names."
                         ;; finished configuring its keywords and
                         ;; syntax tables for the current buffer.
                         (bound-and-true-p font-lock-set-defaults))
-               (save-restriction
-                 (widen)
+               (condition-case err
+                   (cond
+                    ((and (fboundp 'font-lock-flush)
+                          (fboundp 'font-lock-ensure))
+                     (font-lock-flush)
+                     (ignore-errors
+                       (font-lock-ensure)))
 
-                 (condition-case err
-                     (cond
-                      ((and (fboundp 'font-lock-flush)
-                            (fboundp 'font-lock-ensure))
-                       (font-lock-flush)
-                       (ignore-errors
-                         (font-lock-ensure)))
-
-                      ((fboundp 'jit-lock-fontify-now)
-                       (jit-lock-fontify-now)))
-                   (error
-                    (when (bound-and-true-p easysession-debug)
-                      (easysession--warning
-                       "easysession-load font lock: %s"
-                       (error-message-string err))))))))))))))
+                    ((fboundp 'jit-lock-fontify-now)
+                     (jit-lock-fontify-now)))
+                 (error
+                  (when (bound-and-true-p easysession-debug)
+                    (easysession--warning
+                     "easysession-load font lock: %s"
+                     (error-message-string err)))))))))))))
 
 ;;;###autoload
 (defun easysession-load (&optional session-name)
