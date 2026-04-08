@@ -78,21 +78,8 @@ To install **easysession** from MELPA:
 
 ``` emacs-lisp
 (use-package easysession
+  ;; ':demand t' ensures the package is loaded immediately upon startup
   :demand t
-  :custom
-  (easysession-save-interval (* 10 60))  ; Save every 10 minutes
-
-  ;; Save the current session when using `easysession-switch-to'
-  (easysession-switch-to-save-session t)
-
-  ;; Do not exclude the current session when switching sessions
-  (easysession-switch-to-exclude-current nil)
-
-  ;; Display the active session name in the mode-line lighter.
-  (easysession-save-mode-lighter-show-session-name t)
-
-  ;; Optionally, the session name can be shown in the modeline info area:
-  ;; (easysession-mode-line-misc-info t)
 
   :config
   ;; Key mappings
@@ -104,6 +91,20 @@ To install **easysession** from MELPA:
   (global-set-key (kbd "C-c su") #'easysession-unload)
   (global-set-key (kbd "C-c sd") #'easysession-delete)
 
+  ;; Save every 10 minutes
+  (setq easysession-save-interval (* 10 60))
+
+  ;; Save the current session when using `easysession-switch-to'
+  (setq easysession-switch-to-save-session t)
+
+  ;; Do not exclude the current session when switching sessions
+  (setq easysession-switch-to-exclude-current nil)
+
+  ;; Display the active session name in the mode-line lighter.
+  ;; (setq easysession-save-mode-lighter-show-session-name t)
+
+  ;; Optionally, the session name can be shown in the modeline info area:
+  ;; (setq easysession-mode-line-misc-info t)
   ;; non-nil: Make `easysession-setup' load the session automatically.
   ;; (nil: session is not loaded automatically; the user can load it manually.)
   (setq easysession-setup-load-session t)
