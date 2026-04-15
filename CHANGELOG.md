@@ -6,7 +6,9 @@
 
 ## WIP
 
-- Change all defvar options to defcustom
+* Change all defvar options to defcustom
+
+* Move the `easysession-save-mode-lighter-session-name-spec` sexp into the `easysession--lighter-session-name-format` function
 
 ## 1.2.1
 

@@ -292,14 +292,7 @@ sessions."
   :group 'easysession)
 
 (defcustom easysession-save-mode-lighter-session-name-spec
-  '((:eval (if easysession--current-session-name
-               (list (format "%s[" easysession-save-mode-lighter)
-                     (propertize easysession--current-session-name
-                                 'face 'easysession-mode-line-session-name-face)
-                     (unless easysession--session-loaded
-                       " <NOT LOADED>")
-                     "]")
-             easysession-save-mode-lighter)))
+  '((:eval (easysession--lighter-session-name-format)))
   "Mode line lighter specification for displaying the current session name.
 This is only displayed when a session is active."
   :type 'sexp
@@ -1238,6 +1231,17 @@ termination when used from `kill-emacs-query-functions'."
   ;; `kill-emacs-query-functions'. Returning nil would prevent Emacs from
   ;; exiting.
   t)
+
+(defun easysession--lighter-session-name-format ()
+  "Return the mode line lighter format for the current session."
+  (if easysession--current-session-name
+      (list (format "%s[" easysession-save-mode-lighter)
+            (propertize easysession--current-session-name
+                        'face 'easysession-mode-line-session-name-face)
+            (unless easysession--session-loaded
+              " <NOT LOADED>")
+            "]")
+    easysession-save-mode-lighter))
 
 (defun easysession--mode-line-session-name-format ()
   "Return a mode-line construct for the currently loaded session.
