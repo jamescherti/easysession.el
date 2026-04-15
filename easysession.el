@@ -181,8 +181,8 @@ Each element should be a function to be called with no arguments."
 
 (defcustom easysession-quiet nil
   "If non-nil, suppress all messages and only show errors and warnings.
-This includes messages such as `Session deleted:`, `Session loaded:`, `Session
-saved:`, etc."
+This includes messages such as \='Session Deleted\=', \='Session Loaded\=',
+\='Session Saved\=', etc."
   :type 'boolean
   :group 'easysession)
 
@@ -251,11 +251,15 @@ activated when `easysession-save-mode' is enabled."
                  (assq-delete-all 'easysession-mode-line-misc-info
                                   mode-line-misc-info)))))
 
-(defvar easysession-mode-line-misc-info-prefix " [EasySession:"
-  "Prefix string displayed before the session name in the mode line.")
+(defcustom easysession-mode-line-misc-info-prefix " [EasySession:"
+  "Prefix string displayed before the session name in the mode line."
+  :type 'string
+  :group 'easysession)
 
-(defvar easysession-mode-line-misc-info-suffix "] "
-  "Suffix string displayed after the session name in the mode line.")
+(defcustom easysession-mode-line-misc-info-suffix "] "
+  "Suffix string displayed after the session name in the mode line."
+  :type 'string
+  :group 'easysession)
 
 (defcustom easysession-switch-to-save-session t
   "Non-nil means save the current session when using `easysession-switch-to'."
@@ -277,13 +281,17 @@ sessions."
   :group 'easysession)
 
 ;; Lighter
-(defvar easysession-save-mode-lighter " EasySessionSv"
-  "Default lighter string for `easysession-save-mode'.")
+(defcustom easysession-save-mode-lighter " EasySessionSv"
+  "Default lighter string for `easysession-save-mode'."
+  :type 'string
+  :group 'easysession)
 
-(defvar easysession-save-mode-lighter-show-session-name nil
-  "If non-nil, display the session name in the lighter.")
+(defcustom easysession-save-mode-lighter-show-session-name nil
+  "If non-nil, display the session name in the lighter."
+  :type 'boolean
+  :group 'easysession)
 
-(defvar easysession-save-mode-lighter-session-name-spec
+(defcustom easysession-save-mode-lighter-session-name-spec
   '((:eval (if easysession--current-session-name
                (list (format "%s[" easysession-save-mode-lighter)
                      (propertize easysession--current-session-name
@@ -293,7 +301,9 @@ sessions."
                      "]")
              easysession-save-mode-lighter)))
   "Mode line lighter specification for displaying the current session name.
-This is only displayed when a session is active.")
+This is only displayed when a session is active."
+  :type 'sexp
+  :group 'easysession)
 (put 'easysession-save-mode-lighter-session-name-spec 'risky-local-variable t)
 
 ;; Other
@@ -458,17 +468,21 @@ This is an internal variable that is meant to be read-only. Do not modify it.
 This variable is used to indicate whether a session saving process is in
 progress.")
 
-(defvar easysession-confirm-new-session t
-  "Non-nil prompts the user for confirmation when creating a new session.")
+(defcustom easysession-confirm-new-session t
+  "Non-nil prompts the user for confirmation when creating a new session."
+  :type 'boolean
+  :group 'easysession)
 
-(defvar easysession-save-pretty-print nil
+(defcustom easysession-save-pretty-print nil
   "Non-nil means session data is pretty-printed when written to disk.
 When it is nil, session data is saved in a more compact form that is harder for
 humans to read but takes less space.
 This option only changes how the session file looks, not what information is
-stored.")
+stored."
+  :type 'boolean
+  :group 'easysession)
 
-(defvar easysession-setup-add-hook-depth 102
+(defcustom easysession-setup-add-hook-depth 102
   "Priority depth used when `easysession-setup' adds `easysession' hooks.
 Higher values ensure that `easysession' hooks run after most other startup or
 frame hooks.
@@ -479,25 +493,31 @@ certain optimizations restore `file-name-handler-alist' at depth 101 during
 `emacs-startup-hook'.
 
 The `easysession-setup-add-hook-depth' variable must be set before calling the
-`easysession-setup' function.")
+`easysession-setup' function."
+  :type 'integer
+  :group 'easysession)
 
-(defvar easysession-setup-load-session t
+(defcustom easysession-setup-load-session t
   "Non-nil means `easysession-setup' automatically loads the session.
 
 Nil means the session is not loaded automatically; the user can load it
 manually.
 
 The `easysession-setup-load-session' variable must be set before calling the
-`easysession-setup' function.")
+`easysession-setup' function."
+  :type 'boolean
+  :group 'easysession)
 
-(defvar easysession-setup-load-session-including-geometry t
+(defcustom easysession-setup-load-session-including-geometry t
   "Non-nil means the `easysession-setup' session restores frame geometry.
 If nil, the first session is loaded without restoring frame sizes or positions.
 
 The `easysession-setup-load-session-including-geometry' variable must be set
-before calling the `easysession-setup' function.")
+before calling the `easysession-setup' function."
+  :type 'boolean
+  :group 'easysession)
 
-(defvar easysession-setup-load-predicate nil
+(defcustom easysession-setup-load-predicate nil
   "Predicate to determine whether `easysession-setup' loads the session.
 When nil, the session loads without additional checks. If assigned a function,
 the function is called without arguments; the session restoration proceeds only
@@ -507,9 +527,12 @@ This variable allows restricting session restoration to specific environments,
 such as graphical frames.
 
 The `easysession-setup-load-predicate' variable must be set
-before calling the `easysession-setup' function.")
+before calling the `easysession-setup' function."
+  :type '(choice (const :tag "Always load" nil)
+                 (function :tag "Predicate function"))
+  :group 'easysession)
 
-(defvar easysession-refresh-tab-bar nil
+(defcustom easysession-refresh-tab-bar nil
   "EXPERIMENTAL FEATURE. Non-nil to force a state and name refresh of all tabs.
 This is an experimental feature. When non-nil, EasySession cycles through all
 tabs on all frames before saving the session to ensure that tab names match the
@@ -517,14 +540,18 @@ actual buffer names.
 Persisting a session with outdated tab names prevents those buffers from
 matching the restored tabs. This mismatch occurs when a buffer is renamed by
 `uniquify' or another package that does not notify the `tab-bar' of the change.
-By default, the `tab-bar' only updates a tab name after the user visits it.")
+By default, the `tab-bar' only updates a tab name after the user visits it."
+  :type 'boolean
+  :group 'easysession)
 
-(defvar easysession-fontify nil
+(defcustom easysession-fontify nil
   "When non-nil, force fontification of restored buffers.
 This variable addresses an issue where `font-lock-mode' fails to fontify
 buffers during session restoration when `redisplay-skip-fontification-on-input'
 is non-nil. Without this, text remains unfontified until the user provides
-input, such as pressing a key.")
+input, such as pressing a key."
+  :type 'boolean
+  :group 'easysession)
 
 ;;; Internal variables
 
