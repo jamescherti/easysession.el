@@ -476,16 +476,26 @@ frame hooks.
 The default value of 102 ensures that the session loads after all other
 packages. Setting the depth to 102 is useful for users of minimal-emacs.d, where
 certain optimizations restore `file-name-handler-alist' at depth 101 during
-`emacs-startup-hook'.")
+`emacs-startup-hook'.
+
+The `easysession-setup-add-hook-depth' variable must be set before calling the
+`easysession-setup' function.")
 
 (defvar easysession-setup-load-session t
   "Non-nil means `easysession-setup' automatically loads the session.
+
 Nil means the session is not loaded automatically; the user can load it
-manually.")
+manually.
+
+The `easysession-setup-load-session' variable must be set before calling the
+`easysession-setup' function.")
 
 (defvar easysession-setup-load-session-including-geometry t
   "Non-nil means the `easysession-setup' session restores frame geometry.
-If nil, the first session is loaded without restoring frame sizes or positions.")
+If nil, the first session is loaded without restoring frame sizes or positions.
+
+The `easysession-setup-load-session-including-geometry' variable must be set
+before calling the `easysession-setup' function.")
 
 (defvar easysession-setup-load-predicate nil
   "Predicate to determine whether `easysession-setup' loads the session.
@@ -494,7 +504,10 @@ the function is called without arguments; the session restoration proceeds only
 if the return value is non-nil.
 
 This variable allows restricting session restoration to specific environments,
-such as graphical frames.")
+such as graphical frames.
+
+The `easysession-setup-load-predicate' variable must be set
+before calling the `easysession-setup' function.")
 
 (defvar easysession-refresh-tab-bar nil
   "EXPERIMENTAL FEATURE. Non-nil to force a state and name refresh of all tabs.
