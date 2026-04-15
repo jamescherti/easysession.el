@@ -69,37 +69,41 @@
 ;; Installation from MELPA:
 ;; ------------------------
 ;; (use-package easysession
-;;   :custom
-;;   (easysession-save-interval (* 10 60))  ; Save every 10 minutes
-;;
-;;   ;; Display the active session name in the mode-line lighter.
-;;   (easysession-save-mode-lighter-show-session-name t)
-;;
-;;   ;; Optionally, the session name can be shown in the modeline info area:
-;;   ;; (easysession-mode-line-misc-info t)
+;;   ;; ':demand t' ensures the package is loaded immediately upon startup
+;;   :demand t
 ;;
 ;;   :config
 ;;   ;; Key mappings
 ;;   (global-set-key (kbd "C-c sl") #'easysession-switch-to) ; Load session
 ;;   (global-set-key (kbd "C-c ss") #'easysession-save) ; Save session
-;;   (global-set-key (kbd "C-c sL")
-;;    #'easysession-switch-to-and-restore-geometry)
+;;   (global-set-key (kbd "C-c sL") #'easysession-switch-to-and-restore-geometry)
 ;;   (global-set-key (kbd "C-c sr") #'easysession-rename)
 ;;   (global-set-key (kbd "C-c sR") #'easysession-reset)
+;;   (global-set-key (kbd "C-c su") #'easysession-unload)
 ;;   (global-set-key (kbd "C-c sd") #'easysession-delete)
 ;;
-;;   ;; Non-nil: `easysession-setup' loads the session automatically.
-;;   ;; Nil: session is not loaded automatically; the user can load it manually.
+;;   ;; Save every 10 minutes
+;;   (setq easysession-save-interval (* 10 60))
+;;
+;;   ;; Save the current session when using `easysession-switch-to'
+;;   (setq easysession-switch-to-save-session t)
+;;
+;;   ;; Do not exclude the current session when switching sessions
+;;   (setq easysession-switch-to-exclude-current nil)
+;;
+;;   ;; Display the active session name in the mode-line lighter.
+;;   ;; (setq easysession-save-mode-lighter-show-session-name t)
+;;
+;;   ;; Optionally, the session name can be shown in the modeline info area:
+;;   ;; (setq easysession-mode-line-misc-info t)
+;;   ;; non-nil: Make `easysession-setup' load the session automatically.
+;;   ;; (nil: session is not loaded automatically; the user can load it manually.)
 ;;   (setq easysession-setup-load-session t)
 ;;
-;;   ;; Priority depth used when `easysession-setup' adds `easysession' hooks.
-;;   ;; 102 ensures that the session is loaded after all other packages.
-;;   (setq easysession-setup-add-hook-depth 102)
-;;
 ;;   ;; The `easysession-setup' function adds hooks:
-;;   ;; - To automatically load the session during `emacs-startup-hook'.
-;;   ;; - To automatically save the session at regular intervals, and when Emacs
-;;   ;; exits.
+;;   ;; - To enable automatic session loading during `emacs-startup-hook', or
+;;   ;;   `server-after-make-frame-hook' when running in daemon mode.
+;;   ;; - To save the session at regular intervals, and when Emacs exits.
 ;;   (easysession-setup))
 ;;
 ;; Usage:
