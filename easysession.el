@@ -1544,13 +1544,14 @@ reflects the same visible portion as when the session was saved.
 In the future, this function may be extended to restore additional buffer
 attributes such as point position, mark, local variables, or other editor state
 information."
-  (let* ((narrowing-bounds (alist-get 'narrowing-bounds buffer-info)))
-    (when (and narrowing-bounds (consp narrowing-bounds))
-      (let* ((start (car narrowing-bounds))
-             (end (cdr narrowing-bounds)))
-        (when (and (numberp start)
-                   (numberp end))
-          (with-current-buffer buffer
+  (with-current-buffer buffer
+    (widen)
+    (let* ((narrowing-bounds (alist-get 'narrowing-bounds buffer-info)))
+      (when (and narrowing-bounds (consp narrowing-bounds))
+        (let* ((start (car narrowing-bounds))
+               (end (cdr narrowing-bounds)))
+          (when (and (numberp start)
+                     (numberp end))
             (narrow-to-region start end)))))))
 
 (defun easysession--handler-load-file-editing-buffers (session-data)

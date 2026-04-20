@@ -10,6 +10,8 @@
 
 * Move the `easysession-save-mode-lighter-session-name-spec` sexp into the `easysession--lighter-session-name-format` function
 
+* Fix an issue where narrowing was not correctly restored. The `easysession--restore-buffer-state` function now unconditionally clears any existing narrowing before applying saved boundaries. This ensures that buffers remaining open across session switches correctly reflect the saved state, even if the narrowing has changed or should be removed.
+
 ## 1.2.1
 
 * Update the auto-save timer dynamically when `easysession-save-interval` changes by centralizing the timer logic into `easysession--update-timer`. This ensures the timer is correctly cancelled and restarted based on the current mode state. A `:set` function was added to `easysession-save-interval` so that modifying the variable immediately updates the running timer without requiring a restart of the mode.
