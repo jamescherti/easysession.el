@@ -1994,14 +1994,16 @@ the process had been freshly started."
   (when (yes-or-no-p "[easysession] Save session and close all frames? ")
     (save-some-buffers)
     (easysession-unload)
-    ;; Close all frames
-    (dolist (frame (frame-list))
-      (when (and (frame-live-p frame)
-                 (or (not (daemonp))
-                     (not (string-equal (terminal-name (frame-terminal frame))
-                                        "initial_terminal"))))
-        (ignore-errors
-          (delete-frame frame t))))))
+    ;; Freeze display before tearing down the GUI
+    (let ((inhibit-redisplay t))
+      ;; Close all frames
+      (dolist (frame (frame-list))
+        (when (and (frame-live-p frame)
+                   (or (not (daemonp))
+                       (not (string-equal (terminal-name (frame-terminal frame))
+                                          "initial_terminal"))))
+          (ignore-errors
+            (delete-frame frame t)))))))
 
 ;;;###autoload
 (defun easysession-setup ()
@@ -2117,22 +2119,23 @@ The returned list contains live buffers only."
   ;; Hooks
   (run-hooks 'easysession-before-reset-hook)
 
+  (let ((inhibit-redisplay t))
+    ;; Delete frames
+    (delete-other-frames)
+
+    ;; Close tabs
+    (when (and (bound-and-true-p tab-bar-mode)
+               (fboundp 'tab-bar-close-other-tabs))
+      (tab-bar-close-other-tabs))
+
+    ;; Close windows
+    (delete-other-windows)
+
+    ;; Switch to the scratch buffer
+    (switch-to-buffer (easysession--get-scratch-buffer-create) nil t))
+
   ;; Kill all buffers
   (easysession-kill-all-buffers)
-
-  ;; Delete frames
-  (delete-other-frames)
-
-  ;; Close tabs
-  (when (and (bound-and-true-p tab-bar-mode)
-             (fboundp 'tab-bar-close-other-tabs))
-    (tab-bar-close-other-tabs))
-
-  ;; Close windows
-  (delete-other-windows)
-
-  ;; Switch to the scratch buffer
-  (switch-to-buffer (easysession--get-scratch-buffer-create) nil t)
 
   ;; Hooks
   (run-hooks 'easysession-after-reset-hook))
@@ -2351,9 +2354,13 @@ loads the current session if set, or defaults to the \"main\" session."
                         (funcall handler session-data)))
 
                     ;; Load the frame set
-                    (easysession--load-frameset
-                     session-data
-                     (bound-and-true-p easysession-frameset-restore-geometry))
+                    ;; Inhibiting redisplay prevents the visual flickering of
+                    ;; windows splitting and resizing. It requires no user
+                    ;; input, making it safe to freeze the screen.
+                    (let ((inhibit-redisplay t))
+                      (easysession--load-frameset
+                       session-data
+                       (bound-and-true-p easysession-frameset-restore-geometry)))
 
                     (when (called-interactively-p 'any)
                       (easysession--message "Session loaded: %s" session-name))
