@@ -122,13 +122,13 @@ To persist and restore global variables in Emacs, you can use the built-in `save
 ```emacs-lisp
 (use-package savehist
   :ensure nil
-  :hook
-  (after-init . savehist-mode)
   :config
   (add-to-list 'savehist-additional-variables 'kill-ring)
   (add-to-list 'savehist-additional-variables 'mark-ring)
   (add-to-list 'savehist-additional-variables 'search-ring)
-  (add-to-list 'savehist-additional-variables 'regexp-search-ring))
+  (add-to-list 'savehist-additional-variables 'regexp-search-ring)
+  :config
+  (savehist-mode 1))
 ```
 
 (Each element added to `savehist-additional-variables` is a variable that will be persisted across Emacs sessions that use `savehist`.)
