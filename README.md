@@ -394,7 +394,7 @@ To keep the echo area completely clean and suppress standard EasySession message
 (setq easysession-quiet t)
 ```
 
-## File-Local Variables and Session Loading
+## File-Local variables and session loading
 
 EasySession respects your global `enable-local-variables` configuration. When a session is loaded, Emacs opens all previously active file buffers in the background.
 
