@@ -555,29 +555,6 @@ input, such as pressing a key."
   :type 'boolean
   :group 'easysession)
 
-(defcustom easysession-enable-local-variables :safe
-  "Control the evaluation of file-local variables when loading a session.
-This variable is temporarily bound to `enable-local-variables' when EasySession
-restores file-visiting buffers.
-The default value of `:safe' is recommended, as it prevents Emacs from pausing
-the background session restoration process to display an interactive prompt for
-unsafe local variables."
-  :type
-  '(choice
-    (const
-     :tag "Evaluate safe variables, silently ignore unsafe"
-     :safe)
-    (const
-     :tag "Do not evaluate any local variables"
-     nil)
-    (const
-     :tag "NOT RECOMMENDED. Query the user if any local variables are unsafe"
-     t)
-    (const
-     :tag "NOT RECOMMENDED. Evaluate all local variables without querying"
-     :all))
-  :group 'easysession)
-
 (defcustom easysession-suppress-same-file-warnings t
   "Control warnings when opening files that resolve to the same target.
 This variable is temporarily bound to `find-file-suppress-same-file-warnings'
@@ -2536,12 +2513,7 @@ loads the current session if set, or defaults to the \"main\" session."
                  ;; that resolve to the exact same target on
                  ;; disk.
                  (find-file-suppress-same-file-warnings
-                  easysession-suppress-same-file-warnings)
-                 ;; Apply all known-safe local variables and
-                 ;; silently ignore any unsafe ones without
-                 ;; triggering an interactive prompt.
-                 (enable-local-variables
-                  easysession-enable-local-variables))
+                  easysession-suppress-same-file-warnings))
             (ignore auto-insert)  ; Silence warning
 
             ;; Pre-validate handlers before proceeding

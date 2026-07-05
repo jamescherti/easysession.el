@@ -13,6 +13,8 @@
 
 - Update `easysession--setup-load-session` to ensure frame geometry is restored only when connecting via a graphical client.
 
+- Removed `easysession-enable-local-variables`: This custom variable has been removed. EasySession now respects the global `enable-local-variables` configuration when restoring file-visiting buffers. This change ensures that background session loading behaves transparently and identically to a manual `find-file` operation, preventing any unexpected overrides of the user's global environment settings.
+
 ## 1.2.3
 
 - Add atomic file saves using temporary files. Session data is now written to a unique temporary file and atomically renamed to the target session path upon completion. This prevents file corruption in the event of an unexpected Emacs crash or disk space error during a write operation. Additionally, session validation and completion prompts have been updated to filter out temporary files, preventing orphaned temporary files from appearing in the UI.
