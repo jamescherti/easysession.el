@@ -15,7 +15,7 @@ Easysession also supports extensions, enabling the restoration of Magit buffers 
 <img src="https://jamescherti.com/misc/easysession-m.png" width="40%" />
 </p>
 
-If this package enhances your workflow, please show your support by **⭐ starring EasySession on GitHub** to help more users discover its benefits.
+**Note: If this project helps your workflow, please consider supporting the project by ⭐ starring EasySession on GitHub and sharing it on your website, blog, Mastodon, Reddit, X, LinkedIn, or other social media platforms so other Emacs users can discover its benefits.**
 
 **Key features include:**
 * Quickly switch between sessions while editing with or without disrupting the frame geometry.
