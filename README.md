@@ -408,6 +408,26 @@ To keep the echo area completely clean and suppress standard EasySession message
 (setq easysession-quiet t)
 ```
 
+## File-Local Variables and Session Loading
+
+EasySession respects your global `enable-local-variables` configuration. When a session is loaded, Emacs opens all previously active file buffers in the background.
+
+By default, Emacs sets `enable-local-variables` to `t`. If a restored file contains unsafe local variables, Emacs will halt the background load to prompt you interactively. This completely stops the automated session restoration process.
+
+Setting `enable-local-variables` to `:safe` resolves this issue.
+
+The benefits of using `:safe` include:
+
+* Non-interactive loading: Emacs will silently evaluate safe variables and ignore unsafe ones, preventing the restoration process from freezing on a user prompt.
+* Security: Arbitrary Lisp code embedded in untrusted files will not execute automatically.
+* Consistency: Background loading behaves predictably without requiring constant user supervision.
+
+You can apply this preference by adding the following to your Emacs configuration:
+
+```elisp
+(setq enable-local-variables :safe)
+```
+
 ### How to persist and restore text scale?
 
 The [persist-text-scale](https://github.com/jamescherti/persist-text-scale.el) Emacs package provides `persist-text-scale-mode`, which ensures that all adjustments made with `text-scale-increase` and `text-scale-decrease` are persisted and restored across sessions. As a result, the text size in each buffer remains consistent, even after restarting Emacs. This package also facilitates grouping buffers into categories, allowing buffers within the same category to share a consistent text scale. This ensures uniform font sizes when adjusting text scaling.
