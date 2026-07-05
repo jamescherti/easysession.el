@@ -4,7 +4,11 @@
 
 **Author:** [James Cherti](https://www.jamescherti.com/)
 
-## WIP
+## 1.2.5
+
+- Removed `easysession-enable-local-variables`: This custom variable has been removed. EasySession now respects the global `enable-local-variables` configuration when restoring file-visiting buffers. This change ensures that background session loading behaves transparently and identically to a manual `find-file` operation, preventing any unexpected overrides of the user's global environment settings.
+
+## 1.2.4
 
 - Update `easysession-save-session-and-close-frames` to improve reliability and flexibility:
   - Support an optional prefix argument to silently save all file-visiting buffers.
@@ -12,8 +16,6 @@
   - Fix a display engine error in daemon mode by deferring the deletion of the currently selected frame until all background frames are closed, avoiding abrupt window manager focus shifts.
 
 - Update `easysession--setup-load-session` to ensure frame geometry is restored only when connecting via a graphical client.
-
-- Removed `easysession-enable-local-variables`: This custom variable has been removed. EasySession now respects the global `enable-local-variables` configuration when restoring file-visiting buffers. This change ensures that background session loading behaves transparently and identically to a manual `find-file` operation, preventing any unexpected overrides of the user's global environment settings.
 
 ## 1.2.3
 
