@@ -386,20 +386,6 @@ Sometimes, restored buffers may remain unfontified (missing syntax highlighting)
 (setq easysession-fontify t)
 ```
 
-### How to handle local variables and same-file warnings silently
-
-EasySession is configured by default to silently restore file buffers without pausing the background process for interactive prompts. You can modify this behavior if you prefer to be prompted:
-
-```elisp
-;; :safe evaluates safe variables and ignores unsafe ones (default)
-;; t prompts the user if any are unsafe
-(setq easysession-enable-local-variables :safe)
-
-;; t silently keeps both buffers if they resolve to the same target (default)
-;; nil prompts the user
-(setq easysession-suppress-same-file-warnings t)
-```
-
 ### How to suppress messages
 
 To keep the echo area completely clean and suppress standard EasySession messages (like "Session Saved"), set:
