@@ -514,6 +514,7 @@ Other packages focus more on managing activities rather than full session manage
   my opinion it should replace the native desktop.el and be included in Emacs
   itself...
   ```
+- [Tom Davey](https://github.com/jamescherti/easysession.el/issues/65): "I love easysession-mode. It's essential to my daily workflow in Emacs... Thanks again for this great package."
 
 ## License
 
