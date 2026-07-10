@@ -1236,6 +1236,34 @@ when no frames are available for persistence."
                  (not (frame-parameter nil 'client))))
        t))
 
+(defun easysession--call-with-default-buffer-list-update-hook (hook function)
+  "Call FUNCTION with the default `buffer-list-update-hook' set to HOOK.
+
+The dynamic binding is established in a buffer without a buffer-local hook
+value.  This ensures that it applies to the default value even when the
+caller's current buffer has its own value.  FUNCTION may change the current
+buffer; its final current buffer is retained."
+  (let* ((original-buffer (current-buffer))
+         (binding-buffer
+          (seq-find
+           (lambda (buffer)
+             (not (local-variable-p 'buffer-list-update-hook buffer)))
+           (buffer-list)))
+         temporary-buffer)
+    (unless binding-buffer
+      (setq temporary-buffer
+            (let ((buffer-list-update-hook nil))
+              (generate-new-buffer " *easysession-hook-binding*"))
+            binding-buffer temporary-buffer))
+    (set-buffer binding-buffer)
+    (let ((buffer-list-update-hook hook))
+      (set-buffer original-buffer)
+      (unwind-protect
+          (funcall function)
+        (when (buffer-live-p temporary-buffer)
+          (ignore-errors
+            (kill-buffer temporary-buffer)))))))
+
 (defun easysession--load-frameset (session-data &optional load-geometry)
   "Load the frameset from the SESSION-DATA argument.
 When LOAD-GEOMETRY is non-nil, load the frame geometry."
@@ -1257,32 +1285,68 @@ When LOAD-GEOMETRY is non-nil, load the frame geometry."
         (setq data (when (assoc "frameset" session-data)
                      (assoc-default "frameset" session-data))))
       (when data
-        (frameset-restore
-         data
-         :filters modified-filter-alist
-         :reuse-frames easysession-frameset-restore-reuse-frames
-         :cleanup-frames
-         (if (eq easysession-frameset-restore-cleanup-frames t)
-             (lambda (frame action)
-               (when (and (memq action '(:rejected :ignored))
-                          ;; Avoid cleaning up the initial daemon frame during
-                          ;; frameset restoration by disabling frame cleanup
-                          ;; when running under a daemon with a single frame.
-                          (not (and (daemonp)
-                                    (equal (terminal-name (frame-terminal frame))
-                                           "initial_terminal"))))
-                 (delete-frame frame)))
-           easysession-frameset-restore-cleanup-frames)
-         :force-display easysession-frameset-restore-force-display
-         :force-onscreen easysession-frameset-restore-force-onscreen)
+        ;; `display-buffer-in-side-window' normally makes these parameters
+        ;; persistent when it creates a side window.  `frameset-restore'
+        ;; reconstructs their values without that registration, so restore it
+        ;; here to keep the next session save from dropping the side layout.
+        (setf (alist-get 'window-side window-persistent-parameters) 'writable
+              (alist-get 'window-slot window-persistent-parameters) 'writable)
 
-        (when (fboundp 'tab-bar-mode)
-          (when (seq-some
-                 (lambda (frame)
-                   (menu-bar-positive-p
-                    (frame-parameter frame 'tab-bar-lines)))
-                 (frame-list))
-            (tab-bar-mode 1)))))))
+        (let ((buffer-list-update-pending nil)
+              (frameset-restored nil)
+              (original-buffer-list-update-hook
+               (default-value 'buffer-list-update-hook)))
+          ;; Restoring a frameset temporarily selects buffers while rebuilding
+          ;; the saved layout.  Coalesce notifications dispatched through the
+          ;; default hook value into one update after restoration reaches its
+          ;; final state.  Buffer-local hook values retain their normal
+          ;; semantics.
+          (unwind-protect
+              (easysession--call-with-default-buffer-list-update-hook
+               (list (lambda ()
+                       (setq buffer-list-update-pending t)))
+               (lambda ()
+                 (frameset-restore
+                  data
+                  :filters modified-filter-alist
+                  :reuse-frames easysession-frameset-restore-reuse-frames
+                  :cleanup-frames
+                  (if (eq easysession-frameset-restore-cleanup-frames t)
+                      (lambda (frame action)
+                        (when (and (memq action '(:rejected :ignored))
+                                   ;; Avoid cleaning up the initial daemon
+                                   ;; frame during frameset restoration by
+                                   ;; disabling frame cleanup when running
+                                   ;; under a daemon with a single frame.
+                                   (not (and
+                                         (daemonp)
+                                         (equal
+                                          (terminal-name
+                                           (frame-terminal frame))
+                                          "initial_terminal"))))
+                          (delete-frame frame)))
+                    easysession-frameset-restore-cleanup-frames)
+                  :force-display easysession-frameset-restore-force-display
+                  :force-onscreen easysession-frameset-restore-force-onscreen)
+
+                 (when (fboundp 'tab-bar-mode)
+                   (when (seq-some
+                          (lambda (frame)
+                            (menu-bar-positive-p
+                             (frame-parameter frame 'tab-bar-lines)))
+                          (frame-list))
+                     (tab-bar-mode 1)))
+
+                 (setq frameset-restored t)))
+            (when buffer-list-update-pending
+              (let ((buffer-list-update-hook
+                     original-buffer-list-update-hook))
+                (if frameset-restored
+                    (run-hooks 'buffer-list-update-hook)
+                  ;; Preserve the original frameset error if an observer also
+                  ;; fails while synchronizing with the partial restored state.
+                  (ignore-errors
+                    (run-hooks 'buffer-list-update-hook)))))))))))
 
 (defun easysession--ensure-buffer-name (buffer name)
   "Ensure that BUFFER name is NAME."

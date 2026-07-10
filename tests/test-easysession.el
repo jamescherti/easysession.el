@@ -69,6 +69,18 @@
 (defvar test-easysession--indirect-buffer1 nil
   "Reference to the indirect test buffer.")
 
+(defun test-easysession--tree-contains-p (tree value)
+  "Return non-nil when TREE contains VALUE as a subtree."
+  (cond
+   ((equal tree value) t)
+   ((consp tree)
+    (or (test-easysession--tree-contains-p (car tree) value)
+        (test-easysession--tree-contains-p (cdr tree) value)))
+   ((vectorp tree)
+    (seq-some (lambda (item)
+                (test-easysession--tree-contains-p item value))
+              tree))))
+
 (defun test-easysession--add-hooks ()
   "Add and configure hooks for testing `easysession`.
 Tracks the execution of session-related hooks and performs checks
@@ -308,6 +320,223 @@ storing them in respective variables for later use."
     (error (concat "easysession--auto-save or the "
                    "easysession-save-mode-predicate do not seem to "
                    "be working"))))
+
+(ert-deftest test-easysession-load-coalesces-buffer-list-update-hook ()
+  "Default buffer list observers see only the final restored frameset."
+  (let* ((temporary-directory (make-temp-file "easysession-test-" t))
+         (easysession-directory (file-name-as-directory temporary-directory))
+         (easysession--builtin-load-handlers nil)
+         (easysession--load-handlers nil)
+         (easysession--current-session-name nil)
+         (easysession--session-loaded nil)
+         (easysession-enable-frameset-restore t)
+         (easysession-fontify nil)
+         (before-load-hook-called nil)
+         (after-load-hook-called nil)
+         (restore-running nil)
+         (restore-finished nil)
+         (hook-calls-during-restore 0)
+         (hook-calls-after-restore 0)
+         (hook-calls-outside-load 0)
+         (local-hook-calls 0)
+         stable-hook-buffer
+         (first-buffer (generate-new-buffer " *easysession-first*"))
+         (second-buffer (generate-new-buffer " *easysession-second*"))
+         (easysession-before-load-hook
+          (list (lambda () (setq before-load-hook-called t))))
+         (easysession-after-load-hook
+          (list (lambda () (setq after-load-hook-called t))))
+         (buffer-list-update-hook
+          (list (lambda ()
+                  (cond
+                   (restore-running
+                    (setq hook-calls-during-restore
+                          (1+ hook-calls-during-restore)))
+                   (restore-finished
+                    (if easysession-load-in-progress
+                        (setq hook-calls-after-restore
+                              (1+ hook-calls-after-restore)
+                              stable-hook-buffer (current-buffer))
+                      (setq hook-calls-outside-load
+                            (1+ hook-calls-outside-load))))
+                   (t
+                    (setq hook-calls-outside-load
+                          (1+ hook-calls-outside-load))))))))
+    (unwind-protect
+        (save-window-excursion
+          (delete-other-windows)
+          (switch-to-buffer first-buffer)
+          (let ((source-window (selected-window))
+                (restored-window (split-window-right)))
+            (set-window-buffer restored-window second-buffer)
+            (dolist (buffer (list first-buffer second-buffer))
+              (with-current-buffer buffer
+                (setq-local
+                 buffer-list-update-hook
+                 (list (lambda ()
+                         (setq local-hook-calls (1+ local-hook-calls)))
+                       t))))
+            (with-temp-file
+                (expand-file-name "hook-test" easysession-directory)
+              (prin1 '(("frameset" . test-frameset)) (current-buffer)))
+            (cl-letf (((symbol-function 'frameset-restore)
+                       (lambda (&rest _)
+                         (setq restore-running t)
+                         (select-window restored-window)
+                         (select-window source-window)
+                         (select-window restored-window)
+                         (setq restore-running nil
+                               restore-finished t))))
+              (easysession-load "hook-test")))
+
+          (should before-load-hook-called)
+          (should after-load-hook-called)
+          (should (= hook-calls-during-restore 0))
+          (should (= hook-calls-after-restore 1))
+          ;; Buffer-local hook values retain their normal semantics, including
+          ;; their `t' element that continues with the default hook value.
+          (should (= local-hook-calls 3))
+          (should (eq stable-hook-buffer second-buffer))
+          (let ((outside-calls hook-calls-outside-load))
+            (run-hooks 'buffer-list-update-hook)
+            (should (= hook-calls-outside-load (1+ outside-calls)))
+            (should (= local-hook-calls 4)))
+
+          ;; Do not invent a notification when frameset restoration made no
+          ;; buffer-list change.
+          (setq restore-finished nil
+                hook-calls-after-restore 0
+                stable-hook-buffer nil)
+          (cl-letf (((symbol-function 'frameset-restore)
+                     (lambda (&rest _)
+                       (setq restore-finished t))))
+            (easysession-load "hook-test"))
+          (should (= hook-calls-after-restore 0))
+          (should (= local-hook-calls 4)))
+      (when (buffer-live-p first-buffer)
+        (kill-buffer first-buffer))
+      (when (buffer-live-p second-buffer)
+        (kill-buffer second-buffer))
+      (delete-directory temporary-directory t))))
+
+(ert-deftest test-easysession-load-restores-hook-after-frameset-error ()
+  "A failed frameset restore replays and restores the default hook safely."
+  (let* ((temporary-directory (make-temp-file "easysession-test-" t))
+         (easysession-directory (file-name-as-directory temporary-directory))
+         (easysession--builtin-load-handlers nil)
+         (easysession--load-handlers nil)
+         (easysession--current-session-name nil)
+         (easysession--session-loaded nil)
+         (easysession-enable-frameset-restore t)
+         (easysession-fontify nil)
+         (easysession-before-load-hook nil)
+         (easysession-after-load-hook nil)
+         (restore-running nil)
+         (hook-calls-during-restore 0)
+         (hook-calls-after-error 0)
+         (hook-calls-outside-load 0)
+         (observer-error-enabled t)
+         (first-buffer (generate-new-buffer " *easysession-error-first*"))
+         (second-buffer (generate-new-buffer " *easysession-error-second*"))
+         (buffer-list-update-hook
+          (list (lambda ()
+                  (if restore-running
+                      (setq hook-calls-during-restore
+                            (1+ hook-calls-during-restore))
+                    (if easysession-load-in-progress
+                        (setq hook-calls-after-error
+                              (1+ hook-calls-after-error))
+                      (setq hook-calls-outside-load
+                            (1+ hook-calls-outside-load)))))
+                (lambda ()
+                  (when (and observer-error-enabled
+                             easysession-load-in-progress)
+                    (error "synthetic observer failure"))))))
+    (unwind-protect
+        (save-window-excursion
+          (delete-other-windows)
+          (switch-to-buffer first-buffer)
+          (let ((restored-window (split-window-right)))
+            (set-window-buffer restored-window second-buffer)
+            (with-temp-file
+                (expand-file-name "hook-error-test" easysession-directory)
+              (prin1 '(("frameset" . test-frameset)) (current-buffer)))
+            (cl-letf (((symbol-function 'frameset-restore)
+                       (lambda (&rest _)
+                         (setq restore-running t)
+                         (select-window restored-window)
+                         (setq restore-running nil)
+                         (error "synthetic frameset failure"))))
+              (let ((error-data
+                     (should-error
+                      (easysession-load "hook-error-test")
+                      :type 'error)))
+                (should
+                 (string-match-p "synthetic frameset failure"
+                                 (error-message-string error-data)))
+                (should-not
+                 (string-match-p "synthetic observer failure"
+                                 (error-message-string error-data))))))
+
+          (should (= hook-calls-during-restore 0))
+          (should (= hook-calls-after-error 1))
+          (should-not easysession-load-in-progress)
+          (setq observer-error-enabled nil)
+          (let ((outside-calls hook-calls-outside-load))
+            (run-hooks 'buffer-list-update-hook)
+            (should (= hook-calls-outside-load (1+ outside-calls)))))
+      (setq observer-error-enabled nil)
+      (when (buffer-live-p first-buffer)
+        (kill-buffer first-buffer))
+      (when (buffer-live-p second-buffer)
+        (kill-buffer second-buffer))
+      (delete-directory temporary-directory t))))
+
+(ert-deftest test-easysession-load-keeps-side-window-parameters-persistent ()
+  "A restored side window remains serializable by the next session save."
+  (let* ((temporary-directory (make-temp-file "easysession-test-" t))
+         (easysession-directory (file-name-as-directory temporary-directory))
+         (easysession--builtin-load-handlers nil)
+         (easysession--load-handlers nil)
+         (easysession--current-session-name nil)
+         (easysession--session-loaded nil)
+         (easysession-before-load-hook nil)
+         (easysession-after-load-hook nil)
+         (easysession-enable-frameset-restore t)
+         (easysession-fontify nil)
+         (window-persistent-parameters
+          (assq-delete-all
+           'window-side
+           (assq-delete-all 'window-slot
+                            (copy-tree window-persistent-parameters))))
+         frameset-restored)
+    (unwind-protect
+        (progn
+          (with-temp-file (expand-file-name "side-window-test"
+                                            easysession-directory)
+            (prin1 '(("frameset" . test-frameset)) (current-buffer)))
+          (cl-letf (((symbol-function 'frameset-restore)
+                     (lambda (&rest _)
+                       (setq frameset-restored t))))
+            (easysession-load "side-window-test"))
+
+          (should frameset-restored)
+          (let ((window (selected-window)))
+            (unwind-protect
+                (progn
+                  (set-window-parameter window 'window-side 'right)
+                  (set-window-parameter window 'window-slot 0)
+                  (let ((next-frameset
+                         (easysession--save-frameset "next-session")))
+                    (should
+                     (test-easysession--tree-contains-p
+                      next-frameset '(window-side . right)))
+                    (should
+                     (test-easysession--tree-contains-p
+                      next-frameset '(window-slot . 0)))))
+              (set-window-parameter window 'window-side nil)
+              (set-window-parameter window 'window-slot nil))))
+      (delete-directory temporary-directory t))))
 
 (defun test-easysession--init ()
   "Init test."
