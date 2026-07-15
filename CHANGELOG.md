@@ -4,6 +4,10 @@
 
 **Author:** [James Cherti](https://www.jamescherti.com/)
 
+## WIP
+
+* Fix lexical scoping and window hooks by replacing `(ignore var)` with `(defvar var)` top-level declarations. This ensures proper dynamic binding for hook variables and resolves byte-compiler warnings in `lexical-binding` mode.
+
 ## 1.2.5
 
 - Removed `easysession-enable-local-variables`: This custom variable has been removed. EasySession now respects the global `enable-local-variables` configuration when restoring file-visiting buffers. This change ensures that background session loading behaves transparently and identically to a manual `find-file` operation, preventing any unexpected overrides of the user's global environment settings.
