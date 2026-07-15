@@ -960,6 +960,14 @@ of their visibility.")
 (defvar easysession-gc-percentage 0.3
   "GC percentage for temporary increase.")
 
+(defvar buffer-list-update-hook)
+(defvar window-buffer-change-functions)
+(defvar window-configuration-change-hook)
+(defvar window-state-change-functions)
+(defvar window-size-change-functions)
+(defvar window-selection-change-functions)
+(defvar window-state-change-hook)
+
 ;;; Internal functions
 
 (defmacro easysession--message (&rest args)
@@ -1549,14 +1557,6 @@ to prevent multiple loads during the same daemon session."
           (not (display-graphic-p frame)))))
    (frame-list)))
 
-(defvar buffer-list-update-hook)
-(defvar window-buffer-change-functions)
-(defvar window-configuration-change-hook)
-(defvar window-state-change-functions)
-(defvar window-size-change-functions)
-(defvar window-selection-change-functions)
-(defvar window-state-change-hook)
-
 (defun easysession--refresh-tabs-all-frames ()
   "Silently update auto-generated tab names across all frames.
 
@@ -1655,14 +1655,6 @@ This provides a fast, invisible alternative to cycling tabs."
                             (window-size-change-functions nil)
                             (window-selection-change-functions nil)
                             (window-state-change-hook nil))
-                        (ignore buffer-list-update-hook)
-                        (ignore window-buffer-change-functions)
-                        (ignore window-configuration-change-hook)
-                        (ignore window-state-change-functions)
-                        (ignore window-size-change-functions)
-                        (ignore window-selection-change-functions)
-                        (ignore window-state-change-hook)
-
                         ;; A `window-configuration' object is essentially a
                         ;; C-level snapshot of pointers to buffer objects. When
                         ;; you call `set-window-configuration', Emacs isn't
