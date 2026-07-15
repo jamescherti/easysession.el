@@ -967,6 +967,7 @@ of their visibility.")
 (defvar window-size-change-functions)
 (defvar window-selection-change-functions)
 (defvar window-state-change-hook)
+(defvar auto-insert)
 
 ;;; Internal functions
 
@@ -2506,8 +2507,6 @@ loads the current session if set, or defaults to the \"main\" session."
                  ;; disk.
                  (find-file-suppress-same-file-warnings
                   easysession-suppress-same-file-warnings))
-            (ignore auto-insert)  ; Silence warning
-
             ;; Pre-validate handlers before proceeding
             (dolist (handler load-handlers)
               (when (and handler
