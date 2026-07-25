@@ -344,6 +344,27 @@ If you want specific buffers to *always* be included regardless of their visibil
 (add-to-list 'easysession-visible-buffer-list-include-names "my-important-buffer")
 ```
 
+### How to exclude restoring remote/tramp buffers?
+
+When EasySession restores a session, it also attempts to restore any remote file buffers (e.g., accessed via TRAMP) that were open when the session was saved. This can result in long wait times due to network latency and connection initialization.
+
+To tell EasySession not to save and restore remote buffers, you can customize the `easysession-buffer-list-function` variable. Add the following code to your Emacs configuration:
+
+```elisp
+(defun my-easysession-filter-remote-buffers ()
+  "Return a list of buffers, excluding remote (TRAMP) buffers."
+  (let ((local-buffers nil))
+    (dolist (buffer (buffer-list))
+      (let ((dir (buffer-local-value 'default-directory buffer)))
+        (unless (and dir (file-remote-p dir))
+          (push buffer local-buffers))))
+    (nreverse local-buffers)))
+
+(setq easysession-buffer-list-function #'my-easysession-filter-remote-buffers)
+```
+
+**Note:** The function checks `default-directory` rather than `buffer-file-name` to ensure all buffer types are evaluated correctly. In addition to file-visiting buffers, EasySession persists directory locations for Dired buffers and specialized modes like Magit. Evaluating `default-directory` reliably identifies and excludes remote buffers regardless of their major mode.
+
 ### How to edit session files directly
 
 To manually inspect or modify a saved session, you can use `M-x easysession-edit`. By default, this opens the session file in `emacs-lisp-mode`.
