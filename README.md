@@ -169,7 +169,7 @@ NOTE: The `easysession-new-session-hook` functions are called when the user swit
 
 ### How to prevent EasySession from saving when switching sessions
 
-By default, the `easysession-switch-to` function saves the current session before switching to another session.
+By default, the `easysession-switch-to` function saves the current session before switching to another session, provided that `easysession-save-mode-predicate` evaluates to non-nil or is nil.
 
 This behavior can be modified by setting the variable `easysession-switch-to-save-session` to nil, which prevents the session from being saved automatically when switching.
 
@@ -189,13 +189,14 @@ Here is how to enable saving before switching (default behavior):
 
 ### How to configure easysession-save-mode to automatically save only the "main" session and let me manually save others?
 
-To set up `easysession-save-mode` to automatically save only the "main" session and allow you to manually save other sessions, add the following code to your configuration:
+To set up `easysession-save-mode` to automatically save only the "main" session (both in the background and before switching sessions) while allowing you to manually save other sessions, add the following code to your configuration:
+
 ```emacs-lisp
 (defun my-easysession-only-main-saved ()
   "Only save the main session."
-  (when (string= "main" (easysession-get-current-session-name))
+  (when (equal "main" (easysession-get-session-name))
     t))
-(setq easysession-save-mode-predicate 'my-easysession-only-main-saved)
+(setq easysession-save-mode-predicate #'my-easysession-only-main-saved)
 ```
 
 ### Passing the session name to Emacs via an environment variable
