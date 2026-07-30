@@ -314,19 +314,14 @@ criteria."
   :type 'function
   :group 'easysession)
 
-(defun easysession--default-auto-save-predicate ()
-  "Default predicate function for `easysession-save-predicate`.
-This function always returns non-nil, ensuring the session is saved."
-  t)
-
-(defcustom easysession-save-mode-predicate
-  #'easysession--default-auto-save-predicate
+(defcustom easysession-save-mode-predicate nil
   "Predicate that determines if the session is saved automatically.
-This function is called with no arguments and should return non-nil if
-`easysession-save-mode' should save the session automatically. The default
-predicate always returns non-nil, ensuring all sessions are saved
-automatically."
-  :type 'function
+This function is called with no arguments and should return non-nil if the
+session should be saved automatically by `easysession-save-mode' or prior to
+switching sessions using `easysession-switch-to'. When set to nil, all sessions
+are saved automatically."
+  :type '(choice (const :tag "Always save" nil)
+                 (function :tag "Predicate function"))
   :group 'easysession)
 
 (define-obsolete-variable-alias
@@ -2817,15 +2812,17 @@ AUTO-SAVE is non-nil when the save is triggered by a background timer."
   "Load a session without altering the frame's size or position.
 SESSION-NAME is the session name.
 
-When `easysession-switch-to-save-session' is non nil, it saves the current
-session before loading the session that is specified.
+When `easysession-switch-to-save-session' is non-nil, it saves the current
+session before loading the specified session, provided that
+`easysession-save-mode-predicate' also permits the save.
 
 This interactive function prompts the user for a session name when called
 interactively.
 
 This function will:
 - Save the current session if it is loaded and not being reloaded.
-  (When `easysession-switch-to-save-session' is non nil.)
+  (Requires `easysession-switch-to-save-session' to be non-nil and
+  `easysession-save-mode-predicate' to evaluate to non-nil or be nil.)
 - Load the specified session.
 - Set the specified session as the current session.
 
@@ -2867,6 +2864,8 @@ accordingly."
                     session-name))))
       (when (and easysession--current-session-name
                  easysession-switch-to-save-session
+                 (or (not easysession-save-mode-predicate)
+                     (funcall easysession-save-mode-predicate))
                  (or (or (not easysession--session-loaded)
                          (not session-reloaded))
                      (yes-or-no-p

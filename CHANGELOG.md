@@ -6,7 +6,11 @@
 
 ## WIP
 
-* Fix lexical scoping and window hooks by replacing `(ignore var)` with `(defvar var)` top-level declarations. This ensures proper dynamic binding for hook variables and resolves byte-compiler warnings in `lexical-binding` mode.
+- Fix lexical scoping and window hooks by replacing `(ignore var)` with `(defvar var)` top-level declarations. This ensures proper dynamic binding for hook variables and resolves byte-compiler warnings in `lexical-binding` mode.
+
+- Updated `easysession-switch-to` to evaluate `easysession-save-mode-predicate` before saving the active session.
+
+- Changed the default value of `easysession-save-mode-predicate` to `nil` and updated its customization type to accept both functions and `nil`.
 
 ## 1.2.5
 
