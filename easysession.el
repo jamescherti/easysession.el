@@ -1764,7 +1764,11 @@ accordingly, ensuring backward compatibility with legacy session files."
           (if (buffer-live-p original-buffer)
               (setq buffer (or (buffer-base-buffer original-buffer)
                                original-buffer))
-            (let ((new-buffer (let ((inhibit-message t))
+            (let ((new-buffer (let ((inhibit-message t)
+                                    (find-file-hook
+                                     (seq-difference
+                                      find-file-hook
+                                      easysession-exclude-from-find-file-hook)))
                                 (condition-case err
                                     (find-file-noselect buffer-path t)
                                   (error
@@ -2495,10 +2499,6 @@ loads the current session if set, or defaults to the \"main\" session."
                                     session-name)))
                     (when (file-exists-p file-name)
                       file-name)))
-                 (find-file-hook
-                  (seq-difference
-                   find-file-hook
-                   easysession-exclude-from-find-file-hook))
                  ;; This prevents `auto-insert-mode' from
                  ;; halting the background session load with
                  ;; interactive prompts (or silently
