@@ -1841,7 +1841,7 @@ If BUFFER is not a base buffer or has no associated path, return nil."
                     (buffer-file-name)))
             (uniquify-base-name (and (fboundp 'uniquify-buffer-base-name)
                                      (uniquify-buffer-base-name))))
-        (when path
+        (when (and path (not (bound-and-true-p with-editor-mode)))
           ;; File visiting buffer and base buffers (not carbon copies)
           `((buffer-name . ,(buffer-name))
             (uniquify-base-name . ,uniquify-base-name)
