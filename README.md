@@ -544,7 +544,7 @@ Other packages focus more on managing activities rather than full session manage
 
 ## License
 
-The easysession Emacs package has been written by [James Cherti](https://www.jamescherti.com/) and is distributed under terms of the GNU General Public License version 3, or, at your choice, any later version.
+The easysession Emacs package has been written by [James Cherti](https://www.jamescherti.com/) and contributors (Emre Yolcu, Herman He, Artem Tseranu, and Enzo Gurgel) and is distributed under terms of the GNU General Public License version 3, or, at your choice, any later version.
 
 Copyright (C) 2024-2026 [James Cherti](https://www.jamescherti.com)
 

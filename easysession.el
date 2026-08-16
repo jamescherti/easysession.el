@@ -577,6 +577,18 @@ current active display."
   :type 'boolean
   :group 'easysession)
 
+(defcustom easysession-exclude-modes '(with-editor-mode)
+  "List of minor or major modes to exclude file-visiting buffers.
+
+If a buffer derives from any of these major modes or has any of these minor
+modes enabled, EasySession will ignore that buffer during the save process.
+
+By default, this includes `with-editor-mode', which instructs the save handler
+to ignore any file-visiting buffer operating under `with-editor-mode' (this
+includes Magit commit messages, Git rebases, and similar transient states)."
+  :type '(repeat symbol)
+  :group 'easysession)
+
 ;;; Internal variables
 
 (defvar easysession--auto-saving nil
@@ -1845,7 +1857,11 @@ If BUFFER is not a base buffer or has no associated path, return nil."
         ;; Any buffer operating under with-editor-mode (which includes Magit
         ;; commit messages, Git rebases..) is completely ignored by the save
         ;; handler.
-        (when (and path (not (bound-and-true-p with-editor-mode)))
+        (when (and path
+                   (not (seq-some (lambda (mode)
+                                    (or (derived-mode-p mode)
+                                        (and (boundp mode) (symbol-value mode))))
+                                  easysession-exclude-modes)))
           ;; File visiting buffer and base buffers (not carbon copies)
           `((buffer-name . ,(buffer-name))
             (uniquify-base-name . ,uniquify-base-name)

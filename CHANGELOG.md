@@ -16,6 +16,8 @@
 
 - Contribution by Emre Yolcu: Exclude `with-editor` buffers from saved sessions and `let-bind` the `find-file-hook` variable only while restoring file-editing buffers
 
+- Added `easysession-exclude-modes`: A new customization option to exclude file-visiting buffers from being saved based on active major or minor modes (defaults to `'(with-editor-mode)`).
+
 ## 1.2.5
 
 - Removed `easysession-enable-local-variables`: This custom variable has been removed. EasySession now respects the global `enable-local-variables` configuration when restoring file-visiting buffers. This change ensures that background session loading behaves transparently and identically to a manual `find-file` operation, preventing any unexpected overrides of the user's global environment settings.
