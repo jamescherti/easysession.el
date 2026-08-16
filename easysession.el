@@ -1843,10 +1843,8 @@ If BUFFER is not a base buffer or has no associated path, return nil."
                                       (fboundp 'uniquify-buffer-base-name)
                                       (uniquify-buffer-base-name))))
         ;; Any buffer operating under with-editor-mode (which includes Magit
-        ;; commit messages, Git rebases, and other IPC-driven editors) is
-        ;; completely ignored by the save handler. Because the buffer is never
-        ;; saved, it is never restored, avoiding the scenario where Emacs
-        ;; attempts to reuse a dead buffer for a new Git commit process.
+        ;; commit messages, Git rebases..) is completely ignored by the save
+        ;; handler.
         (when (and path (not (bound-and-true-p with-editor-mode)))
           ;; File visiting buffer and base buffers (not carbon copies)
           `((buffer-name . ,(buffer-name))
