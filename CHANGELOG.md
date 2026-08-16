@@ -12,6 +12,8 @@
 
 - Changed the default value of `easysession-save-mode-predicate` to `nil` and updated its customization type to accept both functions and `nil`.
 
+- Fixed daemon issue when restoring GUI sessions in a terminal by adding `easysession-frameset-restore-force-current-display`.
+
 ## 1.2.5
 
 - Removed `easysession-enable-local-variables`: This custom variable has been removed. EasySession now respects the global `enable-local-variables` configuration when restoring file-visiting buffers. This change ensures that background session loading behaves transparently and identically to a manual `find-file` operation, preventing any unexpected overrides of the user's global environment settings.

@@ -393,6 +393,25 @@ By default, EasySession prompts for confirmation before creating a new session w
 (setq easysession-confirm-new-session nil)
 ```
 
+### Emacs daemon exits when restoring GUI sessions in a terminal (TTY)
+
+Users running Emacs in daemon mode may experience a process crash under the following conditions:
+
+- A session is saved from a graphical (GUI) frame.
+- The GUI frame is closed.
+- The daemon is subsequently accessed via a terminal client (`emacsclient -nw`).
+- A session restore operation is initiated.
+
+This failure originates from hardcoded logic in the core `frameset.el` library. In daemon mode, Emacs ignores the active terminal display and attempts to reconstruct frames on the original GUI display. If that display is inaccessible (frequently seen with PGTK builds or when switching between X11 and Wayland environments), the daemon process terminates completely.
+
+To resolve this issue, configure EasySession to override the saved display parameters and force frame restoration onto the currently active display:
+
+```elisp
+(setq easysession-frameset-restore-force-current-display (daemonp))
+```
+
+Note: Enabling this setting consolidates all restored frames onto the active display, which overrides default upstream multi-display handling.
+
 ### How to conditionally load sessions at startup
 
 You can restrict automatic session restoration to specific environments (such as graphical frames only) by assigning a predicate function. Note that this must be set *before* calling `(easysession-setup)`.

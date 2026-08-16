@@ -562,6 +562,21 @@ the background load with an interactive prompt."
                         nil))
   :group 'easysession)
 
+(defcustom easysession-frameset-restore-force-current-display nil
+  "Non-nil means force every frameset restore to use the current display.
+
+When non-nil, frames are recreated on the current display instead of their saved
+display. This prevents the Emacs server from crashing in daemon mode if you save
+a session in a GUI frame and later attempt to restore it in a terminal (TTY)
+frame using \='emacsclient -nw\='. In this scenario, Emacs attempts to restore
+the frame on the original graphical display, which may no longer be available,
+causing the daemon to exit.
+
+Setting this to t bypasses this limitation by consolidating all frames onto the
+current active display."
+  :type 'boolean
+  :group 'easysession)
+
 ;;; Internal variables
 
 (defvar easysession--auto-saving nil
@@ -1256,29 +1271,41 @@ When LOAD-GEOMETRY is non-nil, load the frame geometry."
                  easysession--overwrite-frameset-filter-include-geometry-alist)
               ;; Exclude geometry
               (easysession--init-frame-parameters-filters
-               easysession--overwrite-frameset-filter-alist))))
+               easysession--overwrite-frameset-filter-alist)))
+           (orig-keep-display
+            (if (fboundp 'frameset-keep-original-display-p)
+                (symbol-function 'frameset-keep-original-display-p)
+              (easysession--warning "Function undefined: frameset-keep-original-display-p")
+              nil)))
       (when (and (not data) load-geometry)
         (setq data (when (assoc "frameset" session-data)
                      (assoc-default "frameset" session-data))))
       (when data
-        (frameset-restore
-         data
-         :filters modified-filter-alist
-         :reuse-frames easysession-frameset-restore-reuse-frames
-         :cleanup-frames
-         (if (eq easysession-frameset-restore-cleanup-frames t)
-             (lambda (frame action)
-               (when (and (memq action '(:rejected :ignored))
-                          ;; Avoid cleaning up the initial daemon frame during
-                          ;; frameset restoration by disabling frame cleanup
-                          ;; when running under a daemon with a single frame.
-                          (not (and (daemonp)
-                                    (equal (terminal-name (frame-terminal frame))
-                                           "initial_terminal"))))
-                 (delete-frame frame)))
-           easysession-frameset-restore-cleanup-frames)
-         :force-display easysession-frameset-restore-force-display
-         :force-onscreen easysession-frameset-restore-force-onscreen)
+        (cl-letf (((symbol-function 'frameset-keep-original-display-p)
+                   (lambda (force-display)
+                     (if easysession-frameset-restore-force-current-display
+                         nil
+                       (if orig-keep-display
+                           (funcall orig-keep-display force-display)
+                         nil)))))
+          (frameset-restore
+           data
+           :filters modified-filter-alist
+           :reuse-frames easysession-frameset-restore-reuse-frames
+           :cleanup-frames
+           (if (eq easysession-frameset-restore-cleanup-frames t)
+               (lambda (frame action)
+                 (when (and (memq action '(:rejected :ignored))
+                            ;; Avoid cleaning up the initial daemon frame during
+                            ;; frameset restoration by disabling frame cleanup
+                            ;; when running under a daemon with a single frame.
+                            (not (and (daemonp)
+                                      (equal (terminal-name (frame-terminal frame))
+                                             "initial_terminal"))))
+                   (delete-frame frame)))
+             easysession-frameset-restore-cleanup-frames)
+           :force-display easysession-frameset-restore-force-display
+           :force-onscreen easysession-frameset-restore-force-onscreen))
 
         (when (fboundp 'tab-bar-mode)
           (when (seq-some
