@@ -1836,11 +1836,12 @@ buffer name, buffer path, and narrowing information.
 If BUFFER is not a base buffer or has no associated path, return nil."
   (unless (buffer-base-buffer buffer)
     (with-current-buffer buffer
-      (let ((path (if (derived-mode-p 'dired-mode)
-                      default-directory
-                    (buffer-file-name)))
-            (uniquify-base-name (and (fboundp 'uniquify-buffer-base-name)
-                                     (uniquify-buffer-base-name))))
+      (let* ((path (if (derived-mode-p 'dired-mode)
+                       default-directory
+                     (buffer-file-name)))
+             (uniquify-base-name (and path
+                                      (fboundp 'uniquify-buffer-base-name)
+                                      (uniquify-buffer-base-name))))
         ;; Any buffer operating under with-editor-mode (which includes Magit
         ;; commit messages, Git rebases, and other IPC-driven editors) is
         ;; completely ignored by the save handler. Because the buffer is never

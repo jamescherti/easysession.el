@@ -14,6 +14,8 @@
 
 - Fixed daemon issue when restoring GUI sessions in a terminal by adding `easysession-frameset-restore-force-current-display`.
 
+- Contribution by Emre Yolcu: Exclude `with-editor` buffers from saved sessions and `let-bind` the `find-file-hook` variable only while restoring file-editing buffers
+
 ## 1.2.5
 
 - Removed `easysession-enable-local-variables`: This custom variable has been removed. EasySession now respects the global `enable-local-variables` configuration when restoring file-visiting buffers. This change ensures that background session loading behaves transparently and identically to a manual `find-file` operation, preventing any unexpected overrides of the user's global environment settings.
