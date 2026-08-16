@@ -1747,52 +1747,52 @@ representation:
 
 The loader detects the representation dynamically and restores buffers
 accordingly, ensuring backward compatibility with legacy session files."
-  (dolist (buffer-info (or (assoc-default "path-buffers" session-data)
-                           (assoc-default "buffers" session-data)))
-    (let* ((uniquify-buffer-name-style nil)
-           (new-format-p (and (consp buffer-info)
-                              (consp (car buffer-info))))
-           (buffer-name (if new-format-p
-                            (alist-get 'buffer-name buffer-info)
-                          (car buffer-info)))
-           (buffer-path (if new-format-p
-                            (alist-get 'buffer-path buffer-info)
-                          (cdr buffer-info))))
-      (when buffer-path
-        (let ((original-buffer (get-file-buffer buffer-path))
-              buffer)
-          (if (buffer-live-p original-buffer)
-              (setq buffer (or (buffer-base-buffer original-buffer)
-                               original-buffer))
-            (let ((new-buffer (let ((inhibit-message t)
-                                    (find-file-hook
-                                     (seq-difference
-                                      find-file-hook
-                                      easysession-exclude-from-find-file-hook)))
-                                (condition-case err
-                                    (find-file-noselect buffer-path t)
-                                  (error
-                                   (easysession--warning
-                                    "Failed to restore the buffer '%s': %s"
-                                    buffer-name
-                                    (error-message-string err))
-                                   nil)))))
-              ;; We are going to be using the base buffer to make sure that the
-              ;; buffer that was returned by `find-file-noselect' is a base
-              ;; buffer and not a clone
-              (setq buffer (or (buffer-base-buffer new-buffer) new-buffer))))
+  (let ((custom-find-file-hook (seq-difference
+                                find-file-hook
+                                easysession-exclude-from-find-file-hook)))
+    (dolist (buffer-info (or (assoc-default "path-buffers" session-data)
+                             (assoc-default "buffers" session-data)))
+      (let* ((uniquify-buffer-name-style nil)
+             (new-format-p (and (consp buffer-info)
+                                (consp (car buffer-info))))
+             (buffer-name (if new-format-p
+                              (alist-get 'buffer-name buffer-info)
+                            (car buffer-info)))
+             (buffer-path (if new-format-p
+                              (alist-get 'buffer-path buffer-info)
+                            (cdr buffer-info))))
+        (when buffer-path
+          (let ((original-buffer (get-file-buffer buffer-path))
+                buffer)
+            (if (buffer-live-p original-buffer)
+                (setq buffer (or (buffer-base-buffer original-buffer)
+                                 original-buffer))
+              (let ((new-buffer (let ((inhibit-message t)
+                                      (find-file-hook custom-find-file-hook))
+                                  (condition-case err
+                                      (find-file-noselect buffer-path t)
+                                    (error
+                                     (easysession--warning
+                                      "Failed to restore the buffer '%s': %s"
+                                      buffer-name
+                                      (error-message-string err))
+                                     nil)))))
+                ;; We are going to be using the base buffer to make sure that the
+                ;; buffer that was returned by `find-file-noselect' is a base
+                ;; buffer and not a clone
+                (setq buffer (or (buffer-base-buffer new-buffer) new-buffer))))
 
-          (unless (buffer-base-buffer buffer)
-            (if (not (buffer-live-p buffer))
-                (easysession--warning "Failed to restore the buffer '%s': %s"
-                                      buffer-name buffer-path)
-              ;; Ensure that buffer name is buffer-name
-              (easysession--ensure-buffer-name buffer buffer-name)
+            (unless (buffer-base-buffer buffer)
+              (if (not (buffer-live-p buffer))
+                  (easysession--warning "Failed to restore the buffer '%s': %s"
+                                        buffer-name buffer-path)
+                ;; Ensure that buffer name is buffer-name
+                (easysession--ensure-buffer-name buffer buffer-name)
 
-              ;; Restore buffer narrowing if present
-              (when new-format-p
-                (easysession--restore-buffer-state buffer
-                                                   buffer-info)))))))))
+                ;; Restore buffer narrowing if present
+                (when new-format-p
+                  (easysession--restore-buffer-state buffer
+                                                     buffer-info))))))))))
 
 (defun easysession--handler-load-indirect-buffers (session-data)
   "Load indirect buffers from the SESSION-DATA variable."
@@ -1841,6 +1841,11 @@ If BUFFER is not a base buffer or has no associated path, return nil."
                     (buffer-file-name)))
             (uniquify-base-name (and (fboundp 'uniquify-buffer-base-name)
                                      (uniquify-buffer-base-name))))
+        ;; Any buffer operating under with-editor-mode (which includes Magit
+        ;; commit messages, Git rebases, and other IPC-driven editors) is
+        ;; completely ignored by the save handler. Because the buffer is never
+        ;; saved, it is never restored, avoiding the scenario where Emacs
+        ;; attempts to reuse a dead buffer for a new Git commit process.
         (when (and path (not (bound-and-true-p with-editor-mode)))
           ;; File visiting buffer and base buffers (not carbon copies)
           `((buffer-name . ,(buffer-name))
