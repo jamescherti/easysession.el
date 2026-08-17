@@ -110,6 +110,7 @@ To activate `easysession-magit-mode`, add the following to your Emacs configurat
 ## Usage
 
 It is recommended to use the following functions:
+
 - `easysession-switch-to` to switch to another session,
 - `easysession-save` to save the current session as the current name or another name.
 
@@ -463,6 +464,7 @@ EasySession can persist and restore all original and indirect buffers exactly as
 Easysession.el provides a reliable and modern alternative to desktop.el.
 
 While desktop.el is a foundational session management tool for Emacs, it has several limitations:
+
 - It primarily saves Emacs' state on exit and restores it on startup, making it difficult to switch between different session files during an editing session.
 - desktop.el does not restores buffer narrowing, which is the restriction of a buffer to display and edit only a specific portion of its contents.
 - The desktop.el package does not allow the user to easily choose whether to load sessions with or without modifying the Emacs frame geometry. This last feature is important in easysession because it allows switching between sessions without the annoyance of changing the window position or size.
@@ -518,30 +520,7 @@ Other packages focus more on managing activities rather than full session manage
 - Mijail Guillemard (Email): "Thanks a lot for easysession.el, it is definitely more useful than other desktop*.el packages. The workflow I now have with Emacs has drastically improved with easysession."
 - [JamesBrickley](https://www.reddit.com/r/emacs/comments/1tzfbsq/comment/oqds13q/): "I'm really enjoying James Cherti's Minimal-Emacs.d, Compile-Angle, Easy-Session, and Buffer-Terminator packages."
 - [dewyke](https://www.reddit.com/r/emacs/comments/1tvwmhe/comment/opv2ezr/): "Thank you for this package, it has made such a difference to me! I have to shut my laptop down at the end of each day and having almost everything just restore automagically when I boot it again is fantastic!"
-- [tdavey on Reddit](https://www.reddit.com/r/emacs/comments/1r47s44/comment/o639qyo/):
-  ```
-  Easysession is essential to my workflow. I rely heavily on tab-bar mode and
-  tab-line mode to organize my work, e.g., one tab-bar tab per project. My typical
-  Emacs session includes ~20 tab-bar tabs and ~70 buffers.
-
-  Upon restarting Emacs, Easysession restores everything, and I mean everything.
-  Many of my buffers are indirect clones. Easysession restores them. And many of
-  these clones are narrowed, for zooming in on a section of code or an Org-mode
-  tree. Easysession restores the narrowed state too.
-
-  This is huge. I know of no other desktop package for Emacs that restores
-  indirect buffers AND their narrowed state.
-
-  Easysession can also restore earmuff buffers, like Magit status, the Org Agenda,
-  and *Packages*, as long your init files initialize them first. I load
-  easysession at the end of my Emacs start-up to make sure that Easysession will
-  put everything I need in their designated tabs, including the special earmuff
-  buffers
-
-  Mr. Cherti, thanks so much for this package and its continuing development. In
-  my opinion it should replace the native desktop.el and be included in Emacs
-  itself...
-  ```
+- [tdavey on Reddit](https://www.reddit.com/r/emacs/comments/1r47s44/comment/o639qyo/): "Easysession is essential to my workflow. I rely heavily on tab-bar mode and tab-line mode to organize my work, e.g., one tab-bar tab per project. My typical Emacs session includes ~20 tab-bar tabs and ~70 buffers. Upon restarting Emacs, Easysession restores everything, and I mean everything. Many of my buffers are indirect clones. Easysession restores them. And many of these clones are narrowed, for zooming in on a section of code or an Org-mode tree. Easysession restores the narrowed state too. This is huge. I know of no other desktop package for Emacs that restores indirect buffers AND their narrowed state. Easysession can also restore earmuff buffers, like Magit status, the Org Agenda, and *Packages*, as long your init files initialize them first. I load easysession at the end of my Emacs start-up to make sure that Easysession will put everything I need in their designated tabs, including the special earmuff buffers Mr. Cherti, thanks so much for this package and its continuing development. In my opinion it should replace the native desktop.el and be included in Emacs itself..."
 - [Tom Davey](https://github.com/jamescherti/easysession.el/issues/65): "I love easysession-mode. It's essential to my daily workflow in Emacs... Thanks again for this great package."
 
 ## License
@@ -563,6 +542,7 @@ You should have received a copy of the GNU General Public License along with thi
 - There is also a Vim version of Easysession: [vim-easysession](https://github.com/jamescherti/vim-easysession)
 
 Other Emacs packages by the same author:
+
 - [minimal-emacs.d](https://github.com/jamescherti/minimal-emacs.d): This repository hosts a minimal Emacs configuration designed to serve as a foundation for your vanilla Emacs setup and provide a solid base for an enhanced Emacs experience.
 - [compile-angel.el](https://github.com/jamescherti/compile-angel.el): **Speed up Emacs!** This package guarantees that all .el files are both byte-compiled and native-compiled, which significantly speeds up Emacs.
 - [outline-indent.el](https://github.com/jamescherti/outline-indent.el): An Emacs package that provides a minor mode that enables code folding and outlining based on indentation levels for various indentation-based text files, such as YAML, Python, and other indented text files.
