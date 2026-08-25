@@ -129,7 +129,7 @@
 
 (defgroup easysession nil
   "Customization options for EasySession."
-  :group 'easysession
+  :group 'frames
   :prefix "easysession-")
 
 (defcustom easysession-directory (expand-file-name "easysession"
