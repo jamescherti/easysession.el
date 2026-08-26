@@ -5,7 +5,7 @@
 ;; Author: James Cherti <https://www.jamescherti.com/contact/>
 ;; Version: 1.2.6
 ;; URL: https://github.com/jamescherti/easysession.el
-;; Keywords: convenience
+;; Keywords: convenience, frames, files
 ;; Package-Requires: ((emacs "26.1"))
 ;; SPDX-License-Identifier: GPL-3.0-or-later
 

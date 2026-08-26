@@ -5,7 +5,7 @@
 ;; Author: Emre Yolcu
 ;; Version: 1.2.6
 ;; URL: https://github.com/jamescherti/easysession.el
-;; Keywords: convenience
+;; Keywords: convenience, vc
 ;; Package-Requires: ((emacs "26.1"))
 ;; SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -36,7 +36,7 @@
 
 (defgroup easysession-magit nil
   "Customization options for persisting Magit buffers."
-  :group 'easysession-magit
+  :group 'easysession
   :prefix "easysession-magit-")
 
 (defvar magit-display-buffer-noselect)
