@@ -4,19 +4,25 @@
 
 **Author:** [James Cherti](https://www.jamescherti.com/)
 
-## WIP
-
-- Fix lexical scoping and window hooks by replacing `(ignore var)` with `(defvar var)` top-level declarations. This ensures proper dynamic binding for hook variables and resolves byte-compiler warnings in `lexical-binding` mode.
-
-- Updated `easysession-switch-to` to evaluate `easysession-save-mode-predicate` before saving the active session.
-
-- Changed the default value of `easysession-save-mode-predicate` to `nil` and updated its customization type to accept both functions and `nil`.
+## 1.3.0
 
 - Fixed daemon issue when restoring GUI sessions in a terminal by adding `easysession-frameset-restore-force-current-display`.
 
 - Contribution by Emre Yolcu: Exclude `with-editor` buffers from saved sessions and `let-bind` the `find-file-hook` variable only while restoring file-editing buffers
 
 - Added `easysession-exclude-modes`: A new customization option to exclude file-visiting buffers from being saved based on active major or minor modes (defaults to `'(with-editor-mode)`).
+
+- `easysession--get-base-buffer-info`: Only read uniquify-base-name when it is a file buffer
+
+- Update defgroup :group and Keywords
+
+## 1.2.6
+
+- Fix lexical scoping and window hooks by replacing `(ignore var)` with `(defvar var)` top-level declarations. This ensures proper dynamic binding for hook variables and resolves byte-compiler warnings in `lexical-binding` mode.
+
+- Updated `easysession-switch-to` to evaluate `easysession-save-mode-predicate` before saving the active session.
+
+- Changed the default value of `easysession-save-mode-predicate` to `nil` and updated its customization type to accept both functions and `nil`.
 
 ## 1.2.5
 
