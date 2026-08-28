@@ -3,7 +3,7 @@
 ;; Copyright (C) 2024-2026 James Cherti | https://www.jamescherti.com/contact/
 
 ;; Author: James Cherti <https://www.jamescherti.com/contact/>
-;; Version: 1.2.6
+;; Version: 1.3.0
 ;; URL: https://github.com/jamescherti/easysession.el
 ;; Keywords: convenience, frames, files
 ;; Package-Requires: ((emacs "26.1"))
