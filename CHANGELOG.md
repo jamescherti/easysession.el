@@ -4,6 +4,12 @@
 
 **Author:** [James Cherti](https://www.jamescherti.com/)
 
+## Wip
+
+- `easysession-scratch`: Refactor scratch buffer lookup for better performance: Replace the manual `catch` and `dolist` iteration in the load handler with `assoc` and `assq` functions. This improves lookup efficiency.
+
+- `easysession-scratch`: Refactor `add-to-list` call to remove redundant member check. The `add-to-list` function automatically verifies if the element is already present in the list before adding it. Removing the explicit `unless` and `member` checks simplifies the logic while preserving the exact same behavior.
+
 ## 1.3.0
 
 - Fixed daemon issue when restoring GUI sessions in a terminal by adding `easysession-frameset-restore-force-current-display`.
