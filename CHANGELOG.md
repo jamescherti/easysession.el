@@ -10,6 +10,8 @@
 
 - `easysession-scratch`: Refactor `add-to-list` call to remove redundant member check. The `add-to-list` function automatically verifies if the element is already present in the list before adding it. Removing the explicit `unless` and `member` checks simplifies the logic while preserving the exact same behavior.
 
+- Change `easysession-fontify` to t. This variable addresses an issue where `font-lock-mode` fails to fontify buffers during session restoration when `redisplay-skip-fontification-on-input` is non-nil. Without this, text remains unfontified until the user provides input, such as pressing a key.
+
 ## 1.3.0
 
 - Fixed daemon issue when restoring GUI sessions in a terminal by adding `easysession-frameset-restore-force-current-display`.

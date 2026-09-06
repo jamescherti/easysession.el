@@ -536,7 +536,7 @@ By default, the `tab-bar' only updates a tab name after the user visits it."
   :type 'boolean
   :group 'easysession)
 
-(defcustom easysession-fontify nil
+(defcustom easysession-fontify t
   "When non-nil, force fontification of restored buffers.
 This variable addresses an issue where `font-lock-mode' fails to fontify
 buffers during session restoration when `redisplay-skip-fontification-on-input'
