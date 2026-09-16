@@ -423,6 +423,13 @@ For more details, see the `frameset-restore' docstring."
   :type 'boolean
   :group 'easysession)
 
+(defcustom easysession-restore-nonexistent-files nil
+  "Non-nil means restore file and directories even if they do not exist.
+When set to nil, buffers visiting paths that no longer exist on disk will
+be skipped during session restoration."
+  :type 'boolean
+  :group 'easysession)
+
 (defcustom easysession-exclude-from-find-file-hook
   '(recentf-track-opened-file
     save-place-find-file-hook
@@ -1287,7 +1294,8 @@ When LOAD-GEOMETRY is non-nil, load the frame geometry."
            (orig-keep-display
             (if (fboundp 'frameset-keep-original-display-p)
                 (symbol-function 'frameset-keep-original-display-p)
-              (easysession--warning "Function undefined: frameset-keep-original-display-p")
+              (easysession--warning
+               "Function undefined: frameset-keep-original-display-p")
               nil)))
       (when (and (not data) load-geometry)
         (setq data (when (assoc "frameset" session-data)
@@ -1637,7 +1645,8 @@ This provides a fast, invisible alternative to cycling tabs."
                                  ;; With the configuration loaded invisibly, get
                                  ;; the name
                                  (funcall tab-bar-tab-name-function))))))))
-                  (when (and new-name (not (equal new-name (alist-get 'name tab))))
+                  (when (and new-name
+                             (not (equal new-name (alist-get 'name tab))))
                     (setf (alist-get 'name tab) new-name)
                     (setq changed t)))))
             ;; If any auto-generated names changed, push the update to the frame
@@ -1774,37 +1783,42 @@ accordingly, ensuring backward compatibility with legacy session files."
                               (alist-get 'buffer-path buffer-info)
                             (cdr buffer-info))))
         (when buffer-path
-          (let ((original-buffer (get-file-buffer buffer-path))
-                buffer)
-            (if (buffer-live-p original-buffer)
-                (setq buffer (or (buffer-base-buffer original-buffer)
-                                 original-buffer))
-              (let ((new-buffer (let ((inhibit-message t)
-                                      (find-file-hook custom-find-file-hook))
-                                  (condition-case err
-                                      (find-file-noselect buffer-path t)
-                                    (error
-                                     (easysession--warning
-                                      "Failed to restore the buffer '%s': %s"
-                                      buffer-name
-                                      (error-message-string err))
-                                     nil)))))
-                ;; We are going to be using the base buffer to make sure that the
-                ;; buffer that was returned by `find-file-noselect' is a base
-                ;; buffer and not a clone
-                (setq buffer (or (buffer-base-buffer new-buffer) new-buffer))))
+          (if (and (not easysession-restore-nonexistent-files)
+                   (not (file-exists-p buffer-path)))
+              (easysession--debug-message
+                "Skipped restoring buffer '%s': path '%s' does not exist"
+                buffer-name buffer-path)
+            (let ((original-buffer (get-file-buffer buffer-path))
+                  buffer)
+              (if (buffer-live-p original-buffer)
+                  (setq buffer (or (buffer-base-buffer original-buffer)
+                                   original-buffer))
+                (let ((new-buffer (let ((inhibit-message t)
+                                        (find-file-hook custom-find-file-hook))
+                                    (condition-case err
+                                        (find-file-noselect buffer-path t)
+                                      (error
+                                       (easysession--warning
+                                        "Failed to restore the buffer '%s': %s"
+                                        buffer-name
+                                        (error-message-string err))
+                                       nil)))))
+                  ;; We are going to be using the base buffer to make sure that
+                  ;; the buffer that was returned by `find-file-noselect' is a
+                  ;; base buffer and not a clone
+                  (setq buffer (or (buffer-base-buffer new-buffer) new-buffer))))
 
-            (unless (buffer-base-buffer buffer)
-              (if (not (buffer-live-p buffer))
-                  (easysession--warning "Failed to restore the buffer '%s': %s"
-                                        buffer-name buffer-path)
-                ;; Ensure that buffer name is buffer-name
-                (easysession--ensure-buffer-name buffer buffer-name)
+              (unless (buffer-base-buffer buffer)
+                (if (not (buffer-live-p buffer))
+                    (easysession--warning "Failed to restore the buffer '%s': %s"
+                                          buffer-name buffer-path)
+                  ;; Ensure that buffer name is buffer-name
+                  (easysession--ensure-buffer-name buffer buffer-name)
 
-                ;; Restore buffer narrowing if present
-                (when new-format-p
-                  (easysession--restore-buffer-state buffer
-                                                     buffer-info))))))))))
+                  ;; Restore buffer narrowing if present
+                  (when new-format-p
+                    (easysession--restore-buffer-state buffer
+                                                       buffer-info)))))))))))
 
 (defun easysession--handler-load-indirect-buffers (session-data)
   "Load indirect buffers from the SESSION-DATA variable."
@@ -2916,8 +2930,9 @@ accordingly."
                  (or (or (not easysession--session-loaded)
                          (not session-reloaded))
                      (yes-or-no-p
-                      (format "[easysession] Do you want to save the current session '%s' before reloading it? "
-                              easysession--current-session-name))))
+                      (format
+                       "[easysession] Do you want to save the current session '%s' before reloading it? "
+                       easysession--current-session-name))))
         (easysession-save easysession--current-session-name)
         (setq saved t))
 

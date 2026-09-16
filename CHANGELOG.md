@@ -12,6 +12,8 @@
 
 - Change `easysession-fontify` to t. This variable addresses an issue where `font-lock-mode` fails to fontify buffers during session restoration when `redisplay-skip-fontification-on-input` is non-nil. Without this, text remains unfontified until the user provides input, such as pressing a key.
 
+- Added the `easysession-restore-nonexistent-files` custom option, which allows users to control whether file and Dired buffers are restored when their paths no longer exist on disk. When set to nil, buffers with missing paths are skipped instead of being restored as empty buffers.
+
 ## 1.3.0
 
 - Fixed daemon issue when restoring GUI sessions in a terminal by adding `easysession-frameset-restore-force-current-display`.
