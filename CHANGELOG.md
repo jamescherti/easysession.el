@@ -4,7 +4,7 @@
 
 **Author:** [James Cherti](https://www.jamescherti.com/)
 
-## Wip
+## 1.3.1
 
 - `easysession-scratch`: Refactor scratch buffer lookup for better performance: Replace the manual `catch` and `dolist` iteration in the load handler with `assoc` and `assq` functions. This improves lookup efficiency.
 
