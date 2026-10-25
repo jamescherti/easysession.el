@@ -5,7 +5,10 @@
 ![License](https://img.shields.io/github/license/jamescherti/easysession.el)
 ![](https://jamescherti.com/misc/made-for-gnu-emacs.svg)
 
-The **easysession** Emacs package provides a comprehensive session management for Emacs. It is capable of persisting and restoring file-visiting buffers, indirect buffers (clones), buffer narrowing, Dired buffers, window configurations, the built-in tab-bar (including tabs, their buffers, and associated windows), as well as entire Emacs frames (frame name, size, position, etc.).
+- Author: James Cherti <[https://www.jamescherti.com/](https://www.jamescherti.com/)>
+- License: GPL
+
+The **[easysession.el](https://github.com/jamescherti/easysession.el)** Emacs package provides a comprehensive session management for Emacs. It is capable of persisting and restoring file-visiting buffers, indirect buffers (clones), buffer narrowing, Dired buffers, window configurations, the built-in tab-bar (including tabs, their buffers, and associated windows), as well as entire Emacs frames (frame name, size, position, etc.).
 
 With **easysession**, your Emacs setup is restored automatically when you restart. All files, Dired buffers, and window layouts come back as they were, so you can continue working right where you left off. While editing, you can also switch to another session, switch back, rename sessions, or delete them, giving you full control over multiple work environments.
 
