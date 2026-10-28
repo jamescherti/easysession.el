@@ -4,6 +4,10 @@
 
 **Author:** [James Cherti](https://www.jamescherti.com/)
 
+## WIP
+
+- Contribution by systemfreund: Added the `easysession-eshell` extension to persist and restore Eshell buffers, preserving their names and working directories across sessions.
+
 ## 1.3.1
 
 - `easysession-scratch`: Refactor scratch buffer lookup for better performance: Replace the manual `catch` and `dolist` iteration in the load handler with `assoc` and `assq` functions. This improves lookup efficiency.

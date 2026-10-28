@@ -35,6 +35,7 @@ Easysession also supports extensions, enabling the restoration of Magit buffers 
 * Exact restoration of **narrowed regions** in both base and indirect buffers, ensuring each buffer reopens with the same visible scope as when it was saved.
 * Optional **scratch buffer persistence** via the **extensions/easysession-scratch.el** extension, preserving notes and experiments across restarts.
 * Optional **Magit state restoration** via the **extensions/easysession-magit.el** extension, keeping version control workflows intact.
+* Optional **Eshell state restoration** via the **extensions/easysession-eshell.el** extension. It preserves each buffer's name and working directory, recreating the Eshell buffer with a fresh prompt when the session is restored.
 
 ## Installation
 
@@ -108,6 +109,18 @@ To activate `easysession-magit-mode`, add the following to your Emacs configurat
 (with-eval-after-load 'easysession
   (require 'easysession-magit)
   (easysession-magit-mode 1))
+```
+
+### Extension: easysession-eshell (Persist and restore Eshell buffers)
+
+This extension enables EasySession to persist and restore Eshell buffers. It preserves each buffer's name and working directory, recreating the Eshell buffer with a fresh prompt when the session is restored. Command history and previous output are not restored. Buffers whose saved working directories no longer exist are skipped.
+
+To enable `easysession-eshell-mode`, add the following to your Emacs configuration:
+
+```elisp
+(with-eval-after-load 'easysession
+  (require 'easysession-eshell)
+  (easysession-eshell-mode 1))
 ```
 
 ## Usage
