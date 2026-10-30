@@ -124,6 +124,8 @@
 (require 'frameset)
 (require 'cl-lib)
 (require 'seq)
+(eval-when-compile
+  (require 'subr-x)) ; string-join
 
 ;;; Variables
 
