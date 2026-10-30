@@ -1403,6 +1403,8 @@ termination when used from `kill-emacs-query-functions'."
   #'easysession-mode-line-session-name-format
   "1.2.3")
 
+(defvar trusted-content)
+
 (defun easysession-mode-line-session-name-format ()
   "Return a mode-line construct for the currently loaded session.
 The session name is displayed only when a session is actively loaded."
