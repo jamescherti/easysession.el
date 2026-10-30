@@ -124,8 +124,12 @@
 (require 'frameset)
 (require 'cl-lib)
 (require 'seq)
+
 (eval-when-compile
   (require 'subr-x)) ; string-join
+
+(when (<= emacs-major-version 28)
+  (require 'subr-x))
 
 ;;; Variables
 
