@@ -1198,8 +1198,9 @@ Returns nil if BUFFER is not live or if no matching entry exists."
                           (default-directory . ,default-directory)))
                  (save-fn (plist-get (cdr entry) :save))
                  (data (when (functionp save-fn)
-                         (ignore-errors
-                           (funcall save-fn)))))
+                         (condition-case nil
+                             (funcall save-fn)
+                           (error nil)))))
             (when data
               (nconc state (list (cons 'data data))))
             state))))))
@@ -1210,7 +1211,7 @@ Return nil when no session has been loaded before."
   easysession--current-session-name)
 
 (defalias 'easysession-get-current-session-name
-  'easysession-get-session-name
+  #'easysession-get-session-name
   "Renamed to `easysession-get-session-name'.")
 
 (make-obsolete 'easysession-get-current-session-name
@@ -1399,7 +1400,7 @@ termination when used from `kill-emacs-query-functions'."
 
 (define-obsolete-function-alias
   'easysession--mode-line-session-name-format
-  'easysession-mode-line-session-name-format
+  #'easysession-mode-line-session-name-format
   "1.2.3")
 
 (defun easysession-mode-line-session-name-format ()
@@ -1420,7 +1421,7 @@ The session name is displayed only when a session is actively loaded."
 (defun easysession--get-scratch-buffer-create ()
   "Return the *scratch* buffer, creating a new one if needed."
   (if (fboundp 'get-scratch-buffer-create)
-      (funcall 'get-scratch-buffer-create)
+      (funcall #'get-scratch-buffer-create)
     (or (get-buffer "*scratch*")
         (let ((scratch (get-buffer-create "*scratch*")))
           (with-current-buffer scratch
@@ -1429,8 +1430,7 @@ The session name is displayed only when a session is actively loaded."
               (set-buffer-modified-p nil))
             (funcall initial-major-mode)
             (when (eq initial-major-mode 'lisp-interaction-mode)
-              (with-no-warnings
-                (setq-local trusted-content :all))))
+              (setq-local trusted-content :all)))
           scratch))))
 
 (defun easysession--cl-list* (&rest args)
@@ -1642,7 +1642,7 @@ This provides a fast, invisible alternative to cycling tabs."
                                  (with-no-warnings
                                    (if (version< emacs-version "28.1")
                                        (set-window-configuration wc)
-                                     (set-window-configuration wc nil t)))
+                                     (funcall #'set-window-configuration wc nil t)))
 
                                  ;; With the configuration loaded invisibly, get
                                  ;; the name
@@ -1710,10 +1710,9 @@ This provides a fast, invisible alternative to cycling tabs."
                         ;;
                         ;; Silence: `set-window-configuration' called with 3
                         ;; arguments, but accepts only 1
-                        (with-no-warnings
-                          (if (version< emacs-version "28.1")
-                              (set-window-configuration wc)
-                            (set-window-configuration wc nil t)))
+                        (if (version< emacs-version "28.1")
+                            (set-window-configuration wc)
+                          (funcall #'set-window-configuration wc nil t))
 
                         (setq bufs (append (mapcar #'window-buffer
                                                    (window-list frame))
@@ -2216,14 +2215,16 @@ the process had been freshly started."
                 (push frame other-frames))))
 
           (dolist (frame other-frames)
-            (ignore-errors
-              (when (frame-live-p frame)
-                (delete-frame frame t))))
+            (condition-case nil
+                (when (frame-live-p frame)
+                  (delete-frame frame t))
+              (error nil)))
 
           ;; Delete the selected frame last to prevent focus shift issues
-          (ignore-errors
-            (when (frame-live-p current)
-              (delete-frame current t))))))))
+          (condition-case nil
+              (when (frame-live-p current)
+                (delete-frame current t))
+            (error nil)))))))
 
 ;;;###autoload
 (defun easysession-setup ()
@@ -2495,8 +2496,9 @@ SESSION-NAMES is a string or a list of session names."
                     ((and (fboundp 'font-lock-flush)
                           (fboundp 'font-lock-ensure))
                      (font-lock-flush)
-                     (ignore-errors
-                       (font-lock-ensure)))
+                     (condition-case nil
+                         (font-lock-ensure)
+                       (error nil)))
 
                     ((fboundp 'jit-lock-fontify-now)
                      (jit-lock-fontify-now)))
@@ -2857,7 +2859,9 @@ AUTO-SAVE is non-nil when the save is triggered by a background timer."
                            (point-min) (point-max) tmp-file nil 'silent)
                           (rename-file tmp-file session-file t))
                       (when (and tmp-file (file-regular-p tmp-file))
-                        (ignore-errors (delete-file tmp-file))))))
+                        (condition-case nil
+                            (delete-file tmp-file)
+                          (error nil))))))
                 nil)
               (when (called-interactively-p 'any)
                 (if (string= session-name easysession--current-session-name)
@@ -2867,7 +2871,7 @@ AUTO-SAVE is non-nil when the save is triggered by a background timer."
             (run-hooks 'easysession-after-save-hook)))
       (setq easysession-save-in-progress nil))))
 
-(defalias 'easysession-save-as 'easysession-save)
+(defalias 'easysession-save-as #'easysession-save)
 (make-obsolete 'easysession-save-as 'easysession-save "1.2.0")
 
 ;;;###autoload
