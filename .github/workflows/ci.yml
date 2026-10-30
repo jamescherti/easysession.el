@@ -89,7 +89,7 @@ jobs:
         env:
           LOCAL_REPO: "${{ github.workspace }}"
           RECIPE: (easysession :fetcher github :repo "jamescherti/easysession.el" :branch "${{ github.ref_name }}")
-          EXIST_OK: 'false'
+          EXIST_OK: 'true'
         run: |
           python -m pip install --upgrade pip
           git clone https://github.com/riscy/melpazoid.git ~/melpazoid
