@@ -18,19 +18,20 @@ CASK_DIR := $(shell cask package-directory)
 
 INIT_PACKAGES="(progn \
   (require 'package) \
+  (setq package-user-dir \"$(CASK_DIR)/elpa\") \
   (push '(\"melpa-stable\" . \"https://stable.melpa.org/packages/\") package-archives) \
+  (push '(\"melpa\" . \"https://melpa.org/packages/\") package-archives) \
   (customize-set-variable 'package-archive-priorities \
-                          '((\"gnu\"    . 99) (\"nongnu\" . 80) \
-                            (\"melpa-stable\" . 70) (\"melpa\"  . 0))) \
+						  '((\"gnu\"          . 99) (\"nongnu\" . 80) \
+							(\"melpa-stable\" . 70) (\"melpa\"  . 0))) \
   (package-initialize) \
-  (package-refresh-contents) \
+  (unless package-archive-contents \
+	(package-refresh-contents)) \
   (dolist (pkg '(package-lint)) \
-   (unless (assoc pkg package-archive-contents) \
-     (package-refresh-contents)) \
-   (unless (package-installed-p pkg) \
-     (package-install pkg))))"
+	(unless (package-installed-p pkg) \
+	  (package-install pkg))))"
 
-$(CASK_DIR): Cask
+$(CASK_DIR): Cask easysession.el
 	cask install
 	@touch $(CASK_DIR)
 
@@ -39,15 +40,21 @@ cask: $(CASK_DIR)
 
 .PHONY: compile
 compile: cask
-	cask emacs -batch -L . \
-          --eval "(setq byte-compile-error-on-warn t)" \
-	  -f batch-byte-compile $$(cask files); \
-	  (ret=$$? ; cask clean-elc && exit $$ret)
+	cask exec emacs -Q --batch -L . \
+		--eval "(setq byte-compile-error-on-warn t)" \
+		-f batch-byte-compile $$(cask files); \
+		(ret=$$? ; cask clean-elc && exit $$ret)
 
 .PHONY: package-lint
-package-lint:
-	cask emacs -Q --eval ${INIT_PACKAGES} -batch -f package-lint-batch-and-exit easysession.el
+package-lint: cask
+	cask exec emacs -Q --batch -L . \
+		--eval ${INIT_PACKAGES} \
+		-f package-lint-batch-and-exit $$(cask files)
 
 .PHONY: test
-test:
-	if test -d tests; then cask emacs --batch -L . -L tests -l tests/test-easysession.el -f ert-run-tests-batch-and-exit; else true; fi
+test: cask
+	if test -d tests; then \
+		cask exec emacs -Q --batch -L . -L tests \
+			-l tests/test-easysession.el \
+			-f ert-run-tests-batch-and-exit; \
+	fi
