@@ -1641,10 +1641,9 @@ This provides a fast, invisible alternative to cycling tabs."
                                      (window-size-change-functions nil)
                                      (window-selection-change-functions nil)
                                      (window-state-change-hook nil))
-                                 (with-no-warnings
-                                   (if (version< emacs-version "28.1")
-                                       (set-window-configuration wc)
-                                     (apply 'set-window-configuration (list wc nil t))))
+                                 (if (version< emacs-version "28.1")
+                                     (set-window-configuration wc)
+                                   (apply #'set-window-configuration (list wc nil t)))
 
                                  ;; With the configuration loaded invisibly, get
                                  ;; the name
@@ -1714,7 +1713,7 @@ This provides a fast, invisible alternative to cycling tabs."
                         ;; arguments, but accepts only 1
                         (if (version< emacs-version "28.1")
                             (set-window-configuration wc)
-                          (apply 'set-window-configuration (list wc nil t)))
+                          (apply #'set-window-configuration (list wc nil t)))
 
                         (setq bufs (append (mapcar #'window-buffer
                                                    (window-list frame))
