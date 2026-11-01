@@ -14,5 +14,3 @@ repos:
       - id: elisp-check-parens
       - id: elisp-check-byte-compile
         exclude: '(^|/)(\.dir-locals\.el$|test)'
-        # TODO fix regexp
-        # exclude: '\.dir-locals\.el|test-easysession\.el)'
