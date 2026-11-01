@@ -1,5 +1,8 @@
 ---
 #
+# Copyright (C) James Cherti <https://www.jamescherti.com/>
+# URL: https://github.com/jamescherti/easysession.el
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
@@ -27,12 +30,16 @@ on:  # yamllint disable-line rule:truthy
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         emacs-version:
           - '26.3'
@@ -41,11 +48,21 @@ jobs:
           - '29.1'
           - '29.4'
           - '30.1'
+          - '31.1'
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Prevents checkout from retaining its authentication token in Git
+          # configuration. These build steps do not need authenticated Git
+          # operations.
+          persist-credentials: false
 
+      # Avoid installing the requested Python version in the other five matrix
+      # jobs. Apply this only if the Makefile targets do not require that Python
+      # version.
       - uses: actions/setup-python@v5
+        if: matrix.emacs-version == '30.1'
         with:
           python-version: '3.11'
 
@@ -88,11 +105,15 @@ jobs:
         if: matrix.emacs-version == '30.1'
         env:
           LOCAL_REPO: "${{ github.workspace }}"
-          RECIPE: (easysession :fetcher github :repo "jamescherti/easysession.el" :branch "${{ github.ref_name }}")
+
+          RECIPE: >-
+            (easysession :fetcher github
+            :repo "jamescherti/easysession.el"
+            :branch "${{ github.head_ref || github.ref_name }}")
+
           EXIST_OK: 'true'
         run: |
+          git clone --depth 1 https://github.com/riscy/melpazoid.git "$HOME/melpazoid"
           python -m pip install --upgrade pip
-          git clone https://github.com/riscy/melpazoid.git ~/melpazoid
-          pip install ~/melpazoid
-          cat ~/melpazoid/melpazoid/melpazoid.el
-          echo "$GITHUB_REF" && make -C ~/melpazoid
+          python -m pip install "$HOME/melpazoid"
+          make -C "$HOME/melpazoid"
