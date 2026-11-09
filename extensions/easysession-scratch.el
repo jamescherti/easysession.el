@@ -52,8 +52,8 @@
         ;; Load
         #'(lambda (session-data)
             "Load SESSION-DATA."
-            (add-to-list 'easysession-visible-buffer-list-include-names
-                         "*scratch*")
+            (unless (member "*scratch*" easysession-visible-buffer-list-include-names)
+              (push "*scratch*" easysession-visible-buffer-list-include-names))
 
             ;; Load the scratch buffer
             (let* ((buffer-data (cdr (assoc "*scratch*" session-data)))
@@ -63,14 +63,16 @@
                   (let ((buffer (easysession--get-scratch-buffer-create)))
                     (when (buffer-live-p buffer)
                       (with-current-buffer buffer
-                        (erase-buffer)
-                        (insert buffer-string)
+                        (let ((inhibit-read-only t))
+                          (erase-buffer)
+                          (insert buffer-string))
                         (goto-char (point-min)))))
                 ;; Erase the scratch buffer if it exists
                 (let ((buffer (get-buffer "*scratch*")))
                   (when (buffer-live-p buffer)
                     (with-current-buffer buffer
-                      (erase-buffer)))))))
+                      (let ((inhibit-read-only t))
+                        (erase-buffer))))))))
 
         ;; Save
         #'(lambda(buffers)

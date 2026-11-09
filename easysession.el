@@ -233,10 +233,9 @@ activated when `easysession-save-mode' is enabled."
 
 (defun easysession--update-modeline-misc-info (value)
   "Update the mode line with VALUE."
-  (setq mode-line-misc-info (assq-delete-all 'easysession-mode-line-misc-info
-                                             mode-line-misc-info))
-  (add-to-list 'mode-line-misc-info `(easysession-mode-line-misc-info
-                                      ,value)))
+  (setq mode-line-misc-info
+        (assq-delete-all 'easysession-mode-line-misc-info mode-line-misc-info))
+  (push `(easysession-mode-line-misc-info ,value) mode-line-misc-info))
 
 (defcustom easysession-mode-line-misc-info-format
   '(:eval (easysession-mode-line-session-name-format))
